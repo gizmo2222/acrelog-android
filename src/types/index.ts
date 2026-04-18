@@ -91,6 +91,7 @@ export interface MaintenanceTask {
   lastCompletedHours?: number;
   nextDueAt?: Timestamp;
   nextDueHours?: number;
+  archived?: boolean;
   createdAt: Timestamp;
 }
 

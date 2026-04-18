@@ -133,16 +133,22 @@ export async function logMaintenance(
   };
   await setDoc(logRef, log);
 
-  // Update task's last completed and next due
+  // Update task's last completed, next due, and auto-archive one-time tasks
   const { nextDueHours, nextDueAt } = computeNextDue(task, completedAt, hoursAtCompletion);
+  const isOneTime = !task.intervalHours && !task.intervalDays;
   await updateDoc(doc(db, 'maintenanceTasks', task.id), {
     lastCompletedAt: completedAt,
     lastCompletedHours: hoursAtCompletion,
     nextDueHours: nextDueHours ?? null,
     nextDueAt: nextDueAt ?? null,
+    ...(isOneTime ? { archived: true } : {}),
   });
 
   return log;
+}
+
+export async function archiveMaintenanceTask(id: string, archived: boolean): Promise<void> {
+  await updateDoc(doc(db, 'maintenanceTasks', id), { archived });
 }
 
 async function uploadMaintenanceFile(

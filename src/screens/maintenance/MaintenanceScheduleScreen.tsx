@@ -9,7 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
 import {
   getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
-  getMaintenanceStatus, scrapeMaintenanceSchedule,
+  archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule,
 } from '../../services/maintenance';
 import { Equipment, MaintenanceTask } from '../../types';
 
@@ -39,6 +39,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const [intervalHours, setIntervalHours] = useState('');
   const [intervalDays, setIntervalDays] = useState('');
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [equipmentId]));
 
@@ -111,6 +112,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
 
   const canEdit = activeFarm?.role === 'owner';
   const canLog = activeFarm?.role !== 'auditor';
+  const activeTasks = tasks.filter(t => !t.archived);
+  const archivedTasks = tasks.filter(t => t.archived);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
@@ -119,7 +122,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       <Text variant="titleMedium" style={styles.equipName}>{equipment?.name} — {equipment?.totalHours} hrs</Text>
 
       <FlatList
-        data={tasks}
+        data={activeTasks}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}
         ListHeaderComponent={
@@ -178,7 +181,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
               </Card>
             )}
 
-            <Text variant="labelLarge" style={styles.listHeader}>Tasks ({tasks.length})</Text>
+            <Text variant="labelLarge" style={styles.listHeader}>Tasks ({activeTasks.length})</Text>
           </>
         }
         renderItem={({ item }) => {
@@ -194,6 +197,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                   {canEdit && (
                     <>
                       <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                      <IconButton icon="archive-outline" size={18} onPress={() => { archiveMaintenanceTask(item.id, true); load(); }} />
                       <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
                     </>
                   )}
@@ -230,6 +234,39 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
           );
         }}
         ListEmptyComponent={<Text style={styles.empty}>No maintenance tasks. Add one or import from the manufacturer's site.</Text>}
+        ListFooterComponent={archivedTasks.length > 0 ? (
+          <View>
+            <Button
+              mode="text"
+              icon={showArchived ? 'chevron-up' : 'chevron-down'}
+              onPress={() => setShowArchived(v => !v)}
+              style={styles.archivedToggle}
+              compact
+            >
+              Completed / Archived ({archivedTasks.length})
+            </Button>
+            {showArchived && archivedTasks.map(item => (
+              <Card key={item.id} style={[styles.card, styles.archivedCard]}>
+                <Card.Content>
+                  <View style={styles.taskHeader}>
+                    <Text variant="titleSmall" style={[styles.flex, styles.archivedText]}>{item.name}</Text>
+                    {canEdit && (
+                      <>
+                        <IconButton icon="restore" size={18} onPress={() => { archiveMaintenanceTask(item.id, false); load(); }} />
+                        <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                      </>
+                    )}
+                  </View>
+                  {item.lastCompletedAt && (
+                    <Text variant="bodySmall" style={styles.lastDone}>
+                      Completed: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
+                    </Text>
+                  )}
+                </Card.Content>
+              </Card>
+            ))}
+          </View>
+        ) : null}
       />
 
       {canEdit && (
@@ -257,5 +294,8 @@ const styles = StyleSheet.create({
   lastDone: { color: '#888' },
   logBtn: { marginTop: 8, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#999', padding: 32 },
+  archivedToggle: { marginHorizontal: 16, marginTop: 8, alignSelf: 'flex-start' },
+  archivedCard: { opacity: 0.6 },
+  archivedText: { color: '#999' },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });
