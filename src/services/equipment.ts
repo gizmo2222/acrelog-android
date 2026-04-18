@@ -165,6 +165,10 @@ export async function archiveEquipment(id: string, status: EquipmentStatus, brea
   await updateDoc(doc(db, 'equipment', id), update);
 }
 
+export async function deleteEquipment(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'equipment', id));
+}
+
 // ─── Images ────────────────────────────────────────────────────────────────
 
 export async function uploadPrimaryImage(equipmentId: string, farmId: string, uri: string): Promise<string> {

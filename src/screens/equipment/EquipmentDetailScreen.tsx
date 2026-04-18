@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceTask } from '../../types';
 
@@ -87,15 +87,41 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
             anchor={<IconButton icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
           >
             <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('EquipmentForm', { equipmentId }); }} title="Edit" />
-            {equipment.status === 'active' && (
+            {['active', 'broken'].includes(equipment.status) && (
               <>
                 <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('archived'); }} title="Archive" />
                 <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('sold'); }} title="Mark as Sold" />
-                <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('broken'); }} title="Mark as Broken" />
+                {equipment.status === 'active' && (
+                  <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('broken'); }} title="Mark as Broken" />
+                )}
+                <Divider />
+                <Menu.Item
+                  title="Delete…"
+                  titleStyle={{ color: '#999' }}
+                  onPress={() => { setMenuVisible(false); Alert.alert('Archive First', 'Archive or mark as sold before deleting.'); }}
+                />
               </>
             )}
-            {equipment.status !== 'active' && (
-              <Menu.Item onPress={() => { setMenuVisible(false); archiveEquipment(equipmentId, 'active').then(load); }} title="Restore to Active" />
+            {!['active', 'broken'].includes(equipment.status) && (
+              <>
+                <Menu.Item onPress={() => { setMenuVisible(false); archiveEquipment(equipmentId, 'active').then(load); }} title="Restore to Active" />
+                <Divider />
+                <Menu.Item
+                  title="Delete Permanently"
+                  titleStyle={{ color: '#c62828' }}
+                  onPress={() => {
+                    setMenuVisible(false);
+                    Alert.alert(
+                      'Delete Equipment',
+                      `Permanently delete "${equipment.name}"? This cannot be undone.`,
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Delete', style: 'destructive', onPress: async () => { await deleteEquipment(equipmentId); navigation.goBack(); } },
+                      ]
+                    );
+                  }}
+                />
+              </>
             )}
           </Menu>
         )}
