@@ -103,7 +103,8 @@ export async function logMaintenance(
   photoUris: string[],
   equipmentFarmId: string
 ): Promise<MaintenanceLog> {
-  const user = auth.currentUser!;
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
   const completedAt = Timestamp.now();
 
   // Upload receipts and photos
@@ -115,18 +116,18 @@ export async function logMaintenance(
   );
 
   const logRef = doc(collection(db, 'maintenanceLogs'));
-  const log: MaintenanceLog = {
+  const log: any = {
     id: logRef.id,
     maintenanceTaskId: task.id,
     equipmentId: task.equipmentId,
     completedAt,
     hoursAtCompletion,
     userId: user.uid,
-    notes,
-    diagnosticNotes,
-    partsUsed,
-    receiptUrls,
-    photoUrls,
+    notes: notes || '',
+    diagnosticNotes: diagnosticNotes || '',
+    partsUsed: partsUsed ?? [],
+    receiptUrls: receiptUrls ?? [],
+    photoUrls: photoUrls ?? [],
     signedBy: user.uid,
     signedAt: completedAt,
   };

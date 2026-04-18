@@ -66,6 +66,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
     }
     setSaving(true);
     try {
+      console.log('[MaintenanceLog] saving for task:', task.id, 'hours:', hours);
       await logMaintenance(
         task,
         parseFloat(hours),
@@ -76,9 +77,11 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
         photoUris,
         activeFarm.farmId
       );
+      console.log('[MaintenanceLog] saved successfully');
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      console.error('[MaintenanceLog] save error:', e);
+      Alert.alert('Error logging completion', e.message ?? 'Unknown error');
     } finally {
       setSaving(false);
     }
