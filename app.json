@@ -40,7 +40,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-firebase/app",
       "expo-camera",
       "expo-local-authentication",
       [
