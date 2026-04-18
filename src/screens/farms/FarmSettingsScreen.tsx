@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider, Dialog, Portal } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
@@ -12,6 +15,7 @@ const ROLES: UserRole[] = ['owner', 'worker', 'mechanic', 'auditor'];
 
 export default function FarmSettingsScreen() {
   const { activeFarm, setActiveFarm } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('worker');
@@ -85,6 +89,12 @@ export default function FarmSettingsScreen() {
       </View>
       <Button mode="outlined" icon="qrcode" onPress={handleShowQR} loading={qrLoading} style={styles.button}>
         Generate QR Code
+      </Button>
+
+      <Divider style={styles.divider} />
+
+      <Button mode="outlined" icon="tag-multiple-outline" onPress={() => navigation.navigate('CategorySettings')} style={styles.button}>
+        Manage Categories
       </Button>
 
       <Divider style={styles.divider} />

@@ -16,6 +16,7 @@ import BiometricScreen from '../screens/auth/BiometricScreen';
 import FarmSelectorScreen from '../screens/farms/FarmSelectorScreen';
 import CreateFarmScreen from '../screens/farms/CreateFarmScreen';
 import FarmSettingsScreen from '../screens/farms/FarmSettingsScreen';
+import CategorySettingsScreen from '../screens/farms/CategorySettingsScreen';
 
 // Equipment screens
 import EquipmentListScreen from '../screens/equipment/EquipmentListScreen';
@@ -45,6 +46,7 @@ export type RootStackParamList = {
   CreateFarm: undefined;
   Main: undefined;
   FarmSettings: undefined;
+  CategorySettings: undefined;
   EquipmentDetail: { equipmentId: string };
   EquipmentForm: { equipmentId?: string; prefillSerial?: string };
   SerialScan: undefined;
@@ -114,6 +116,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="FarmSettings" component={FarmSettingsScreen} options={{ headerShown: true, title: 'Farm Settings' }} />
+            <Stack.Screen name="CategorySettings" component={CategorySettingsScreen} options={{ headerShown: true, title: 'Categories' }} />
             <Stack.Screen name="EquipmentDetail" component={EquipmentDetailScreen} options={{ headerShown: true, title: 'Equipment' }} />
             <Stack.Screen name="EquipmentForm" component={EquipmentFormScreen} options={{ headerShown: true, title: 'Equipment' }} />
             <Stack.Screen name="SerialScan" component={SerialScanScreen} options={{ headerShown: true, title: 'Scan Serial Number' }} />

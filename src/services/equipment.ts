@@ -115,11 +115,19 @@ export async function getCategories(farmId: string): Promise<Category[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
 }
 
-export async function createCategory(farmId: string, name: string): Promise<Category> {
+export async function createCategory(farmId: string, name: string, defaultFields: Category['defaultFields'] = []): Promise<Category> {
   const ref = doc(collection(db, 'categories'));
-  const cat: Category = { id: ref.id, farmId, name, builtIn: false, defaultFields: [] };
+  const cat: Category = { id: ref.id, farmId, name, builtIn: false, defaultFields };
   await setDoc(ref, cat);
   return cat;
+}
+
+export async function updateCategory(id: string, data: Partial<Pick<Category, 'name' | 'defaultFields'>>): Promise<void> {
+  await updateDoc(doc(db, 'categories', id), data);
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'categories', id));
 }
 
 // ─── Equipment ─────────────────────────────────────────────────────────────
