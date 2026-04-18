@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, Divider, Dialog, Portal } from 'react-native-paper';
+import { Text, TextInput, Button, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../hooks/useAuth';
 import { inviteUserToFarm, createQRInvite } from '../../services/farms';
@@ -17,6 +17,9 @@ export default function FarmSettingsScreen() {
   const { activeFarm, setActiveFarm } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
+  const [tab, setTab] = useState<'invites' | 'general'>('invites');
+
+  // Invite state
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('worker');
   const [loading, setLoading] = useState(false);
@@ -52,61 +55,84 @@ export default function FarmSettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
-      <Text variant="titleLarge" style={styles.section}>Farm: {activeFarm?.farmName}</Text>
+    <View style={styles.wrapper}>
+      <Text variant="titleMedium" style={styles.farmName}>{activeFarm?.farmName}</Text>
 
-      <Divider style={styles.divider} />
-
-      <Text variant="titleMedium" style={styles.section}>Invite by Email</Text>
-      <TextInput
-        label="Email address"
-        value={inviteEmail}
-        onChangeText={setInviteEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        mode="outlined"
-        style={styles.input}
+      <SegmentedButtons
+        value={tab}
+        onValueChange={v => setTab(v as 'invites' | 'general')}
+        buttons={[
+          { value: 'invites', label: 'Invites', icon: 'account-plus-outline' },
+          { value: 'general', label: 'General', icon: 'cog-outline' },
+        ]}
+        style={styles.tabs}
       />
-      <Text variant="labelLarge" style={styles.roleLabel}>Role</Text>
-      <View style={styles.roleRow}>
-        {ROLES.map((r) => (
-          <Button key={r} mode={inviteRole === r ? 'contained' : 'outlined'} onPress={() => setInviteRole(r)} compact style={styles.roleButton}>{r}</Button>
-        ))}
-      </View>
-      <Button mode="contained" onPress={handleInvite} loading={loading} style={styles.button}>
-        Send Invite
-      </Button>
 
-      <Divider style={styles.divider} />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}>
+        {tab === 'invites' && (
+          <>
+            <Text variant="titleSmall" style={styles.sectionTitle}>Invite by Email</Text>
+            <Text variant="bodySmall" style={styles.hint}>They'll be added when they next log in.</Text>
+            <TextInput
+              label="Email address"
+              value={inviteEmail}
+              onChangeText={setInviteEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              mode="outlined"
+              style={styles.input}
+            />
+            <Text variant="labelLarge" style={styles.roleLabel}>Role</Text>
+            <View style={styles.roleRow}>
+              {ROLES.map(r => (
+                <Button key={r} mode={inviteRole === r ? 'contained' : 'outlined'} onPress={() => setInviteRole(r)} compact style={styles.roleButton}>{r}</Button>
+              ))}
+            </View>
+            <Button mode="contained" onPress={handleInvite} loading={loading} style={styles.button}>
+              Send Invite
+            </Button>
 
-      <Text variant="titleMedium" style={styles.section}>Invite by QR Code</Text>
-      <Text variant="bodySmall" style={styles.qrNote}>Generate a QR code to share. Valid for 7 days.</Text>
-      <Text variant="labelLarge" style={styles.roleLabel}>Role</Text>
-      <View style={styles.roleRow}>
-        {ROLES.map((r) => (
-          <Button key={r} mode={qrRole === r ? 'contained' : 'outlined'} onPress={() => setQrRole(r)} compact style={styles.roleButton}>{r}</Button>
-        ))}
-      </View>
-      <Button mode="outlined" icon="qrcode" onPress={handleShowQR} loading={qrLoading} style={styles.button}>
-        Generate QR Code
-      </Button>
+            <Divider style={styles.divider} />
 
-      <Divider style={styles.divider} />
+            <Text variant="titleSmall" style={styles.sectionTitle}>Invite by QR Code</Text>
+            <Text variant="bodySmall" style={styles.hint}>Generate a scannable code. Valid for 7 days.</Text>
+            <Text variant="labelLarge" style={styles.roleLabel}>Role</Text>
+            <View style={styles.roleRow}>
+              {ROLES.map(r => (
+                <Button key={r} mode={qrRole === r ? 'contained' : 'outlined'} onPress={() => setQrRole(r)} compact style={styles.roleButton}>{r}</Button>
+              ))}
+            </View>
+            <Button mode="outlined" icon="qrcode" onPress={handleShowQR} loading={qrLoading} style={styles.button}>
+              Generate QR Code
+            </Button>
+          </>
+        )}
 
-      <Button mode="outlined" icon="tag-multiple-outline" onPress={() => navigation.navigate('CategorySettings')} style={styles.button}>
-        Manage Categories
-      </Button>
+        {tab === 'general' && (
+          <>
+            <Text variant="titleSmall" style={styles.sectionTitle}>Equipment</Text>
+            <Button mode="outlined" icon="tag-multiple-outline" onPress={() => navigation.navigate('CategorySettings')} style={styles.button}>
+              Manage Categories
+            </Button>
 
-      <Divider style={styles.divider} />
+            <Divider style={styles.divider} />
 
-      <Button mode="outlined" onPress={() => setActiveFarm(null)} style={styles.button}>Switch Farm</Button>
-      <Button onPress={() => signOut()}>Sign Out</Button>
+            <Text variant="titleSmall" style={styles.sectionTitle}>Account</Text>
+            <Button mode="outlined" onPress={() => setActiveFarm(null)} style={styles.button}>
+              Switch Farm
+            </Button>
+            <Button onPress={() => signOut()} textColor="#c62828">
+              Sign Out
+            </Button>
+          </>
+        )}
+      </ScrollView>
 
       <Portal>
         <Dialog visible={!!qrToken} onDismiss={() => setQrToken(null)}>
           <Dialog.Title>Scan to Join — {qrRole}</Dialog.Title>
           <Dialog.Content style={styles.qrContainer}>
-            <Text variant="bodySmall" style={styles.qrNote}>{activeFarm?.farmName}</Text>
+            <Text variant="bodySmall" style={styles.hint}>{activeFarm?.farmName}</Text>
             {qrToken && <QRCode value={qrToken} size={220} />}
             <Text variant="bodySmall" style={styles.qrExpiry}>Expires in 7 days</Text>
           </Dialog.Content>
@@ -115,20 +141,22 @@ export default function FarmSettingsScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
-  section: { marginVertical: 12, fontWeight: 'bold' },
-  divider: { marginVertical: 16 },
+  wrapper: { flex: 1, backgroundColor: '#f5f5f5' },
+  farmName: { paddingHorizontal: 16, paddingTop: 12, fontWeight: 'bold', color: '#2e7d32' },
+  tabs: { margin: 16, marginBottom: 0 },
+  sectionTitle: { fontWeight: 'bold', marginBottom: 4, color: '#333' },
+  hint: { color: '#666', marginBottom: 12 },
+  divider: { marginVertical: 20 },
   input: { marginBottom: 12 },
   roleLabel: { marginBottom: 8, color: '#666' },
   roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   roleButton: { marginRight: 4 },
   button: { marginBottom: 12 },
-  qrNote: { color: '#666', marginBottom: 12 },
   qrContainer: { alignItems: 'center' },
   qrExpiry: { color: '#999', marginTop: 12 },
 });
