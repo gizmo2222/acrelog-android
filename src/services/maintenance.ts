@@ -63,13 +63,10 @@ export function getMaintenanceStatus(task: MaintenanceTask, currentHours: number
 }
 
 export async function getMaintenanceTasks(equipmentId: string): Promise<MaintenanceTask[]> {
-  const q = query(
-    collection(db, 'maintenanceTasks'),
-    where('equipmentId', '==', equipmentId),
-    orderBy('name')
-  );
+  const q = query(collection(db, 'maintenanceTasks'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceTask));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceTask))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function createMaintenanceTask(
@@ -158,13 +155,10 @@ async function uploadMaintenanceFile(
 }
 
 export async function getMaintenanceLogs(equipmentId: string): Promise<MaintenanceLog[]> {
-  const q = query(
-    collection(db, 'maintenanceLogs'),
-    where('equipmentId', '==', equipmentId),
-    orderBy('completedAt', 'desc')
-  );
+  const q = query(collection(db, 'maintenanceLogs'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceLog));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceLog))
+    .sort((a, b) => b.completedAt.toMillis() - a.completedAt.toMillis());
 }
 
 // ─── Import from URL ────────────────────────────────────────────────────────

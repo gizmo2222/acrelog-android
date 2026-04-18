@@ -19,9 +19,10 @@ import { getMaintenanceTasks, updateMaintenanceTask } from './maintenance';
 // ─── Projects ──────────────────────────────────────────────────────────────
 
 export async function getProjects(farmId: string): Promise<Project[]> {
-  const q = query(collection(db, 'projects'), where('farmId', '==', farmId), orderBy('createdAt', 'desc'));
+  const q = query(collection(db, 'projects'), where('farmId', '==', farmId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project))
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
 export async function createProject(farmId: string, name: string): Promise<Project> {
@@ -46,9 +47,10 @@ export async function updateProjectStatus(id: string, status: ProjectStatus): Pr
 // ─── Tasks ─────────────────────────────────────────────────────────────────
 
 export async function getTasks(projectId: string): Promise<Task[]> {
-  const q = query(collection(db, 'tasks'), where('projectId', '==', projectId), orderBy('createdAt'));
+  const q = query(collection(db, 'tasks'), where('projectId', '==', projectId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task))
+    .sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
 }
 
 export async function createTask(

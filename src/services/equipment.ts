@@ -125,9 +125,10 @@ export async function createCategory(farmId: string, name: string): Promise<Cate
 // ─── Equipment ─────────────────────────────────────────────────────────────
 
 export async function getEquipment(farmId: string): Promise<Equipment[]> {
-  const q = query(collection(db, 'equipment'), where('farmId', '==', farmId), orderBy('name'));
+  const q = query(collection(db, 'equipment'), where('farmId', '==', farmId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Equipment));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Equipment))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getEquipmentById(id: string): Promise<Equipment | null> {
@@ -217,13 +218,10 @@ export async function addHours(equipmentId: string, hours: number): Promise<void
 }
 
 export async function getMeterReadings(equipmentId: string): Promise<MeterReading[]> {
-  const q = query(
-    collection(db, 'meterReadings'),
-    where('equipmentId', '==', equipmentId),
-    orderBy('recordedAt', 'desc')
-  );
+  const q = query(collection(db, 'meterReadings'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MeterReading));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MeterReading))
+    .sort((a, b) => b.recordedAt.toMillis() - a.recordedAt.toMillis());
 }
 
 // ─── Downtime ──────────────────────────────────────────────────────────────
@@ -247,11 +245,8 @@ export async function resolveDowntime(recordId: string): Promise<void> {
 }
 
 export async function getDowntimeRecords(equipmentId: string): Promise<DowntimeRecord[]> {
-  const q = query(
-    collection(db, 'downtimeRecords'),
-    where('equipmentId', '==', equipmentId),
-    orderBy('startedAt', 'desc')
-  );
+  const q = query(collection(db, 'downtimeRecords'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as DowntimeRecord));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as DowntimeRecord))
+    .sort((a, b) => b.startedAt.toMillis() - a.startedAt.toMillis());
 }
