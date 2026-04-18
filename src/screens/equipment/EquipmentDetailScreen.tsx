@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
-import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
@@ -25,6 +25,8 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [brokenDialogVisible, setBrokenDialogVisible] = useState(false);
+  const [breakReason, setBreakReason] = useState('');
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -49,17 +51,21 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
 
   async function handleArchive(status: 'archived' | 'sold' | 'broken') {
     if (status === 'broken') {
-      Alert.prompt('Reason', 'Why is this equipment broken?', async (reason) => {
-        if (!reason) return;
-        await archiveEquipment(equipmentId, status, reason);
-        navigation.goBack();
-      });
+      setBreakReason('');
+      setBrokenDialogVisible(true);
     } else {
       Alert.alert('Confirm', `Mark as ${status}?`, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Confirm', onPress: async () => { await archiveEquipment(equipmentId, status); navigation.goBack(); } },
       ]);
     }
+  }
+
+  async function confirmBroken() {
+    if (!breakReason.trim()) return;
+    setBrokenDialogVisible(false);
+    await archiveEquipment(equipmentId, 'broken', breakReason.trim());
+    navigation.goBack();
   }
 
   if (loading || !equipment) {
@@ -169,6 +175,24 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           History
         </Button>
       </View>
+      <Portal>
+        <Dialog visible={brokenDialogVisible} onDismiss={() => setBrokenDialogVisible(false)}>
+          <Dialog.Title>Mark as Broken</Dialog.Title>
+          <Dialog.Content>
+            <PaperTextInput
+              label="Reason *"
+              value={breakReason}
+              onChangeText={setBreakReason}
+              mode="outlined"
+              autoFocus
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setBrokenDialogVisible(false)}>Cancel</Button>
+            <Button onPress={confirmBroken} disabled={!breakReason.trim()}>Confirm</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }
