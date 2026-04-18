@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,6 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function MaintenanceScheduleScreen({ route, navigation }: Props) {
   const { equipmentId } = route.params;
   const { activeFarm } = useAuth();
+  const insets = useSafeAreaInsets();
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +215,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       />
 
       {canEdit && (
-        <FAB icon="plus" style={styles.fab} onPress={() => setShowAddForm(true)} />
+        <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => setShowAddForm(true)} />
       )}
     </View>
   );

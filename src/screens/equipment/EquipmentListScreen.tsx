@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +21,7 @@ const STATUS_COLORS: Record<MaintenanceStatus, string> = {
 export default function EquipmentListScreen() {
   const navigation = useNavigation<Nav>();
   const { activeFarm } = useAuth();
+  const insets = useSafeAreaInsets();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
@@ -146,13 +148,13 @@ export default function EquipmentListScreen() {
         <>
           <FAB
             icon="camera"
-            style={[styles.fab, styles.fabSecondary]}
+            style={[styles.fab, { bottom: 80 + insets.bottom, backgroundColor: '#555' }]}
             onPress={() => navigation.navigate('SerialScan')}
             small
           />
           <FAB
             icon="plus"
-            style={styles.fab}
+            style={[styles.fab, { bottom: 16 + insets.bottom }]}
             onPress={() => navigation.navigate('EquipmentForm', {})}
           />
         </>
@@ -177,6 +179,5 @@ const styles = StyleSheet.create({
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#999', marginTop: 48 },
-  fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
-  fabSecondary: { bottom: 80, backgroundColor: '#555' },
+  fab: { position: 'absolute', right: 16, backgroundColor: '#2e7d32' },
 });

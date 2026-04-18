@@ -46,7 +46,7 @@ export function getMaintenanceStatus(task: MaintenanceTask, currentHours: number
   let hoursOverdue = false;
   let datesOverdue = false;
 
-  if (task.nextDueHours !== undefined) {
+  if (task.nextDueHours != null) {
     if (currentHours >= task.nextDueHours) hoursOverdue = true;
     else if (currentHours >= task.nextDueHours - hoursSoonWindow) hoursDue = true;
   }
