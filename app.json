@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Farm Manager",
-    "slug": "farm-manager-android",
+    "name": "AcreLog",
+    "slug": "acrelog-android",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,7 +34,7 @@
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
       ],
-      "package": "com.farmmanager.app"
+      "package": "com.acrelog.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,7 +46,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Farm Manager to access your photos for equipment images"
+          "photosPermission": "Allow AcreLog to access your photos for equipment images"
         }
       ]
     ]

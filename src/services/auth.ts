@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from './firebase';
 import { UserProfile } from '../types';
 
-const BIOMETRIC_KEY = '@farm_manager_biometric_enabled';
+const BIOMETRIC_KEY = '@acrelog_biometric_enabled';
 
 export async function signIn(email: string, password: string): Promise<User> {
   const result = await signInWithEmailAndPassword(auth, email, password);

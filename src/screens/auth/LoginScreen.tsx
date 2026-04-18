@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Surface style={styles.card} elevation={2}>
-        <Text variant="headlineMedium" style={styles.title}>Farm Manager</Text>
+        <Text variant="headlineMedium" style={styles.title}>AcreLog</Text>
         <Text variant="bodyMedium" style={styles.subtitle}>Sign in to continue</Text>
 
         <TextInput
