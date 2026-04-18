@@ -78,7 +78,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       Alert.alert('Permission required', 'Camera access is needed to take photos.');
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8, cameraType: ImagePicker.CameraType.back });
     if (!result.canceled) setPrimaryImageUri(result.assets[0].uri);
   }
 
