@@ -147,14 +147,12 @@ export async function createEquipment(data: Omit<Equipment, 'id' | 'createdAt' |
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
   const ref = doc(collection(db, 'equipment'));
-  const equipment: Equipment = {
-    ...data,
-    id: ref.id,
-    createdAt: serverTimestamp() as any,
-    createdBy: user.uid,
-  };
-  await setDoc(ref, equipment);
-  return equipment;
+  const clean: any = { id: ref.id, createdAt: serverTimestamp(), createdBy: user.uid };
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== undefined) clean[k] = v;
+  }
+  await setDoc(ref, clean);
+  return clean as Equipment;
 }
 
 export async function updateEquipment(id: string, data: Partial<Equipment>): Promise<void> {

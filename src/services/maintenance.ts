@@ -73,9 +73,13 @@ export async function createMaintenanceTask(
   data: Omit<MaintenanceTask, 'id' | 'createdAt'>
 ): Promise<MaintenanceTask> {
   const ref = doc(collection(db, 'maintenanceTasks'));
-  const task: MaintenanceTask = { ...data, id: ref.id, createdAt: serverTimestamp() as any };
-  await setDoc(ref, task);
-  return task;
+  // Strip undefined fields — Firestore rejects them
+  const clean: any = { id: ref.id, createdAt: serverTimestamp() };
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== undefined) clean[k] = v;
+  }
+  await setDoc(ref, clean);
+  return clean as MaintenanceTask;
 }
 
 export async function updateMaintenanceTask(id: string, data: Partial<MaintenanceTask>): Promise<void> {

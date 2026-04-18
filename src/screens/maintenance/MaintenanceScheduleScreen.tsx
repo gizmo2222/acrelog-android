@@ -49,18 +49,24 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
 
   async function handleAddTask() {
     if (!taskName) return;
-    await createMaintenanceTask({
-      equipmentId,
-      name: taskName,
-      intervalHours: intervalHours ? parseInt(intervalHours) : undefined,
-      intervalDays: intervalDays ? parseInt(intervalDays) : undefined,
-      imported: false,
-    });
-    setTaskName('');
-    setIntervalHours('');
-    setIntervalDays('');
-    setShowAddForm(false);
-    load();
+    try {
+      const taskData: any = {
+        equipmentId,
+        name: taskName.trim(),
+        imported: false,
+      };
+      if (intervalHours) taskData.intervalHours = parseInt(intervalHours);
+      if (intervalDays) taskData.intervalDays = parseInt(intervalDays);
+
+      await createMaintenanceTask(taskData);
+      setTaskName('');
+      setIntervalHours('');
+      setIntervalDays('');
+      setShowAddForm(false);
+      load();
+    } catch (e: any) {
+      Alert.alert('Error saving task', e.message ?? 'Unknown error');
+    }
   }
 
   async function handleImport() {
