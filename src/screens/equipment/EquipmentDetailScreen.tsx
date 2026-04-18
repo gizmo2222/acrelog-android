@@ -89,6 +89,9 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
             <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('EquipmentForm', { equipmentId }); }} title="Edit" />
             {['active', 'broken'].includes(equipment.status) && (
               <>
+                {equipment.status === 'broken' && (
+                  <Menu.Item onPress={() => { setMenuVisible(false); archiveEquipment(equipmentId, 'active').then(load); }} title="Restore to Active" />
+                )}
                 <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('archived'); }} title="Archive" />
                 <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('sold'); }} title="Mark as Sold" />
                 {equipment.status === 'active' && (

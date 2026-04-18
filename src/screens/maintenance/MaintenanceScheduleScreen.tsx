@@ -8,7 +8,7 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
 import {
-  getMaintenanceTasks, createMaintenanceTask, deleteMaintenanceTask,
+  getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
   getMaintenanceStatus, scrapeMaintenanceSchedule,
 } from '../../services/maintenance';
 import { Equipment, MaintenanceTask } from '../../types';
@@ -34,10 +34,11 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const [importLoading, setImportLoading] = useState(false);
   const [importedTasks, setImportedTasks] = useState<Omit<MaintenanceTask, 'id' | 'equipmentId' | 'createdAt'>[]>([]);
 
-  // New task form state
+  // Add/edit task form state
   const [taskName, setTaskName] = useState('');
   const [intervalHours, setIntervalHours] = useState('');
   const [intervalDays, setIntervalDays] = useState('');
+  const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
 
   useFocusEffect(useCallback(() => { load(); }, [equipmentId]));
 
@@ -49,22 +50,35 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     setLoading(false);
   }
 
-  async function handleAddTask() {
+  function startEdit(task: MaintenanceTask) {
+    setEditingTask(task);
+    setTaskName(task.name);
+    setIntervalHours(task.intervalHours ? String(task.intervalHours) : '');
+    setIntervalDays(task.intervalDays ? String(task.intervalDays) : '');
+    setShowAddForm(true);
+  }
+
+  function cancelForm() {
+    setEditingTask(null);
+    setTaskName('');
+    setIntervalHours('');
+    setIntervalDays('');
+    setShowAddForm(false);
+  }
+
+  async function handleSaveTask() {
     if (!taskName) return;
     try {
-      const taskData: any = {
-        equipmentId,
-        name: taskName.trim(),
-        imported: false,
-      };
-      if (intervalHours) taskData.intervalHours = parseInt(intervalHours);
-      if (intervalDays) taskData.intervalDays = parseInt(intervalDays);
+      const updates: any = { name: taskName.trim() };
+      updates.intervalHours = intervalHours ? parseInt(intervalHours) : null;
+      updates.intervalDays = intervalDays ? parseInt(intervalDays) : null;
 
-      await createMaintenanceTask(taskData);
-      setTaskName('');
-      setIntervalHours('');
-      setIntervalDays('');
-      setShowAddForm(false);
+      if (editingTask) {
+        await updateMaintenanceTask(editingTask.id, updates);
+      } else {
+        await createMaintenanceTask({ equipmentId, imported: false, ...updates });
+      }
+      cancelForm();
       load();
     } catch (e: any) {
       Alert.alert('Error saving task', e.message ?? 'Unknown error');
@@ -148,17 +162,17 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
               </Card>
             )}
 
-            {/* Add task form */}
+            {/* Add / edit task form */}
             {canEdit && showAddForm && (
               <Card style={styles.card}>
                 <Card.Content>
-                  <Text variant="titleSmall" style={styles.sectionTitle}>New Task</Text>
+                  <Text variant="titleSmall" style={styles.sectionTitle}>{editingTask ? 'Edit Task' : 'New Task'}</Text>
                   <TextInput label="Task name *" value={taskName} onChangeText={setTaskName} mode="outlined" style={styles.input} />
                   <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
                   <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
                   <View style={styles.formRow}>
-                    <Button onPress={() => setShowAddForm(false)}>Cancel</Button>
-                    <Button mode="contained" onPress={handleAddTask}>Save</Button>
+                    <Button onPress={cancelForm}>Cancel</Button>
+                    <Button mode="contained" onPress={handleSaveTask}>Save</Button>
                   </View>
                 </Card.Content>
               </Card>
@@ -178,7 +192,10 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     {status === 'ok' ? 'OK' : status === 'due_soon' ? 'Due Soon' : 'Overdue'}
                   </Chip>
                   {canEdit && (
-                    <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                    <>
+                      <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                      <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                    </>
                   )}
                 </View>
                 {item.intervalHours && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalHours} hours</Text>}
@@ -216,7 +233,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       />
 
       {canEdit && (
-        <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => setShowAddForm(true)} />
+        <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => { cancelForm(); setShowAddForm(true); }} />
       )}
     </View>
   );
