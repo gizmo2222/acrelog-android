@@ -167,10 +167,16 @@ export async function updateEquipment(id: string, data: Partial<Equipment>): Pro
   await updateDoc(doc(db, 'equipment', id), data);
 }
 
-export async function archiveEquipment(id: string, status: EquipmentStatus, breakReason?: string): Promise<void> {
-  const update: Partial<Equipment> = { status };
-  if (status === 'broken' && breakReason) update.breakReason = breakReason;
-  await updateDoc(doc(db, 'equipment', id), update);
+export async function archiveEquipment(id: string, status: EquipmentStatus): Promise<void> {
+  await updateDoc(doc(db, 'equipment', id), { status, broken: false, breakReason: null });
+}
+
+export async function markBroken(id: string, reason: string): Promise<void> {
+  await updateDoc(doc(db, 'equipment', id), { broken: true, breakReason: reason });
+}
+
+export async function clearBroken(id: string): Promise<void> {
+  await updateDoc(doc(db, 'equipment', id), { broken: false, breakReason: null });
 }
 
 export async function deleteEquipment(id: string): Promise<void> {

@@ -1,8 +1,8 @@
 import { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'owner' | 'worker' | 'mechanic' | 'auditor';
-export type EquipmentStatus = 'active' | 'archived' | 'sold' | 'broken';
-export type MaintenanceStatus = 'ok' | 'due_soon' | 'overdue';
+export type EquipmentStatus = 'active' | 'archived' | 'sold';
+export type MaintenanceStatus = 'ok' | 'due_soon' | 'overdue' | 'broken';
 export type ProjectStatus = 'active' | 'archived';
 export type TaskStatus = 'pending' | 'completed';
 
@@ -29,6 +29,13 @@ export interface Farm {
   name: string;
   createdAt: Timestamp;
   createdBy: string;
+  // Optional detail fields
+  ownerName?: string;
+  address?: string;
+  acreage?: number;
+  purchaseDate?: string;
+  notes?: string;
+  locations?: string[];
 }
 
 // ─── Category ──────────────────────────────────────────────────────────────
@@ -70,6 +77,7 @@ export interface Equipment {
   totalHours: number;
   customFields: Record<string, string>;
   status: EquipmentStatus;
+  broken?: boolean;
   breakReason?: string;
   manufacturerUrl?: string;
   primaryImageUrl?: string;

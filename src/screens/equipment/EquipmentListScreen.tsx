@@ -1,26 +1,45 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton } from 'react-native-paper';
+import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton, Divider } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipment, getCategories } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
-import { Equipment, Category, EquipmentStatus, MaintenanceStatus } from '../../types';
+import { Equipment, Category, MaintenanceStatus } from '../../types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+type SortKey = 'name_asc' | 'name_desc' | 'hours_desc' | 'hours_asc' | 'maintenance';
 
 const STATUS_COLORS: Record<MaintenanceStatus, string> = {
   ok: '#2e7d32',
   due_soon: '#f57c00',
   overdue: '#c62828',
+  broken: '#7b1fa2',
 };
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'name_asc', label: 'Name A–Z' },
+  { value: 'name_desc', label: 'Name Z–A' },
+  { value: 'hours_desc', label: 'Hours ↓' },
+  { value: 'hours_asc', label: 'Hours ↑' },
+  { value: 'maintenance', label: 'Maintenance' },
+];
+
+const MAINT_FILTER_OPTIONS: { value: MaintenanceStatus | 'all'; label: string; color: string }[] = [
+  { value: 'all', label: 'All', color: '#666' },
+  { value: 'broken', label: 'Broken', color: '#7b1fa2' },
+  { value: 'overdue', label: 'Overdue', color: '#c62828' },
+  { value: 'due_soon', label: 'Due Soon', color: '#f57c00' },
+  { value: 'ok', label: 'Up to Date', color: '#2e7d32' },
+];
 
 export default function EquipmentListScreen() {
   const navigation = useNavigation<Nav>();
-  const { activeFarm } = useAuth();
+  const { activeFarm, setActiveFarm } = useAuth();
   const insets = useSafeAreaInsets();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -28,6 +47,12 @@ export default function EquipmentListScreen() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'archived'>('active');
   const [loading, setLoading] = useState(true);
   const [maintenanceStatus, setMaintenanceStatus] = useState<Record<string, MaintenanceStatus>>({});
+
+  // Filter/sort state
+  const [showFilters, setShowFilters] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [maintFilter, setMaintFilter] = useState<MaintenanceStatus | 'all'>('all');
+  const [sortBy, setSortBy] = useState<SortKey>('name_asc');
 
   useFocusEffect(
     useCallback(() => {
@@ -50,6 +75,7 @@ export default function EquipmentListScreen() {
       const statuses: Record<string, MaintenanceStatus> = {};
       await Promise.all(
         eq.filter(e => e.status === 'active').map(async (e) => {
+          if (e.broken) { statuses[e.id] = 'broken'; return; }
           const tasks = await getMaintenanceTasks(e.id);
           const worst = tasks.reduce<MaintenanceStatus>((acc, t) => {
             const s = getMaintenanceStatus(t, e.totalHours);
@@ -72,28 +98,152 @@ export default function EquipmentListScreen() {
     return categories.find(c => c.id === categoryId)?.name ?? 'Unknown';
   }
 
-  const filtered = equipment.filter(e => {
-    const matchesStatus = statusFilter === 'active'
-      ? ['active', 'broken'].includes(e.status)
-      : ['archived', 'sold'].includes(e.status);
-    const matchesSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) ||
-      e.brand.toLowerCase().includes(search.toLowerCase()) ||
-      e.model.toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const activeFilterCount = [
+    categoryFilter !== null,
+    maintFilter !== 'all',
+    sortBy !== 'name_asc',
+  ].filter(Boolean).length;
+
+  const filtered = equipment
+    .filter(e => {
+      const matchesStatus = statusFilter === 'active' ? e.status === 'active' : e.status !== 'active';
+      const matchesSearch = !search ||
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        e.brand.toLowerCase().includes(search.toLowerCase()) ||
+        e.model.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = !categoryFilter || e.categoryId === categoryFilter;
+      const matchesMaint = maintFilter === 'all' || e.status !== 'active' ||
+        (maintenanceStatus[e.id] ?? 'ok') === maintFilter;
+      return matchesStatus && matchesSearch && matchesCategory && matchesMaint;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name_desc': return b.name.localeCompare(a.name);
+        case 'hours_desc': return (b.totalHours ?? 0) - (a.totalHours ?? 0);
+        case 'hours_asc': return (a.totalHours ?? 0) - (b.totalHours ?? 0);
+        case 'maintenance': {
+          const order: Record<MaintenanceStatus, number> = { broken: 0, overdue: 1, due_soon: 2, ok: 3 };
+          return (order[maintenanceStatus[a.id] ?? 'ok']) - (order[maintenanceStatus[b.id] ?? 'ok']);
+        }
+        default: return a.name.localeCompare(b.name);
+      }
+    });
 
   if (loading) {
     return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text variant="headlineSmall" style={styles.title}>Equipment</Text>
+        <View style={styles.headerLeft}>
+          <Text variant="headlineSmall" style={styles.title}>Equipment</Text>
+          <IconButton
+            icon="swap-horizontal"
+            size={16}
+            iconColor="#888"
+            style={styles.farmSwitchIcon}
+            onPress={() => setActiveFarm(null)}
+          />
+          <Text variant="bodySmall" style={styles.farmNameLabel} onPress={() => setActiveFarm(null)}>
+            {activeFarm?.farmName}
+          </Text>
+        </View>
         <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
       </View>
 
-      <Searchbar placeholder="Search equipment..." value={search} onChangeText={setSearch} style={styles.search} />
+      <View style={styles.searchRow}>
+        <Searchbar
+          placeholder="Search equipment..."
+          value={search}
+          onChangeText={setSearch}
+          style={styles.search}
+        />
+        <IconButton
+          icon="tune-variant"
+          size={24}
+          onPress={() => setShowFilters(v => !v)}
+          iconColor={activeFilterCount > 0 ? '#2e7d32' : '#666'}
+          style={styles.filterIcon}
+        />
+      </View>
+
+      {showFilters && (
+        <View style={styles.filterPanel}>
+          {/* Category */}
+          <Text variant="labelSmall" style={styles.filterLabel}>Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            <Chip
+              compact
+              selected={categoryFilter === null}
+              onPress={() => setCategoryFilter(null)}
+              style={styles.filterChip}
+            >
+              All
+            </Chip>
+            {categories.map(cat => (
+              <Chip
+                key={cat.id}
+                compact
+                selected={categoryFilter === cat.id}
+                onPress={() => setCategoryFilter(categoryFilter === cat.id ? null : cat.id)}
+                style={styles.filterChip}
+              >
+                {cat.name}
+              </Chip>
+            ))}
+          </ScrollView>
+
+          {/* Maintenance status (active tab only) */}
+          {statusFilter === 'active' && (
+            <>
+              <Text variant="labelSmall" style={styles.filterLabel}>Maintenance</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+                {MAINT_FILTER_OPTIONS.map(opt => (
+                  <Chip
+                    key={opt.value}
+                    compact
+                    selected={maintFilter === opt.value}
+                    onPress={() => setMaintFilter(opt.value)}
+                    selectedColor={opt.color}
+                    style={styles.filterChip}
+                  >
+                    {opt.label}
+                  </Chip>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
+          {/* Sort */}
+          <Text variant="labelSmall" style={styles.filterLabel}>Sort by</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.chipRow, styles.chipRowLast]}>
+            {SORT_OPTIONS.map(opt => (
+              <Chip
+                key={opt.value}
+                compact
+                selected={sortBy === opt.value}
+                onPress={() => setSortBy(opt.value)}
+                style={styles.filterChip}
+              >
+                {opt.label}
+              </Chip>
+            ))}
+          </ScrollView>
+
+          {activeFilterCount > 0 && (
+            <Text
+              variant="labelSmall"
+              style={styles.clearFilters}
+              onPress={() => { setCategoryFilter(null); setMaintFilter('all'); setSortBy('name_asc'); }}
+            >
+              Clear filters
+            </Text>
+          )}
+
+          <Divider style={styles.filterDivider} />
+        </View>
+      )}
 
       <SegmentedButtons
         value={statusFilter}
@@ -124,19 +274,16 @@ export default function EquipmentListScreen() {
                   <Text variant="titleMedium">{item.name}</Text>
                   <Text variant="bodySmall" style={styles.subtitle}>{item.brand} {item.model}</Text>
                   <Text variant="bodySmall" style={styles.category}>{getCategoryName(item.categoryId)}</Text>
-                  {item.status === 'broken' && (
-                    <Chip compact style={styles.brokenChip} textStyle={{ color: 'white' }}>BROKEN</Chip>
-                  )}
-                  {['active', 'broken'].includes(item.status) && (
+                  {item.status === 'active' && (
                     <Chip
                       compact
                       style={[styles.statusChip, { backgroundColor: STATUS_COLORS[mStatus] }]}
                       textStyle={{ color: 'white' }}
                     >
-                      {mStatus === 'ok' ? 'Up to date' : mStatus === 'due_soon' ? 'Due soon' : 'Overdue'}
+                      {mStatus === 'ok' ? 'Up to date' : mStatus === 'due_soon' ? 'Due soon' : mStatus === 'overdue' ? 'Overdue' : 'Broken'}
                     </Chip>
                   )}
-                  {!['active', 'broken'].includes(item.status) && (
+                  {item.status !== 'active' && (
                     <Chip compact style={styles.archivedChip}>{item.status}</Chip>
                   )}
                 </View>
@@ -145,7 +292,9 @@ export default function EquipmentListScreen() {
           );
         }}
         ListEmptyComponent={
-          <Text style={styles.empty}>No equipment found</Text>
+          <Text style={styles.empty}>
+            {activeFilterCount > 0 ? 'No equipment matches your filters.' : 'No equipment found.'}
+          </Text>
         }
       />
 
@@ -171,10 +320,22 @@ export default function EquipmentListScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 16, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  header: { paddingLeft: 16, paddingRight: 4, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
-  search: { margin: 16, marginTop: 8 },
-  segment: { marginHorizontal: 16, marginBottom: 8 },
+  farmNameLabel: { color: '#888' },
+  farmSwitchIcon: { margin: 0, marginLeft: 2 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 8 },
+  search: { flex: 1 },
+  filterIcon: { margin: 0, marginLeft: 4 },
+  filterPanel: { backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 4, borderRadius: 8, paddingTop: 12, paddingHorizontal: 12 },
+  filterLabel: { color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  chipRow: { marginBottom: 10 },
+  chipRowLast: { marginBottom: 4 },
+  filterChip: { marginRight: 6 },
+  clearFilters: { color: '#c62828', textAlign: 'right', marginBottom: 8 },
+  filterDivider: { marginTop: 4 },
+  segment: { marginHorizontal: 16, marginVertical: 8 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   cardContent: { flexDirection: 'row', alignItems: 'center' },
   thumbnail: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
@@ -182,7 +343,6 @@ const styles = StyleSheet.create({
   subtitle: { color: '#666' },
   category: { color: '#888', fontSize: 11 },
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
-  brokenChip: { marginTop: 4, alignSelf: 'flex-start', backgroundColor: '#c62828' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#999', marginTop: 48 },
   fab: { position: 'absolute', right: 16, backgroundColor: '#2e7d32' },

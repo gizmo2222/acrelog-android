@@ -9,6 +9,8 @@ import {
   where,
   serverTimestamp,
   arrayUnion,
+  arrayRemove,
+  deleteDoc,
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
@@ -114,6 +116,39 @@ export async function redeemQRInvite(token: string, uid: string): Promise<string
   });
 
   return farmName;
+}
+
+export async function updateFarm(farmId: string, data: Partial<Pick<Farm, 'name' | 'ownerName' | 'address' | 'acreage' | 'purchaseDate' | 'notes'>>): Promise<void> {
+  await updateDoc(doc(db, 'farms', farmId), data);
+}
+
+export async function addFarmLocation(farmId: string, name: string): Promise<void> {
+  await updateDoc(doc(db, 'farms', farmId), { locations: arrayUnion(name.trim()) });
+}
+
+export async function removeFarmLocation(farmId: string, name: string): Promise<void> {
+  await updateDoc(doc(db, 'farms', farmId), { locations: arrayRemove(name) });
+}
+
+export async function leaveFarm(farmId: string): Promise<void> {
+  const user = auth.currentUser!;
+  const userSnap = await getDoc(doc(db, 'users', user.uid));
+  const memberships: FarmMembership[] = userSnap.data()?.farmMemberships ?? [];
+  const membership = memberships.find(m => m.farmId === farmId);
+  if (membership) {
+    await updateDoc(doc(db, 'users', user.uid), { farmMemberships: arrayRemove(membership) });
+  }
+}
+
+export async function deleteFarm(farmId: string): Promise<void> {
+  const user = auth.currentUser!;
+  await deleteDoc(doc(db, 'farms', farmId));
+  const userSnap = await getDoc(doc(db, 'users', user.uid));
+  const memberships: FarmMembership[] = userSnap.data()?.farmMemberships ?? [];
+  const membership = memberships.find(m => m.farmId === farmId);
+  if (membership) {
+    await updateDoc(doc(db, 'users', user.uid), { farmMemberships: arrayRemove(membership) });
+  }
 }
 
 export async function getFarm(farmId: string): Promise<Farm | null> {

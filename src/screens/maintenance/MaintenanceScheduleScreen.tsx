@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider } from 'react-native-paper';
+import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
@@ -36,6 +36,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
 
   // Add/edit task form state
   const [taskName, setTaskName] = useState('');
+  const [taskType, setTaskType] = useState<'recurring' | 'oneoff'>('recurring');
   const [intervalHours, setIntervalHours] = useState('');
   const [intervalDays, setIntervalDays] = useState('');
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
@@ -54,6 +55,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   function startEdit(task: MaintenanceTask) {
     setEditingTask(task);
     setTaskName(task.name);
+    const isOneOff = !task.intervalHours && !task.intervalDays;
+    setTaskType(isOneOff ? 'oneoff' : 'recurring');
     setIntervalHours(task.intervalHours ? String(task.intervalHours) : '');
     setIntervalDays(task.intervalDays ? String(task.intervalDays) : '');
     setShowAddForm(true);
@@ -62,6 +65,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   function cancelForm() {
     setEditingTask(null);
     setTaskName('');
+    setTaskType('recurring');
     setIntervalHours('');
     setIntervalDays('');
     setShowAddForm(false);
@@ -71,8 +75,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     if (!taskName) return;
     try {
       const updates: any = { name: taskName.trim() };
-      updates.intervalHours = intervalHours ? parseInt(intervalHours) : null;
-      updates.intervalDays = intervalDays ? parseInt(intervalDays) : null;
+      updates.intervalHours = taskType === 'recurring' && intervalHours ? parseInt(intervalHours) : null;
+      updates.intervalDays = taskType === 'recurring' && intervalDays ? parseInt(intervalDays) : null;
 
       if (editingTask) {
         await updateMaintenanceTask(editingTask.id, updates);
@@ -113,6 +117,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const canEdit = activeFarm?.role === 'owner';
   const canLog = activeFarm?.role !== 'auditor';
   const activeTasks = tasks.filter(t => !t.archived);
+  const recurringTasks = activeTasks.filter(t => t.intervalHours || t.intervalDays);
+  const oneOffTasks = activeTasks.filter(t => !t.intervalHours && !t.intervalDays);
   const archivedTasks = tasks.filter(t => t.archived);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
@@ -122,7 +128,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       <Text variant="titleMedium" style={styles.equipName}>{equipment?.name} — {equipment?.totalHours} hrs</Text>
 
       <FlatList
-        data={activeTasks}
+        data={recurringTasks}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}
         ListHeaderComponent={
@@ -171,8 +177,21 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                 <Card.Content>
                   <Text variant="titleSmall" style={styles.sectionTitle}>{editingTask ? 'Edit Task' : 'New Task'}</Text>
                   <TextInput label="Task name *" value={taskName} onChangeText={setTaskName} mode="outlined" style={styles.input} />
-                  <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
-                  <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
+                  <SegmentedButtons
+                    value={taskType}
+                    onValueChange={v => setTaskType(v as 'recurring' | 'oneoff')}
+                    buttons={[
+                      { value: 'recurring', label: 'Recurring' },
+                      { value: 'oneoff', label: 'One-off' },
+                    ]}
+                    style={styles.segmented}
+                  />
+                  {taskType === 'recurring' && (
+                    <>
+                      <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
+                      <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
+                    </>
+                  )}
                   <View style={styles.formRow}>
                     <Button onPress={cancelForm}>Cancel</Button>
                     <Button mode="contained" onPress={handleSaveTask}>Save</Button>
@@ -181,7 +200,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
               </Card>
             )}
 
-            <Text variant="labelLarge" style={styles.listHeader}>Tasks ({activeTasks.length})</Text>
+            {recurringTasks.length > 0 && <Text variant="labelLarge" style={styles.listHeader}>Recurring ({recurringTasks.length})</Text>}
+            {recurringTasks.length === 0 && oneOffTasks.length === 0 && <Text style={styles.empty}>No maintenance tasks. Add one or import from the manufacturer's site.</Text>}
           </>
         }
         renderItem={({ item }) => {
@@ -194,6 +214,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                   <Chip compact style={{ backgroundColor: STATUS_COLORS[status] }} textStyle={{ color: 'white' }}>
                     {status === 'ok' ? 'OK' : status === 'due_soon' ? 'Due Soon' : 'Overdue'}
                   </Chip>
+                  {item.imported && <Chip compact style={styles.importedChip}>Imported</Chip>}
                   {canEdit && (
                     <>
                       <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
@@ -233,40 +254,83 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
             </Card>
           );
         }}
-        ListEmptyComponent={<Text style={styles.empty}>No maintenance tasks. Add one or import from the manufacturer's site.</Text>}
-        ListFooterComponent={archivedTasks.length > 0 ? (
+        ListEmptyComponent={null}
+        ListFooterComponent={(
           <View>
-            <Button
-              mode="text"
-              icon={showArchived ? 'chevron-up' : 'chevron-down'}
-              onPress={() => setShowArchived(v => !v)}
-              style={styles.archivedToggle}
-              compact
-            >
-              Completed / Archived ({archivedTasks.length})
-            </Button>
-            {showArchived && archivedTasks.map(item => (
-              <Card key={item.id} style={[styles.card, styles.archivedCard]}>
-                <Card.Content>
-                  <View style={styles.taskHeader}>
-                    <Text variant="titleSmall" style={[styles.flex, styles.archivedText]}>{item.name}</Text>
-                    {canEdit && (
-                      <>
-                        <IconButton icon="restore" size={18} onPress={() => { archiveMaintenanceTask(item.id, false); load(); }} />
-                        <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
-                      </>
-                    )}
-                  </View>
-                  {item.lastCompletedAt && (
-                    <Text variant="bodySmall" style={styles.lastDone}>
-                      Completed: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
-                    </Text>
-                  )}
-                </Card.Content>
-              </Card>
-            ))}
+            {/* One-off tasks section */}
+            {oneOffTasks.length > 0 && (
+              <>
+                <Text variant="labelLarge" style={styles.listHeader}>One-off Tasks ({oneOffTasks.length})</Text>
+                {oneOffTasks.map(item => (
+                  <Card key={item.id} style={styles.card}>
+                    <Card.Content>
+                      <View style={styles.taskHeader}>
+                        <Text variant="titleSmall" style={styles.flex}>{item.name}</Text>
+                        <Chip compact style={styles.pendingChip} textStyle={{ color: '#1565c0' }}>Pending</Chip>
+                        {canEdit && (
+                          <>
+                            <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                            <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                          </>
+                        )}
+                      </View>
+                      {item.lastCompletedAt && (
+                        <Text variant="bodySmall" style={styles.lastDone}>
+                          Last done: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
+                        </Text>
+                      )}
+                      {canLog && (
+                        <Button
+                          mode="contained"
+                          compact
+                          style={styles.logBtn}
+                          onPress={() => navigation.navigate('MaintenanceLogForm', { taskId: item.id, equipmentId })}
+                        >
+                          Log Completion
+                        </Button>
+                      )}
+                    </Card.Content>
+                  </Card>
+                ))}
+              </>
+            )}
+
+            {/* Archived section */}
+            {archivedTasks.length > 0 && (
+              <>
+                <Button
+                  mode="text"
+                  icon={showArchived ? 'chevron-up' : 'chevron-down'}
+                  onPress={() => setShowArchived(v => !v)}
+                  style={styles.archivedToggle}
+                  compact
+                >
+                  Completed / Archived ({archivedTasks.length})
+                </Button>
+                {showArchived && archivedTasks.map(item => (
+                  <Card key={item.id} style={[styles.card, styles.archivedCard]}>
+                    <Card.Content>
+                      <View style={styles.taskHeader}>
+                        <Text variant="titleSmall" style={[styles.flex, styles.archivedText]}>{item.name}</Text>
+                        {canEdit && (
+                          <>
+                            <IconButton icon="restore" size={18} onPress={() => { archiveMaintenanceTask(item.id, false); load(); }} />
+                            <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                          </>
+                        )}
+                      </View>
+                      {item.lastCompletedAt && (
+                        <Text variant="bodySmall" style={styles.lastDone}>
+                          Completed: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
+                        </Text>
+                      )}
+                    </Card.Content>
+                  </Card>
+                ))}
+              </>
+            )}
           </View>
-        ) : null}
+        )}
       />
 
       {canEdit && (
@@ -297,5 +361,8 @@ const styles = StyleSheet.create({
   archivedToggle: { marginHorizontal: 16, marginTop: 8, alignSelf: 'flex-start' },
   archivedCard: { opacity: 0.6 },
   archivedText: { color: '#999' },
+  segmented: { marginBottom: 12 },
+  pendingChip: { backgroundColor: '#e3f2fd' },
+  importedChip: { backgroundColor: '#f3e5f5', marginLeft: 4 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });

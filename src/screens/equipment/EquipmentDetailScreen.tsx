@@ -6,16 +6,26 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours, setHours, getMeterReadings } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
-import { Equipment, Category, MaintenanceTask, MeterReading } from '../../types';
+import { getUserFarms } from '../../services/farms';
+import { auth } from '../../services/firebase';
+import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, Farm, UserRole } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_COLORS: Record<MaintenanceStatus, string> = {
   ok: '#2e7d32',
   due_soon: '#f57c00',
   overdue: '#c62828',
+  broken: '#7b1fa2',
+};
+
+const STATUS_LABELS: Record<MaintenanceStatus, string> = {
+  ok: 'Up to date',
+  due_soon: 'Due soon',
+  overdue: 'Overdue',
+  broken: 'Broken',
 };
 
 export default function EquipmentDetailScreen({ route, navigation }: Props) {
@@ -33,6 +43,9 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [hoursDialogVisible, setHoursDialogVisible] = useState(false);
   const [hoursInput, setHoursInput] = useState('');
   const [hoursMode, setHoursMode] = useState<'add' | 'set'>('add');
+  const [moveDialogVisible, setMoveDialogVisible] = useState(false);
+  const [otherFarms, setOtherFarms] = useState<{ farm: Farm; role: UserRole }[]>([]);
+  const [moving, setMoving] = useState(false);
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -59,23 +72,23 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     return activeFarm?.role === 'owner';
   }
 
-  async function handleArchive(status: 'archived' | 'sold' | 'broken') {
-    if (status === 'broken') {
-      setBreakReason('');
-      setBrokenDialogVisible(true);
-    } else {
-      Alert.alert('Confirm', `Mark as ${status}?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: async () => { await archiveEquipment(equipmentId, status); navigation.goBack(); } },
-      ]);
-    }
+  async function handleArchive(status: 'archived' | 'sold') {
+    Alert.alert('Confirm', `Mark as ${status}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Confirm', onPress: async () => { await archiveEquipment(equipmentId, status); navigation.goBack(); } },
+    ]);
+  }
+
+  function handleMarkBroken() {
+    setBreakReason('');
+    setBrokenDialogVisible(true);
   }
 
   async function confirmBroken() {
     if (!breakReason.trim()) return;
     setBrokenDialogVisible(false);
-    await archiveEquipment(equipmentId, 'broken', breakReason.trim());
-    navigation.goBack();
+    await markBroken(equipmentId, breakReason.trim());
+    load();
   }
 
   async function confirmHours() {
@@ -87,64 +100,90 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     load();
   }
 
+  async function handleOpenMove() {
+    setMenuVisible(false);
+    const uid = auth.currentUser?.uid;
+    if (!uid || !activeFarm) return;
+    const all = await getUserFarms(uid);
+    setOtherFarms(all.filter(f => f.farm.id !== activeFarm.farmId));
+    setMoveDialogVisible(true);
+  }
+
+  async function handleMoveTo(targetFarmId: string) {
+    setMoving(true);
+    try {
+      await updateEquipment(equipmentId, { farmId: targetFarmId, categoryId: '' } as any);
+      setMoveDialogVisible(false);
+      navigation.goBack();
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setMoving(false);
+    }
+  }
+
   const insets = useSafeAreaInsets();
 
   if (loading || !equipment) {
     return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
   }
 
+  const overallStatus: MaintenanceStatus = equipment.broken
+    ? 'broken'
+    : tasks.filter(t => !t.archived).reduce<MaintenanceStatus>((acc, t) => {
+        const s = getMaintenanceStatus(t, equipment.totalHours);
+        if (s === 'overdue') return 'overdue';
+        if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
+        return acc;
+      }, 'ok');
+
+  // Pick the most informative custom fields for the summary (all of them, up to 6)
+  const summaryFields = category?.defaultFields
+    .filter(f => equipment.customFields?.[f.key])
+    .slice(0, 6) ?? [];
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
-      {/* Header row with menu */}
+      {/* Header row */}
       <View style={styles.headerRow}>
         <Text variant="headlineSmall" style={styles.name}>{equipment.name}</Text>
         {canEdit() && (
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={<IconButton icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
-          >
-            <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('EquipmentForm', { equipmentId }); }} title="Edit" />
-            {['active', 'broken'].includes(equipment.status) && (
-              <>
-                {equipment.status === 'broken' && (
+          <View style={styles.headerActions}>
+            <IconButton icon="pencil-outline" size={22} onPress={() => navigation.navigate('EquipmentForm', { equipmentId })} />
+            <Menu
+              visible={menuVisible}
+              onDismiss={() => setMenuVisible(false)}
+              anchor={<IconButton icon="dots-vertical" size={22} onPress={() => setMenuVisible(true)} />}
+            >
+              {equipment.status === 'active' ? (
+                <>
+                  <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('archived'); }} title="Archive" />
+                  <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('sold'); }} title="Mark as Sold" />
+                  <Menu.Item onPress={handleOpenMove} title="Move to Farm…" />
+                </>
+              ) : (
+                <>
                   <Menu.Item onPress={() => { setMenuVisible(false); archiveEquipment(equipmentId, 'active').then(load); }} title="Restore to Active" />
-                )}
-                <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('archived'); }} title="Archive" />
-                <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('sold'); }} title="Mark as Sold" />
-                {equipment.status === 'active' && (
-                  <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('broken'); }} title="Mark as Broken" />
-                )}
-                <Divider />
-                <Menu.Item
-                  title="Delete…"
-                  titleStyle={{ color: '#999' }}
-                  onPress={() => { setMenuVisible(false); Alert.alert('Archive First', 'Archive or mark as sold before deleting.'); }}
-                />
-              </>
-            )}
-            {!['active', 'broken'].includes(equipment.status) && (
-              <>
-                <Menu.Item onPress={() => { setMenuVisible(false); archiveEquipment(equipmentId, 'active').then(load); }} title="Restore to Active" />
-                <Divider />
-                <Menu.Item
-                  title="Delete Permanently"
-                  titleStyle={{ color: '#c62828' }}
-                  onPress={() => {
-                    setMenuVisible(false);
-                    Alert.alert(
-                      'Delete Equipment',
-                      `Permanently delete "${equipment.name}"? This cannot be undone.`,
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Delete', style: 'destructive', onPress: async () => { await deleteEquipment(equipmentId); navigation.goBack(); } },
-                      ]
-                    );
-                  }}
-                />
-              </>
-            )}
-          </Menu>
+                  <Divider />
+                  <Menu.Item
+                    title="Delete Permanently"
+                    titleStyle={{ color: '#c62828' }}
+                    onPress={() => {
+                      setMenuVisible(false);
+                      Alert.alert(
+                        'Delete Equipment',
+                        `Permanently delete "${equipment.name}"? This cannot be undone.`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Delete', style: 'destructive', onPress: async () => { await deleteEquipment(equipmentId); navigation.goBack(); } },
+                        ]
+                      );
+                    }}
+                  />
+                </>
+              )}
+            </Menu>
+          </View>
         )}
       </View>
 
@@ -153,34 +192,67 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         <Image source={{ uri: equipment.primaryImageUrl }} style={styles.primaryImage} />
       )}
 
-      {/* Status */}
-      {equipment.status !== 'active' && (
-        <View style={styles.row}>
-          <Chip style={[styles.chip, equipment.status === 'broken' && styles.chipBroken]}>
-            {equipment.status.toUpperCase()}
-          </Chip>
-          {equipment.status === 'broken' && equipment.breakReason && (
-            <Text variant="bodySmall" style={styles.breakReason}>Reason: {equipment.breakReason}</Text>
+      {/* Summary */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.summaryGrid}>
+            {/* Hours tile — always first, prominent */}
+            <View style={[styles.statTile, styles.statTileHours]}>
+              <Text variant="labelSmall" style={styles.statLabel}>Total Hours</Text>
+              <Text variant="headlineSmall" style={styles.statHoursValue}>{equipment.totalHours ?? 0}</Text>
+              <Button compact mode="text" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} style={styles.statUpdateBtn}>
+                Update
+              </Button>
+            </View>
+
+            {/* Maintenance status tile */}
+            <View style={[styles.statTile, { borderLeftColor: STATUS_COLORS[overallStatus] }]}>
+              <Text variant="labelSmall" style={styles.statLabel}>Maintenance</Text>
+              <Text variant="titleMedium" style={[styles.statValue, { color: STATUS_COLORS[overallStatus] }]}>
+                {STATUS_LABELS[overallStatus]}
+              </Text>
+              {equipment.broken && equipment.breakReason
+                ? <Text variant="bodySmall" style={styles.statNote}>{equipment.breakReason}</Text>
+                : null}
+            </View>
+
+            {/* Category-specific key fields */}
+            {summaryFields.map(field => (
+              <View key={field.key} style={styles.statTile}>
+                <Text variant="labelSmall" style={styles.statLabel}>{field.label}</Text>
+                <Text variant="titleSmall" style={styles.statValue}>{equipment.customFields[field.key]}</Text>
+              </View>
+            ))}
+
+            {/* Location if set */}
+            {equipment.location ? (
+              <View style={styles.statTile}>
+                <Text variant="labelSmall" style={styles.statLabel}>Location</Text>
+                <Text variant="titleSmall" style={styles.statValue}>{equipment.location}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Broken status banner */}
+          {(equipment.status !== 'active' || equipment.broken) && (
+            <View style={[styles.statusBanner, equipment.broken ? styles.statusBannerBroken : styles.statusBannerArchived]}>
+              <Text variant="labelMedium" style={{ color: equipment.broken ? '#7b1fa2' : '#666' }}>
+                {equipment.broken ? 'BROKEN' : equipment.status.toUpperCase()}
+              </Text>
+            </View>
           )}
-        </View>
-      )}
+        </Card.Content>
+      </Card>
 
       {/* Details */}
       <Card style={styles.card}>
         <Card.Content>
           <Text variant="titleMedium" style={styles.sectionTitle}>Details</Text>
+          <DetailRow label="Category" value={category?.name ?? '-'} />
           <DetailRow label="Brand" value={equipment.brand} />
           <DetailRow label="Model" value={equipment.model} />
           <DetailRow label="Serial #" value={equipment.serialNumber} />
-          <DetailRow label="Category" value={category?.name ?? '-'} />
-          <DetailRow label="Location" value={equipment.location || '-'} />
-          <DetailRow label="Purchase Location" value={equipment.purchaseLocation || '-'} />
-          <View style={styles.hoursRow}>
-            <DetailRow label="Total Hours" value={`${equipment.totalHours} hrs`} />
-            <Button compact mode="outlined" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} style={styles.hoursBtn}>
-              Update
-            </Button>
-          </View>
+          {equipment.purchaseLocation ? <DetailRow label="Purchase Location" value={equipment.purchaseLocation} /> : null}
           {equipment.description ? <DetailRow label="Description" value={equipment.description} /> : null}
           {equipment.manufacturerUrl ? <DetailRow label="Manufacturer URL" value={equipment.manufacturerUrl} /> : null}
         </Card.Content>
@@ -211,13 +283,13 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         </Card>
       )}
 
-      {/* Custom fields */}
-      {Object.keys(equipment.customFields ?? {}).length > 0 && (
+      {/* Extra custom fields not shown in summary (beyond the first 6) */}
+      {(category?.defaultFields.filter(f => equipment.customFields?.[f.key]).length ?? 0) > 6 && (
         <Card style={styles.card}>
           <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Specifications</Text>
-            {Object.entries(equipment.customFields).map(([k, v]) => (
-              <DetailRow key={k} label={k} value={v} />
+            <Text variant="titleMedium" style={styles.sectionTitle}>More Specifications</Text>
+            {category!.defaultFields.slice(6).filter(f => equipment.customFields?.[f.key]).map(f => (
+              <DetailRow key={f.key} label={f.label} value={equipment.customFields[f.key]} />
             ))}
           </Card.Content>
         </Card>
@@ -258,6 +330,15 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         <Button mode="outlined" icon="history" onPress={() => navigation.navigate('MaintenanceHistory', { equipmentId })} style={styles.actionBtn}>
           History
         </Button>
+        {canEdit() && equipment.status === 'active' && (
+          equipment.broken
+            ? <Button mode="outlined" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
+                Clear Broken Status
+              </Button>
+            : <Button mode="outlined" icon="alert-outline" onPress={handleMarkBroken} style={[styles.actionBtn, styles.brokenBtn]} textColor="#7b1fa2">
+                Mark as Broken
+              </Button>
+        )}
       </View>
       <Portal>
         <Dialog visible={hoursDialogVisible} onDismiss={() => setHoursDialogVisible(false)}>
@@ -302,6 +383,35 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
             <Button onPress={confirmBroken} disabled={!breakReason.trim()}>Confirm</Button>
           </Dialog.Actions>
         </Dialog>
+
+        <Dialog visible={moveDialogVisible} onDismiss={() => setMoveDialogVisible(false)}>
+          <Dialog.Title>Move to Farm</Dialog.Title>
+          <Dialog.Content>
+            {otherFarms.length === 0 ? (
+              <Text variant="bodyMedium">You have no other farms to move this equipment to.</Text>
+            ) : (
+              <>
+                <Text variant="bodySmall" style={{ color: '#666', marginBottom: 12 }}>
+                  The equipment will be moved and you can re-assign its category in the new farm.
+                </Text>
+                {otherFarms.map(({ farm }) => (
+                  <Button
+                    key={farm.id}
+                    mode="outlined"
+                    onPress={() => handleMoveTo(farm.id)}
+                    loading={moving}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {farm.name}
+                  </Button>
+                ))}
+              </>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setMoveDialogVisible(false)}>Cancel</Button>
+          </Dialog.Actions>
+        </Dialog>
       </Portal>
     </ScrollView>
   );
@@ -319,19 +429,30 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingVertical: 8 },
   name: { fontWeight: 'bold', flex: 1 },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
   primaryImage: { width: '100%', height: 200, resizeMode: 'cover' },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   chip: { marginRight: 8 },
-  chipBroken: { backgroundColor: '#c62828' },
-  breakReason: { color: '#c62828', flex: 1 },
+  chipBroken: { backgroundColor: '#7b1fa2' },
+  breakReason: { color: '#7b1fa2', flex: 1 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
+  // Summary grid
+  summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+  statTile: { width: '47%', backgroundColor: '#f9f9f9', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#ddd' },
+  statTileHours: { borderLeftColor: '#2e7d32' },
+  statLabel: { color: '#888', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 },
+  statValue: { color: '#222', fontWeight: '600' },
+  statHoursValue: { color: '#2e7d32', fontWeight: 'bold', lineHeight: 36 },
+  statUpdateBtn: { marginTop: 2, marginLeft: -8, alignSelf: 'flex-start', height: 28 },
+  statNote: { color: '#888', marginTop: 2, fontSize: 11 },
+  statusBanner: { marginTop: 8, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, alignSelf: 'flex-start' },
+  statusBannerBroken: { backgroundColor: '#f3e5f5' },
+  statusBannerArchived: { backgroundColor: '#f0f0f0' },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
-  hoursRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  hoursBtn: { marginLeft: 8 },
   readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
   readingDate: { color: '#666' },
   readingHours: { fontWeight: '500' },
@@ -342,4 +463,5 @@ const styles = StyleSheet.create({
   empty: { color: '#999', textAlign: 'center', padding: 8 },
   actions: { padding: 16, gap: 8 },
   actionBtn: { marginBottom: 4 },
+  brokenBtn: { borderColor: '#7b1fa2' },
 });

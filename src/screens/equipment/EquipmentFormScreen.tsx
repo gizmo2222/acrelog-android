@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, SegmentedButtons, Divider, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +10,9 @@ import {
   getEquipmentById, getCategories, createEquipment, updateEquipment,
   uploadPrimaryImage, BUILT_IN_CATEGORIES,
 } from '../../services/equipment';
+import { getFarm } from '../../services/farms';
 import { Category, Equipment, EquipmentStatus } from '../../types';
+import SelectField from '../../components/SelectField';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentForm'>;
 
@@ -20,6 +22,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const isEdit = !!equipmentId;
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [farmLocations, setFarmLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(!!isEdit);
   const [saving, setSaving] = useState(false);
   const [primaryImageUri, setPrimaryImageUri] = useState<string | null>(null);
@@ -41,8 +44,12 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
 
   async function load() {
     if (!activeFarm) return;
-    const cats = await getCategories(activeFarm.farmId);
+    const [cats, farm] = await Promise.all([
+      getCategories(activeFarm.farmId),
+      getFarm(activeFarm.farmId),
+    ]);
     setCategories(cats);
+    setFarmLocations((farm?.locations ?? []).sort());
     if (cats.length > 0 && !categoryId) setCategoryId(cats[0].id);
 
     if (isEdit) {
@@ -138,7 +145,8 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
+    <KeyboardAvoidingView style={styles.kavWrapper} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">
       {/* Primary image */}
       <View style={styles.imageSection}>
         {primaryImageUri ? (
@@ -164,7 +172,18 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
       <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
       <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
-      <TextInput label="Storage Location" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} />
+      {farmLocations.length > 0 ? (
+        <SelectField
+          label="Storage Location"
+          value={location}
+          options={farmLocations}
+          onChange={setLocation}
+          allowClear
+          style={styles.input}
+        />
+      ) : (
+        <TextInput label="Storage Location" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} />
+      )}
       <TextInput label="Manufacturer URL" value={manufacturerUrl} onChangeText={setManufacturerUrl} mode="outlined" style={styles.input} keyboardType="url" autoCapitalize="none" />
 
       <Divider style={styles.divider} />
@@ -184,26 +203,40 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* Dynamic custom fields for selected category */}
-      {selectedCategory?.defaultFields.map((field) => (
-        <TextInput
-          key={field.key}
-          label={field.label}
-          value={customFields[field.key] ?? ''}
-          onChangeText={(v) => setCustomFields({ ...customFields, [field.key]: v })}
-          mode="outlined"
-          style={styles.input}
-          keyboardType={field.type === 'number' ? 'numeric' : 'default'}
-        />
-      ))}
+      {selectedCategory?.defaultFields.map((field) =>
+        field.type === 'select' && field.options?.length ? (
+          <SelectField
+            key={field.key}
+            label={field.label}
+            value={customFields[field.key] ?? ''}
+            options={field.options}
+            onChange={(v) => setCustomFields({ ...customFields, [field.key]: v })}
+            allowClear
+            style={styles.input}
+          />
+        ) : (
+          <TextInput
+            key={field.key}
+            label={field.label}
+            value={customFields[field.key] ?? ''}
+            onChangeText={(v) => setCustomFields({ ...customFields, [field.key]: v })}
+            mode="outlined"
+            style={styles.input}
+            keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+          />
+        )
+      )}
 
       <Button mode="contained" onPress={handleSave} loading={saving} style={styles.saveBtn}>
         {isEdit ? 'Save Changes' : 'Add Equipment'}
       </Button>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  kavWrapper: { flex: 1 },
   container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   imageSection: { alignItems: 'center', marginBottom: 16 },
