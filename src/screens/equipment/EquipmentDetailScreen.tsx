@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceTask } from '../../types';
 
@@ -28,6 +28,8 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [brokenDialogVisible, setBrokenDialogVisible] = useState(false);
   const [breakReason, setBreakReason] = useState('');
+  const [hoursDialogVisible, setHoursDialogVisible] = useState(false);
+  const [hoursInput, setHoursInput] = useState('');
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -67,6 +69,14 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     setBrokenDialogVisible(false);
     await archiveEquipment(equipmentId, 'broken', breakReason.trim());
     navigation.goBack();
+  }
+
+  async function confirmHours() {
+    const h = parseFloat(hoursInput);
+    if (isNaN(h) || h < 0) return;
+    setHoursDialogVisible(false);
+    await addHours(equipmentId, h);
+    load();
   }
 
   const insets = useSafeAreaInsets();
@@ -157,7 +167,10 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           <DetailRow label="Category" value={category?.name ?? '-'} />
           <DetailRow label="Location" value={equipment.location || '-'} />
           <DetailRow label="Purchase Location" value={equipment.purchaseLocation || '-'} />
-          <DetailRow label="Total Hours" value={`${equipment.totalHours} hrs`} />
+          <View style={styles.hoursRow}>
+            <DetailRow label="Total Hours" value={`${equipment.totalHours} hrs`} />
+            <IconButton icon="plus-circle-outline" size={20} iconColor="#2e7d32" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} />
+          </View>
           {equipment.description ? <DetailRow label="Description" value={equipment.description} /> : null}
           {equipment.manufacturerUrl ? <DetailRow label="Manufacturer URL" value={equipment.manufacturerUrl} /> : null}
         </Card.Content>
@@ -212,6 +225,23 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         </Button>
       </View>
       <Portal>
+        <Dialog visible={hoursDialogVisible} onDismiss={() => setHoursDialogVisible(false)}>
+          <Dialog.Title>Add Hours</Dialog.Title>
+          <Dialog.Content>
+            <PaperTextInput
+              label="Hours to add *"
+              value={hoursInput}
+              onChangeText={setHoursInput}
+              mode="outlined"
+              keyboardType="numeric"
+              autoFocus
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setHoursDialogVisible(false)}>Cancel</Button>
+            <Button onPress={confirmHours} disabled={!hoursInput || isNaN(parseFloat(hoursInput))}>Add</Button>
+          </Dialog.Actions>
+        </Dialog>
         <Dialog visible={brokenDialogVisible} onDismiss={() => setBrokenDialogVisible(false)}>
           <Dialog.Title>Mark as Broken</Dialog.Title>
           <Dialog.Content>
@@ -255,7 +285,8 @@ const styles = StyleSheet.create({
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
+  hoursRow: { flexDirection: 'row', alignItems: 'center' },
   detailLabel: { color: '#666', flex: 1 },
   detailValue: { flex: 2, textAlign: 'right' },
   taskRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
