@@ -21,7 +21,7 @@ export default function FarmSettingsScreen() {
     setLoading(true);
     try {
       await inviteUserToFarm(inviteEmail.trim(), activeFarm.farmId, inviteRole);
-      Alert.alert('Success', `${inviteEmail} has been added as ${inviteRole}`);
+      Alert.alert('Invite sent', `${inviteEmail} will be added as ${inviteRole} when they next log in.`);
       setInviteEmail('');
     } catch (e: any) {
       Alert.alert('Error', e.message);

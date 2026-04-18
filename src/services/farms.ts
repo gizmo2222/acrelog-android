@@ -51,14 +51,33 @@ export async function inviteUserToFarm(
   farmId: string,
   role: UserRole
 ): Promise<void> {
-  const q = query(collection(db, 'users'), where('email', '==', email));
-  const snap = await getDocs(q);
-  if (snap.empty) throw new Error('No user found with that email');
-
-  const userDoc = snap.docs[0];
-  await updateDoc(userDoc.ref, {
-    farmMemberships: arrayUnion({ farmId, role } as FarmMembership),
+  const user = auth.currentUser!;
+  const inviteRef = doc(collection(db, 'farmInvites'));
+  await setDoc(inviteRef, {
+    id: inviteRef.id,
+    email: email.toLowerCase().trim(),
+    farmId,
+    role,
+    invitedBy: user.uid,
+    invitedAt: serverTimestamp(),
   });
+}
+
+export async function applyPendingInvites(uid: string, email: string): Promise<void> {
+  const q = query(collection(db, 'farmInvites'), where('email', '==', email.toLowerCase().trim()));
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  const { deleteDoc } = await import('firebase/firestore');
+  await Promise.all(
+    snap.docs.map(async (inviteDoc) => {
+      const { farmId, role } = inviteDoc.data();
+      await updateDoc(doc(db, 'users', uid), {
+        farmMemberships: arrayUnion({ farmId, role } as FarmMembership),
+      });
+      await deleteDoc(inviteDoc.ref);
+    })
+  );
 }
 
 export async function getFarm(farmId: string): Promise<Farm | null> {

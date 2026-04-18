@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthChanged, getUserProfile, isBiometricEnabled, authenticateWithBiometrics } from '../services/auth';
+import { applyPendingInvites } from '../services/farms';
 import { UserProfile, ActiveFarm } from '../types';
 
 interface AuthContextValue {
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[Auth] state changed, user:', u?.uid ?? 'null');
       setUser(u);
       if (u) {
+        if (u.email) await applyPendingInvites(u.uid, u.email);
         const p = await getUserProfile(u.uid);
         setProfile(p);
       } else {
