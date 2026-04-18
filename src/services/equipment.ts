@@ -144,7 +144,8 @@ export async function getEquipmentBySerial(serialNumber: string): Promise<Equipm
 }
 
 export async function createEquipment(data: Omit<Equipment, 'id' | 'createdAt' | 'createdBy'>): Promise<Equipment> {
-  const user = auth.currentUser!;
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
   const ref = doc(collection(db, 'equipment'));
   const equipment: Equipment = {
     ...data,

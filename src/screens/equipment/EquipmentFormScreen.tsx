@@ -78,22 +78,25 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
     }
     setSaving(true);
     try {
-      const data = {
+      // Strip undefined/empty optional fields so Firestore doesn't reject them
+      const data: any = {
         farmId: activeFarm.farmId,
         categoryId,
-        name,
-        brand,
-        model,
-        serialNumber: serial,
-        description,
-        purchaseLocation,
-        location,
-        manufacturerUrl,
+        name: name.trim(),
+        brand: brand.trim(),
+        model: model.trim(),
+        serialNumber: serial.trim(),
+        description: description.trim(),
+        purchaseLocation: purchaseLocation.trim(),
+        location: location.trim(),
         customFields,
         status: 'active' as EquipmentStatus,
         totalHours: 0,
         photos: [],
       };
+      if (manufacturerUrl.trim()) data.manufacturerUrl = manufacturerUrl.trim();
+
+      console.log('[EquipmentForm] saving data:', JSON.stringify(data));
 
       if (isEdit) {
         await updateEquipment(equipmentId!, data);
@@ -103,13 +106,15 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         navigation.goBack();
       } else {
         const eq = await createEquipment(data);
+        console.log('[EquipmentForm] created equipment id:', eq.id);
         if (primaryImageUri) {
           await uploadPrimaryImage(eq.id, activeFarm.farmId, primaryImageUri);
         }
-        navigation.replace('EquipmentDetail', { equipmentId: eq.id });
+        navigation.navigate('EquipmentDetail', { equipmentId: eq.id });
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      console.error('[EquipmentForm] save error:', e);
+      Alert.alert('Error saving equipment', e.message ?? 'Unknown error');
     } finally {
       setSaving(false);
     }
