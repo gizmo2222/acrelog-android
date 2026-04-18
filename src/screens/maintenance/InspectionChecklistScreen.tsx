@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Button, Checkbox, TextInput, FAB, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -80,10 +81,12 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
     setNewItems(['']);
   }
 
+  const insets = useSafeAreaInsets();
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="titleMedium" style={styles.title}>{equipment?.name} — Inspection</Text>
 
       {/* Checklist selector */}

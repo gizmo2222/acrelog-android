@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -68,12 +69,14 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     navigation.goBack();
   }
 
+  const insets = useSafeAreaInsets();
+
   if (loading || !equipment) {
     return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       {/* Header row with menu */}
       <View style={styles.headerRow}>
         <Text variant="headlineSmall" style={styles.name}>{equipment.name}</Text>

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Button, Divider, ActivityIndicator, DataTable } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Print from 'expo-print';
@@ -90,13 +91,15 @@ export default function ReportsScreen() {
     await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
   }
 
+  const insets = useSafeAreaInsets();
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   const totalOverdue = summaries.reduce((a, s) => a + s.overdueCount, 0);
   const totalDueSoon = summaries.reduce((a, s) => a + s.dueSoonCount, 0);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="headlineSmall" style={styles.title}>Reports</Text>
 
       {/* Summary cards */}

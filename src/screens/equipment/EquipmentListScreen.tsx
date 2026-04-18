@@ -107,6 +107,7 @@ export default function EquipmentListScreen() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}
         renderItem={({ item }) => {
           const mStatus = maintenanceStatus[item.id] ?? 'ok';
           return (

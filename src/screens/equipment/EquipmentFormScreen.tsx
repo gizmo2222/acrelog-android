@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, SegmentedButtons, Divider, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -122,10 +123,12 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
 
   const selectedCategory = categories.find(c => c.id === categoryId);
 
+  const insets = useSafeAreaInsets();
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       {/* Primary image */}
       <View style={styles.imageSection}>
         {primaryImageUri ? (

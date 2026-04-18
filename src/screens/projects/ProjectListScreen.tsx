@@ -60,7 +60,7 @@ export default function ProjectListScreen() {
           </Card>
         )}
         ListEmptyComponent={<Text style={styles.empty}>No {filter} projects</Text>}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: 80 + insets.bottom }]}
       />
 
       {activeFarm?.role !== 'auditor' && (
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
   segment: { marginHorizontal: 16, marginBottom: 8 },
-  list: { paddingBottom: 80 },
+  list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   date: { color: '#888', marginTop: 2 },
   empty: { textAlign: 'center', color: '#999', padding: 32 },

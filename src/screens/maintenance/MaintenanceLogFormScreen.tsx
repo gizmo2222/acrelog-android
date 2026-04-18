@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -87,10 +88,12 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
     }
   }
 
+  const insets = useSafeAreaInsets();
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="titleMedium" style={styles.taskName}>{task?.name}</Text>
       <Text variant="bodySmall" style={styles.equipName}>{equipment?.name}</Text>
 

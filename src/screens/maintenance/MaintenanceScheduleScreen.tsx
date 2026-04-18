@@ -107,6 +107,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}
         ListHeaderComponent={
           <>
             {/* Import section */}

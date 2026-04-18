@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider } from 'react-native-paper';
 import { useAuth } from '../../hooks/useAuth';
 import { inviteUserToFarm } from '../../services/farms';
@@ -10,6 +11,7 @@ const ROLES: UserRole[] = ['owner', 'worker', 'mechanic', 'auditor'];
 
 export default function FarmSettingsScreen() {
   const { activeFarm, setActiveFarm } = useAuth();
+  const insets = useSafeAreaInsets();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('worker');
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ export default function FarmSettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="titleLarge" style={styles.section}>Farm: {activeFarm?.farmName}</Text>
 
       <Divider style={styles.divider} />

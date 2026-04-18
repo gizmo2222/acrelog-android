@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Auth screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -59,6 +60,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -73,6 +75,7 @@ function MainTabs() {
         tabBarActiveTintColor: '#2e7d32',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
+        tabBarStyle: { paddingBottom: insets.bottom, height: 56 + insets.bottom },
       })}
     >
       <Tab.Screen name="Equipment" component={EquipmentListScreen} />
