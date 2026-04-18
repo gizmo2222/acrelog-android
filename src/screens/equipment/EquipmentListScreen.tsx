@@ -74,8 +74,8 @@ export default function EquipmentListScreen() {
 
   const filtered = equipment.filter(e => {
     const matchesStatus = statusFilter === 'active'
-      ? e.status === 'active'
-      : ['archived', 'sold', 'broken'].includes(e.status);
+      ? ['active', 'broken'].includes(e.status)
+      : ['archived', 'sold'].includes(e.status);
     const matchesSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) ||
       e.brand.toLowerCase().includes(search.toLowerCase()) ||
       e.model.toLowerCase().includes(search.toLowerCase());
@@ -122,7 +122,10 @@ export default function EquipmentListScreen() {
                   <Text variant="titleMedium">{item.name}</Text>
                   <Text variant="bodySmall" style={styles.subtitle}>{item.brand} {item.model}</Text>
                   <Text variant="bodySmall" style={styles.category}>{getCategoryName(item.categoryId)}</Text>
-                  {item.status === 'active' && (
+                  {item.status === 'broken' && (
+                    <Chip compact style={styles.brokenChip} textStyle={{ color: 'white' }}>BROKEN</Chip>
+                  )}
+                  {['active', 'broken'].includes(item.status) && (
                     <Chip
                       compact
                       style={[styles.statusChip, { backgroundColor: STATUS_COLORS[mStatus] }]}
@@ -131,7 +134,7 @@ export default function EquipmentListScreen() {
                       {mStatus === 'ok' ? 'Up to date' : mStatus === 'due_soon' ? 'Due soon' : 'Overdue'}
                     </Chip>
                   )}
-                  {item.status !== 'active' && (
+                  {!['active', 'broken'].includes(item.status) && (
                     <Chip compact style={styles.archivedChip}>{item.status}</Chip>
                   )}
                 </View>
@@ -177,6 +180,7 @@ const styles = StyleSheet.create({
   subtitle: { color: '#666' },
   category: { color: '#888', fontSize: 11 },
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
+  brokenChip: { marginTop: 4, alignSelf: 'flex-start', backgroundColor: '#c62828' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#999', marginTop: 48 },
   fab: { position: 'absolute', right: 16, backgroundColor: '#2e7d32' },

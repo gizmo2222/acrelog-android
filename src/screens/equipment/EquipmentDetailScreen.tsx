@@ -104,12 +104,16 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       )}
 
       {/* Status */}
-      <View style={styles.row}>
-        <Chip style={styles.chip}>{equipment.status.toUpperCase()}</Chip>
-        {equipment.status === 'broken' && equipment.breakReason && (
-          <Text variant="bodySmall" style={styles.breakReason}>Reason: {equipment.breakReason}</Text>
-        )}
-      </View>
+      {equipment.status !== 'active' && (
+        <View style={styles.row}>
+          <Chip style={[styles.chip, equipment.status === 'broken' && styles.chipBroken]}>
+            {equipment.status.toUpperCase()}
+          </Chip>
+          {equipment.status === 'broken' && equipment.breakReason && (
+            <Text variant="bodySmall" style={styles.breakReason}>Reason: {equipment.breakReason}</Text>
+          )}
+        </View>
+      )}
 
       {/* Details */}
       <Card style={styles.card}>
@@ -214,6 +218,7 @@ const styles = StyleSheet.create({
   primaryImage: { width: '100%', height: 200, resizeMode: 'cover' },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   chip: { marginRight: 8 },
+  chipBroken: { backgroundColor: '#c62828' },
   breakReason: { color: '#c62828', flex: 1 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
