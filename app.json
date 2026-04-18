@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "farm-manager-android",
+    "name": "Farm Manager",
     "slug": "farm-manager-android",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,21 +13,42 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to scan serial numbers and capture equipment photos",
+        "NSPhotoLibraryUsageDescription": "Used to select equipment and maintenance photos",
+        "NSFaceIDUsageDescription": "Used for biometric login"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2e7d32"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ],
+      "package": "com.farmmanager.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      "expo-camera",
+      "expo-local-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Farm Manager to access your photos for equipment images"
+        }
+      ]
     ]
   }
 }
