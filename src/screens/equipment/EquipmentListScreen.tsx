@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
+import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -90,6 +90,7 @@ export default function EquipmentListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text variant="headlineSmall" style={styles.title}>Equipment</Text>
+        <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
       </View>
 
       <Searchbar placeholder="Search equipment..." value={search} onChangeText={setSearch} style={styles.search} />

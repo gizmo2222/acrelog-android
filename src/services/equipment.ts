@@ -203,21 +203,27 @@ export async function uploadEquipmentPhoto(
 
 // ─── Hours & Meter Readings ─────────────────────────────────────────────────
 
-export async function addHours(equipmentId: string, hours: number): Promise<void> {
+async function logMeterReading(equipmentId: string, totalHours: number): Promise<void> {
   const user = auth.currentUser!;
-  await updateDoc(doc(db, 'equipment', equipmentId), { totalHours: increment(hours) });
-
-  const snap = await getDoc(doc(db, 'equipment', equipmentId));
-  const newTotal = snap.data()?.totalHours ?? 0;
-
   const readingRef = doc(collection(db, 'meterReadings'));
   await setDoc(readingRef, {
     id: readingRef.id,
     equipmentId,
-    hours: newTotal,
+    hours: totalHours,
     recordedAt: serverTimestamp(),
     userId: user.uid,
   } as MeterReading);
+}
+
+export async function addHours(equipmentId: string, hours: number): Promise<void> {
+  await updateDoc(doc(db, 'equipment', equipmentId), { totalHours: increment(hours) });
+  const snap = await getDoc(doc(db, 'equipment', equipmentId));
+  await logMeterReading(equipmentId, snap.data()?.totalHours ?? 0);
+}
+
+export async function setHours(equipmentId: string, hours: number): Promise<void> {
+  await updateDoc(doc(db, 'equipment', equipmentId), { totalHours: hours });
+  await logMeterReading(equipmentId, hours);
 }
 
 export async function getMeterReadings(equipmentId: string): Promise<MeterReading[]> {

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput } from 'react-native-paper';
+import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours, setHours } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceTask } from '../../types';
 
@@ -30,6 +30,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [breakReason, setBreakReason] = useState('');
   const [hoursDialogVisible, setHoursDialogVisible] = useState(false);
   const [hoursInput, setHoursInput] = useState('');
+  const [hoursMode, setHoursMode] = useState<'add' | 'set'>('add');
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -75,7 +76,8 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     const h = parseFloat(hoursInput);
     if (isNaN(h) || h < 0) return;
     setHoursDialogVisible(false);
-    await addHours(equipmentId, h);
+    if (hoursMode === 'add') await addHours(equipmentId, h);
+    else await setHours(equipmentId, h);
     load();
   }
 
@@ -226,10 +228,19 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       </View>
       <Portal>
         <Dialog visible={hoursDialogVisible} onDismiss={() => setHoursDialogVisible(false)}>
-          <Dialog.Title>Add Hours</Dialog.Title>
+          <Dialog.Title>Update Hours</Dialog.Title>
           <Dialog.Content>
+            <SegmentedButtons
+              value={hoursMode}
+              onValueChange={v => setHoursMode(v as 'add' | 'set')}
+              buttons={[
+                { value: 'add', label: 'Add hours' },
+                { value: 'set', label: 'Set total' },
+              ]}
+              style={{ marginBottom: 12 }}
+            />
             <PaperTextInput
-              label="Hours to add *"
+              label={hoursMode === 'add' ? 'Hours to add' : 'New total hours'}
               value={hoursInput}
               onChangeText={setHoursInput}
               mode="outlined"
@@ -239,7 +250,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setHoursDialogVisible(false)}>Cancel</Button>
-            <Button onPress={confirmHours} disabled={!hoursInput || isNaN(parseFloat(hoursInput))}>Add</Button>
+            <Button onPress={confirmHours} disabled={!hoursInput || isNaN(parseFloat(hoursInput))}>Save</Button>
           </Dialog.Actions>
         </Dialog>
         <Dialog visible={brokenDialogVisible} onDismiss={() => setBrokenDialogVisible(false)}>
