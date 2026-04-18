@@ -72,6 +72,16 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
     if (!result.canceled) setPrimaryImageUri(result.assets[0].uri);
   }
 
+  async function takePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Camera access is needed to take photos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    if (!result.canceled) setPrimaryImageUri(result.assets[0].uri);
+  }
+
   async function handleSave() {
     if (!name || !brand || !model || !categoryId || !activeFarm) {
       Alert.alert('Please fill in name, brand, model, and category');
@@ -138,9 +148,14 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
             <Text style={styles.imagePlaceholderText}>No photo</Text>
           </View>
         )}
-        <Button icon="camera" mode="outlined" onPress={pickImage} style={styles.imageBtn}>
-          {primaryImageUri ? 'Change Photo' : 'Add Photo'}
-        </Button>
+        <View style={styles.imageBtnRow}>
+          <Button icon="camera" mode="outlined" onPress={takePhoto} style={styles.imageBtn}>
+            Camera
+          </Button>
+          <Button icon="image" mode="outlined" onPress={pickImage} style={styles.imageBtn}>
+            Library
+          </Button>
+        </View>
       </View>
 
       <TextInput label="Name *" value={name} onChangeText={setName} mode="outlined" style={styles.input} />
@@ -195,7 +210,8 @@ const styles = StyleSheet.create({
   primaryImage: { width: '100%', height: 180, borderRadius: 8, marginBottom: 8 },
   imagePlaceholder: { width: '100%', height: 120, backgroundColor: '#ddd', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   imagePlaceholderText: { color: '#999' },
-  imageBtn: { alignSelf: 'center' },
+  imageBtnRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  imageBtn: { flex: 1 },
   input: { marginBottom: 12 },
   divider: { marginVertical: 16 },
   sectionTitle: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 8 },
