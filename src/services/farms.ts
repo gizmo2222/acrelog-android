@@ -9,6 +9,7 @@ import {
   where,
   serverTimestamp,
   arrayUnion,
+  Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { Farm, FarmMembership, UserRole } from '../types';
@@ -78,6 +79,41 @@ export async function applyPendingInvites(uid: string, email: string): Promise<v
       await deleteDoc(inviteDoc.ref);
     })
   );
+}
+
+export async function createQRInvite(farmId: string, role: UserRole): Promise<string> {
+  const user = auth.currentUser!;
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const ref = doc(collection(db, 'farmQRInvites'));
+  await setDoc(ref, {
+    id: ref.id,
+    token,
+    farmId,
+    role,
+    createdBy: user.uid,
+    createdAt: serverTimestamp(),
+    // expires 7 days from now
+    expiresAt: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+  });
+  return token;
+}
+
+export async function redeemQRInvite(token: string, uid: string): Promise<string> {
+  const q = query(collection(db, 'farmQRInvites'), where('token', '==', token));
+  const snap = await getDocs(q);
+  if (snap.empty) throw new Error('Invalid or expired QR code');
+
+  const data = snap.docs[0].data();
+  if (data.expiresAt.toMillis() < Date.now()) throw new Error('This QR code has expired');
+
+  const farmSnap = await getDoc(doc(db, 'farms', data.farmId));
+  const farmName = farmSnap.exists() ? farmSnap.data().name : 'Unknown Farm';
+
+  await updateDoc(doc(db, 'users', uid), {
+    farmMemberships: arrayUnion({ farmId: data.farmId, role: data.role } as FarmMembership),
+  });
+
+  return farmName;
 }
 
 export async function getFarm(farmId: string): Promise<Farm | null> {
