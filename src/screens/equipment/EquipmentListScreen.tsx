@@ -37,29 +37,33 @@ export default function EquipmentListScreen() {
   async function load() {
     if (!activeFarm) return;
     setLoading(true);
-    const [eq, cats] = await Promise.all([
-      getEquipment(activeFarm.farmId),
-      getCategories(activeFarm.farmId),
-    ]);
-    setEquipment(eq);
-    setCategories(cats);
+    try {
+      const [eq, cats] = await Promise.all([
+        getEquipment(activeFarm.farmId),
+        getCategories(activeFarm.farmId),
+      ]);
+      setEquipment(eq);
+      setCategories(cats);
 
-    // Load maintenance status for each active equipment
-    const statuses: Record<string, MaintenanceStatus> = {};
-    await Promise.all(
-      eq.filter(e => e.status === 'active').map(async (e) => {
-        const tasks = await getMaintenanceTasks(e.id);
-        const worst = tasks.reduce<MaintenanceStatus>((acc, t) => {
-          const s = getMaintenanceStatus(t, e.totalHours);
-          if (s === 'overdue') return 'overdue';
-          if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
-          return acc;
-        }, 'ok');
-        statuses[e.id] = worst;
-      })
-    );
-    setMaintenanceStatus(statuses);
-    setLoading(false);
+      const statuses: Record<string, MaintenanceStatus> = {};
+      await Promise.all(
+        eq.filter(e => e.status === 'active').map(async (e) => {
+          const tasks = await getMaintenanceTasks(e.id);
+          const worst = tasks.reduce<MaintenanceStatus>((acc, t) => {
+            const s = getMaintenanceStatus(t, e.totalHours);
+            if (s === 'overdue') return 'overdue';
+            if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
+            return acc;
+          }, 'ok');
+          statuses[e.id] = worst;
+        })
+      );
+      setMaintenanceStatus(statuses);
+    } catch (e: any) {
+      console.error('Equipment load error:', e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function getCategoryName(categoryId: string) {

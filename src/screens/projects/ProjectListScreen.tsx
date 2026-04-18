@@ -20,7 +20,9 @@ export default function ProjectListScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!activeFarm) return;
-      getProjects(activeFarm.farmId).then(p => { setProjects(p); setLoading(false); });
+      getProjects(activeFarm.farmId)
+        .then(p => { setProjects(p); setLoading(false); })
+        .catch(e => { console.error('Projects load error:', e.message); setLoading(false); });
     }, [activeFarm])
   );
 

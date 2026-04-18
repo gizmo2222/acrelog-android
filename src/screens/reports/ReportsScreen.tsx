@@ -28,6 +28,7 @@ export default function ReportsScreen() {
   async function load() {
     if (!activeFarm) return;
     setLoading(true);
+    try {
     const equipment = await getEquipment(activeFarm.farmId);
     const results = await Promise.all(
       equipment.filter(e => e.status === 'active').map(async (e) => {
@@ -51,7 +52,11 @@ export default function ReportsScreen() {
       })
     );
     setSummaries(results);
-    setLoading(false);
+    } catch (e: any) {
+      console.error('Reports load error:', e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function exportEquipmentPDF(summary: EquipmentSummary) {
