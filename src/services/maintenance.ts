@@ -165,6 +165,10 @@ async function uploadMaintenanceFile(
   return getDownloadURL(storageRef);
 }
 
+export async function updateMaintenanceLog(id: string, data: Partial<MaintenanceLog>): Promise<void> {
+  await updateDoc(doc(db, 'maintenanceLogs', id), data);
+}
+
 export async function getMaintenanceLogs(equipmentId: string): Promise<MaintenanceLog[]> {
   const q = query(collection(db, 'maintenanceLogs'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);

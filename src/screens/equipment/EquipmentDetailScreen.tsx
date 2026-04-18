@@ -171,7 +171,9 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           <DetailRow label="Purchase Location" value={equipment.purchaseLocation || '-'} />
           <View style={styles.hoursRow}>
             <DetailRow label="Total Hours" value={`${equipment.totalHours} hrs`} />
-            <IconButton icon="plus-circle-outline" size={20} iconColor="#2e7d32" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} />
+            <Button compact mode="outlined" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} style={styles.hoursBtn}>
+              Update
+            </Button>
           </View>
           {equipment.description ? <DetailRow label="Description" value={equipment.description} /> : null}
           {equipment.manufacturerUrl ? <DetailRow label="Manufacturer URL" value={equipment.manufacturerUrl} /> : null}
@@ -297,7 +299,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
-  hoursRow: { flexDirection: 'row', alignItems: 'center' },
+  hoursRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hoursBtn: { marginLeft: 8 },
   detailLabel: { color: '#666', flex: 1 },
   detailValue: { flex: 2, textAlign: 'right' },
   taskRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
