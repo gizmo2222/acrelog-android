@@ -169,6 +169,11 @@ export async function updateMaintenanceLog(id: string, data: Partial<Maintenance
   await updateDoc(doc(db, 'maintenanceLogs', id), data);
 }
 
+export async function deleteMaintenanceLog(id: string): Promise<void> {
+  const { deleteDoc } = await import('firebase/firestore');
+  await deleteDoc(doc(db, 'maintenanceLogs', id));
+}
+
 export async function getMaintenanceLogs(equipmentId: string): Promise<MaintenanceLog[]> {
   const q = query(collection(db, 'maintenanceLogs'), where('equipmentId', '==', equipmentId));
   const snap = await getDocs(q);

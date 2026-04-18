@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { Text, Card, Divider, ActivityIndicator, Chip, IconButton, TextInput, Button } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
-import { getMaintenanceLogs, getMaintenanceTasks, updateMaintenanceLog } from '../../services/maintenance';
+import { getMaintenanceLogs, getMaintenanceTasks, updateMaintenanceLog, deleteMaintenanceLog } from '../../services/maintenance';
 import { Equipment, MaintenanceLog, MaintenanceTask, PartUsed } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MaintenanceHistory'>;
@@ -88,7 +88,15 @@ export default function MaintenanceHistoryScreen({ route }: Props) {
                 <View style={styles.headerRow}>
                   <Text variant="titleSmall" style={[styles.taskName, styles.flex]}>{getTaskName(item.maintenanceTaskId)}</Text>
                   {canEdit && !isEditing && (
-                    <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                    <>
+                      <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                      <IconButton icon="trash-can-outline" size={18} onPress={() => {
+                        Alert.alert('Delete Log', 'Remove this maintenance record?', [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Delete', style: 'destructive', onPress: async () => { await deleteMaintenanceLog(item.id); load(); } },
+                        ]);
+                      }} />
+                    </>
                   )}
                 </View>
 
