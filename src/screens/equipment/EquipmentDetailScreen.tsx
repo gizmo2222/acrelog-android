@@ -191,14 +191,15 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.sectionHeader}>
-              <Text variant="titleMedium" style={styles.sectionTitle}>Hours History</Text>
-              {readings.length > 5 && (
-                <Button compact onPress={() => setShowAllReadings(v => !v)}>
-                  {showAllReadings ? 'Show less' : `All ${readings.length}`}
-                </Button>
-              )}
+              <Text variant="titleMedium" style={styles.sectionTitle}>
+                Hours History ({readings.length})
+              </Text>
+              <Button compact icon={showAllReadings ? 'chevron-up' : 'chevron-down'}
+                onPress={() => setShowAllReadings(v => !v)}>
+                {showAllReadings ? 'Hide' : 'Show'}
+              </Button>
             </View>
-            {(showAllReadings ? readings : readings.slice(0, 5)).map((r, i) => (
+            {showAllReadings && readings.map((r) => (
               <View key={r.id} style={styles.readingRow}>
                 <Text variant="bodySmall" style={styles.readingDate}>
                   {r.recordedAt.toDate().toLocaleDateString()}
