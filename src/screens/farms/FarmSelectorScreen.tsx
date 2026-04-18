@@ -32,7 +32,6 @@ export default function FarmSelectorScreen({ navigation }: Props) {
 
   function selectFarm(farm: Farm, role: UserRole) {
     setActiveFarm({ farmId: farm.id, farmName: farm.name, role });
-    navigation.replace('Main');
   }
 
   if (loading) {

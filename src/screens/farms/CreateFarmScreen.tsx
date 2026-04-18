@@ -3,7 +3,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { Text, TextInput, Button, Surface } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { createFarm, ensureBuiltInCategories } from '../../services/farms';
+import { createFarm } from '../../services/farms';
 import { useAuth } from '../../hooks/useAuth';
 import { ensureBuiltInCategories as initCategories } from '../../services/equipment';
 
@@ -21,7 +21,6 @@ export default function CreateFarmScreen({ navigation }: Props) {
       const farm = await createFarm(name.trim());
       await initCategories(farm.id);
       setActiveFarm({ farmId: farm.id, farmName: farm.name, role: 'owner' });
-      navigation.replace('Main');
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {

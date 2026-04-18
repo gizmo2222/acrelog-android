@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -19,10 +19,8 @@ export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-
-// Enable offline persistence
-enableIndexedDbPersistence(db).catch(() => {
-  // Persistence fails silently in some environments (e.g. multiple tabs)
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache(),
 });
+
+export const storage = getStorage(app);
