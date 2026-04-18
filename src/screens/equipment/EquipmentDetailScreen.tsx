@@ -6,9 +6,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours, setHours } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, deleteEquipment, addHours, setHours, getMeterReadings } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
-import { Equipment, Category, MaintenanceTask } from '../../types';
+import { Equipment, Category, MaintenanceTask, MeterReading } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
 
@@ -24,6 +24,8 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
+  const [readings, setReadings] = useState<MeterReading[]>([]);
+  const [showAllReadings, setShowAllReadings] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [brokenDialogVisible, setBrokenDialogVisible] = useState(false);
@@ -43,8 +45,12 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     if (eq && activeFarm) {
       const cats = await getCategories(activeFarm.farmId);
       setCategory(cats.find(c => c.id === eq.categoryId) ?? null);
-      const t = await getMaintenanceTasks(equipmentId);
+      const [t, r] = await Promise.all([
+        getMaintenanceTasks(equipmentId),
+        getMeterReadings(equipmentId),
+      ]);
       setTasks(t);
+      setReadings(r);
     }
     setLoading(false);
   }
@@ -180,6 +186,30 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         </Card.Content>
       </Card>
 
+      {/* Hours history */}
+      {readings.length > 0 && (
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.sectionHeader}>
+              <Text variant="titleMedium" style={styles.sectionTitle}>Hours History</Text>
+              {readings.length > 5 && (
+                <Button compact onPress={() => setShowAllReadings(v => !v)}>
+                  {showAllReadings ? 'Show less' : `All ${readings.length}`}
+                </Button>
+              )}
+            </View>
+            {(showAllReadings ? readings : readings.slice(0, 5)).map((r, i) => (
+              <View key={r.id} style={styles.readingRow}>
+                <Text variant="bodySmall" style={styles.readingDate}>
+                  {r.recordedAt.toDate().toLocaleDateString()}
+                </Text>
+                <Text variant="bodyMedium" style={styles.readingHours}>{r.hours} hrs</Text>
+              </View>
+            ))}
+          </Card.Content>
+        </Card>
+      )}
+
       {/* Custom fields */}
       {Object.keys(equipment.customFields ?? {}).length > 0 && (
         <Card style={styles.card}>
@@ -301,6 +331,9 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
   hoursRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   hoursBtn: { marginLeft: 8 },
+  readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
+  readingDate: { color: '#666' },
+  readingHours: { fontWeight: '500' },
   detailLabel: { color: '#666', flex: 1 },
   detailValue: { flex: 2, textAlign: 'right' },
   taskRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },

@@ -41,18 +41,25 @@ export function getMaintenanceStatus(task: MaintenanceTask, currentHours: number
   const soonWindow = 7 * 24 * 60 * 60 * 1000; // 7 days
   const hoursSoonWindow = 10;
 
+  // If never completed, first due point is the interval itself from 0 hrs / task creation
+  const effectiveNextDueHours = task.nextDueHours ?? (task.intervalHours != null ? task.intervalHours : null);
+  const effectiveNextDueAt = task.nextDueAt
+    ?? (task.intervalDays != null && task.createdAt
+      ? Timestamp.fromMillis(task.createdAt.toMillis() + task.intervalDays * 86400000)
+      : null);
+
   let hoursDue = false;
   let datesDue = false;
   let hoursOverdue = false;
   let datesOverdue = false;
 
-  if (task.nextDueHours != null) {
-    if (currentHours >= task.nextDueHours) hoursOverdue = true;
-    else if (currentHours >= task.nextDueHours - hoursSoonWindow) hoursDue = true;
+  if (effectiveNextDueHours != null) {
+    if (currentHours >= effectiveNextDueHours) hoursOverdue = true;
+    else if (currentHours >= effectiveNextDueHours - hoursSoonWindow) hoursDue = true;
   }
 
-  if (task.nextDueAt) {
-    const dueMs = task.nextDueAt.toMillis();
+  if (effectiveNextDueAt) {
+    const dueMs = effectiveNextDueAt.toMillis();
     if (now >= dueMs) datesOverdue = true;
     else if (now >= dueMs - soonWindow) datesDue = true;
   }
