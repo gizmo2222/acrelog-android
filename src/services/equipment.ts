@@ -153,25 +153,40 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
   },
 ];
 
-export async function ensureBuiltInCategories(farmId: string): Promise<void> {
-  const q = query(collection(db, 'categories'), where('farmId', '==', farmId), where('builtIn', '==', true));
-  const snap = await getDocs(q);
-  const existingNames = new Set(snap.docs.map(d => d.data().name as string));
-  const missing = BUILT_IN_CATEGORIES.filter(cat => !existingNames.has(cat.name));
-  if (missing.length === 0) return;
+const _ensuringFarms = new Set<string>();
 
-  await Promise.all(
-    missing.map((cat) => {
-      const ref = doc(collection(db, 'categories'));
-      return setDoc(ref, { ...cat, farmId, id: ref.id });
-    })
-  );
+export async function ensureBuiltInCategories(farmId: string): Promise<void> {
+  if (_ensuringFarms.has(farmId)) return;
+  _ensuringFarms.add(farmId);
+  try {
+    const q = query(collection(db, 'categories'), where('farmId', '==', farmId), where('builtIn', '==', true));
+    const snap = await getDocs(q);
+    const existingNames = new Set(snap.docs.map(d => d.data().name as string));
+    const missing = BUILT_IN_CATEGORIES.filter(cat => !existingNames.has(cat.name));
+    if (missing.length === 0) return;
+
+    await Promise.all(
+      missing.map((cat) => {
+        const ref = doc(collection(db, 'categories'));
+        return setDoc(ref, { ...cat, farmId, id: ref.id });
+      })
+    );
+  } finally {
+    _ensuringFarms.delete(farmId);
+  }
 }
 
 export async function getCategories(farmId: string): Promise<Category[]> {
   const q = query(collection(db, 'categories'), where('farmId', '==', farmId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category))
+  const seen = new Set<string>();
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Category))
+    .filter((cat) => {
+      if (seen.has(cat.name)) return false;
+      seen.add(cat.name);
+      return true;
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
