@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
+import DatePickerField from '../../components/DatePickerField';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
@@ -250,7 +251,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                       <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
                       <Text variant="labelSmall" style={styles.fieldHint}>Last completed (optional — seeds next due calculation)</Text>
                       <View style={styles.twoCol}>
-                        <TextInput label="Date (YYYY-MM-DD)" value={lastDoneDate} onChangeText={setLastDoneDate} mode="outlined" style={styles.colInput} placeholder="2024-01-15" />
+                        <DatePickerField label="Date" value={lastDoneDate} onChange={setLastDoneDate} style={styles.colInput} optional />
                         <TextInput label="At hours" value={lastDoneHours} onChangeText={setLastDoneHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
                       </View>
                     </>
@@ -259,7 +260,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     <>
                       <Text variant="labelSmall" style={styles.fieldHint}>Due (set at least one)</Text>
                       <View style={styles.twoCol}>
-                        <TextInput label="By date (YYYY-MM-DD)" value={dueDate} onChangeText={setDueDate} mode="outlined" style={styles.colInput} placeholder="2024-06-01" />
+                        <DatePickerField label="By date" value={dueDate} onChange={setDueDate} style={styles.colInput} optional />
                         <TextInput label="By hours" value={dueHours} onChangeText={setDueHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
                       </View>
                     </>

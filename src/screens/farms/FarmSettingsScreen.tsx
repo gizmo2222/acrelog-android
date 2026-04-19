@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
+import DatePickerField from '../../components/DatePickerField';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../hooks/useAuth';
 import { inviteUserToFarm, createQRInvite, getFarm, updateFarm, addFarmLocation, removeFarmLocation, leaveFarm, deleteFarm } from '../../services/farms';
@@ -210,7 +211,7 @@ export default function FarmSettingsScreen() {
                 <TextInput label="Owner / Operator" value={ownerName} onChangeText={setOwnerName} mode="outlined" style={styles.input} />
                 <TextInput label="Address" value={address} onChangeText={setAddress} mode="outlined" style={styles.input} />
                 <TextInput label="Acreage" value={acreage} onChangeText={setAcreage} mode="outlined" keyboardType="decimal-pad" style={styles.input} />
-                <TextInput label="Purchase Date" value={purchaseDate} onChangeText={setPurchaseDate} mode="outlined" placeholder="e.g. 2018-06-15" style={styles.input} />
+                <DatePickerField label="Purchase Date" value={purchaseDate} onChange={setPurchaseDate} style={styles.input} optional />
                 <TextInput label="Notes" value={notes} onChangeText={setNotes} mode="outlined" multiline numberOfLines={3} style={styles.input} />
                 <View style={styles.detailsRow}>
                   <Button onPress={() => setDetailsEditing(false)}>Cancel</Button>
