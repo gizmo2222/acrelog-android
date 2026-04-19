@@ -3,6 +3,7 @@ import { View, FlatList, StyleSheet, Alert, Image, TouchableOpacity } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
 import DatePickerField from '../../components/DatePickerField';
+import EmptyState from '../../components/EmptyState';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
@@ -289,7 +290,14 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
             )}
 
             {recurringTasks.length > 0 && <Text variant="labelLarge" style={styles.listHeader}>Recurring ({recurringTasks.length})</Text>}
-            {recurringTasks.length === 0 && oneOffTasks.length === 0 && <Text style={styles.empty}>No maintenance tasks. Add one or import from the manufacturer's site.</Text>}
+            {recurringTasks.length === 0 && oneOffTasks.length === 0 && (
+              <EmptyState
+                icon="wrench-clock"
+                title="No maintenance tasks"
+                subtitle="Add tasks manually or import from the manufacturer's maintenance page."
+                action={canEdit ? { label: 'Add Task', onPress: () => { cancelForm(); setShowAddForm(true); } } : undefined}
+              />
+            )}
           </>
         }
         renderItem={({ item }) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Button, Checkbox, TextInput, FAB, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
+import EmptyState from '../../components/EmptyState';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
@@ -136,7 +137,11 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
           </Card.Content>
         </Card>
       ) : (
-        <Text style={styles.empty}>No checklists yet. Create one below.</Text>
+        <EmptyState
+          icon="clipboard-check-outline"
+          title="No inspection checklists yet"
+          subtitle={activeFarm?.role === 'owner' ? 'Create a checklist template using the form below.' : 'Ask your farm owner to create an inspection checklist.'}
+        />
       )}
 
       {/* Create new checklist */}

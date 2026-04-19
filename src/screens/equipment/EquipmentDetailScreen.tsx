@@ -12,6 +12,7 @@ import { getUserFarms } from '../../services/farms';
 import { auth } from '../../services/firebase';
 import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, Farm, UserRole } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants/equipment';
+import EmptyState from '../../components/EmptyState';
 import * as ImagePicker from 'expo-image-picker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
@@ -401,7 +402,14 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
               </View>
             );
           })}
-          {tasks.length === 0 && <Text style={styles.empty}>No maintenance tasks</Text>}
+          {tasks.length === 0 && (
+            <EmptyState
+              icon="wrench-clock"
+              title="No maintenance tasks"
+              subtitle="Tap Maintenance to set up recurring and one-off tasks."
+              style={{ paddingVertical: 16 }}
+            />
+          )}
         </Card.Content>
       </Card>
 

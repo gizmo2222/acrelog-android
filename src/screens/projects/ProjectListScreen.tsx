@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, FAB, Chip, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
+import EmptyState from '../../components/EmptyState';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -59,7 +60,13 @@ export default function ProjectListScreen() {
             </Card.Content>
           </Card>
         )}
-        ListEmptyComponent={<Text style={styles.empty}>No {filter} projects</Text>}
+        ListEmptyComponent={
+          <EmptyState
+            icon="clipboard-list-outline"
+            title={filter === 'active' ? 'No active projects' : 'No archived projects'}
+            subtitle={filter === 'active' ? 'Tap + to create your first project.' : undefined}
+          />
+        }
         contentContainerStyle={[styles.list, { paddingBottom: 80 + insets.bottom }]}
       />
 

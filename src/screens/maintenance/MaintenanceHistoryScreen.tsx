@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { Text, Card, Divider, ActivityIndicator, Chip, IconButton, TextInput, Button } from 'react-native-paper';
+import EmptyState from '../../components/EmptyState';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -145,7 +146,13 @@ export default function MaintenanceHistoryScreen({ route }: Props) {
             </Card>
           );
         }}
-        ListEmptyComponent={<Text style={styles.empty}>No maintenance history yet</Text>}
+        ListEmptyComponent={
+          <EmptyState
+            icon="history"
+            title="No maintenance history yet"
+            subtitle="Completed maintenance tasks will appear here."
+          />
+        }
       />
     </View>
   );

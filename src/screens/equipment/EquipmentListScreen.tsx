@@ -10,6 +10,7 @@ import { getEquipment, getCategories, ensureBuiltInCategories } from '../../serv
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceStatus } from '../../types';
 import { STATUS_COLORS } from '../../constants/equipment';
+import EmptyState from '../../components/EmptyState';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -105,6 +106,8 @@ export default function EquipmentListScreen() {
     maintFilter !== 'all',
     sortBy !== 'name_asc',
   ].filter(Boolean).length;
+
+  function clearFilters() { setCategoryFilter(null); setMaintFilter('all'); setSortBy('name_asc'); }
 
   const filtered = equipment
     .filter(e => {
@@ -242,7 +245,7 @@ export default function EquipmentListScreen() {
             <Text
               variant="labelSmall"
               style={styles.clearFilters}
-              onPress={() => { setCategoryFilter(null); setMaintFilter('all'); setSortBy('name_asc'); }}
+              onPress={clearFilters}
             >
               Clear filters
             </Text>
@@ -300,9 +303,23 @@ export default function EquipmentListScreen() {
           );
         }}
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            {activeFilterCount > 0 ? 'No equipment matches your filters.' : 'No equipment found.'}
-          </Text>
+          activeFilterCount > 0
+            ? <EmptyState
+                icon="filter-remove-outline"
+                title="No equipment matches your filters"
+                subtitle="Try adjusting or clearing your filters."
+                action={{ label: 'Clear Filters', onPress: clearFilters }}
+              />
+            : <EmptyState
+                icon="tractor"
+                title="No equipment yet"
+                subtitle="Add your first piece of equipment to get started tracking maintenance and hours."
+                action={
+                  activeFarm?.role !== 'worker' && activeFarm?.role !== 'auditor'
+                    ? { label: 'Add Equipment', onPress: () => navigation.navigate('EquipmentForm', {}) }
+                    : undefined
+                }
+              />
         }
       />
 
