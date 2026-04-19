@@ -13,6 +13,8 @@ import {
 import { getFarm } from '../../services/farms';
 import { Category, EquipmentStatus } from '../../types';
 import SelectField from '../../components/SelectField';
+import AutocompleteInput from '../../components/AutocompleteInput';
+import { BRAND_SUGGESTIONS } from '../../constants/brandSuggestions';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentForm'>;
 
@@ -163,6 +165,9 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   }
 
   const selectedCategory = categories.find(c => c.id === categoryId);
+  const categoryBrands = BRAND_SUGGESTIONS[selectedCategory?.name ?? ''] ?? [];
+  const brandSuggestions = categoryBrands.map(b => b.brand);
+  const modelSuggestions = categoryBrands.find(b => b.brand.toLowerCase() === brand.toLowerCase())?.models ?? [];
   const insets = useSafeAreaInsets();
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
@@ -199,8 +204,8 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       </View>
 
       <TextInput label="Name *" value={name} onChangeText={setName} mode="outlined" style={styles.input} />
-      <TextInput label="Brand *" value={brand} onChangeText={setBrand} mode="outlined" style={styles.input} />
-      <TextInput label="Model *" value={model} onChangeText={setModel} mode="outlined" style={styles.input} />
+      <AutocompleteInput label="Brand *" value={brand} onChangeText={setBrand} suggestions={brandSuggestions} style={styles.input} />
+      <AutocompleteInput label="Model *" value={model} onChangeText={setModel} suggestions={modelSuggestions} style={styles.input} />
       <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
       <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
       <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
