@@ -11,6 +11,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { inviteUserToFarm, createQRInvite, getFarm, updateFarm, addFarmLocation, removeFarmLocation, leaveFarm, deleteFarm } from '../../services/farms';
 import { Farm, UserRole } from '../../types';
 import { signOut } from '../../services/auth';
+import { errorMessage } from '../../utils/errorMessage';
 
 const ROLES: UserRole[] = ['owner', 'worker', 'mechanic', 'auditor'];
 
@@ -67,7 +68,7 @@ export default function FarmSettingsScreen() {
       setFarm(prev => prev ? { ...prev, locations: [...(prev.locations ?? []), newLocation.trim()].sort() } : prev);
       setNewLocation('');
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setLocationSaving(false);
     }
@@ -101,7 +102,7 @@ export default function FarmSettingsScreen() {
       await updateFarm(activeFarm.farmId, data);
       setDetailsEditing(false);
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setDetailsSaving(false);
     }
@@ -115,7 +116,7 @@ export default function FarmSettingsScreen() {
       Alert.alert('Invite sent', `${inviteEmail} will be added as ${inviteRole} when they next log in.`);
       setInviteEmail('');
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -128,7 +129,7 @@ export default function FarmSettingsScreen() {
       const token = await createQRInvite(activeFarm.farmId, qrRole);
       setQrToken(token);
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setQrLoading(false);
     }

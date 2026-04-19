@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getUserFarms, redeemQRInvite } from '../../services/farms';
 import { Farm, UserRole } from '../../types';
 import { signOut } from '../../services/auth';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FarmSelector'>;
 
@@ -54,7 +55,7 @@ export default function FarmSelectorScreen({ navigation }: Props) {
       const updated = await getUserFarms(user.uid);
       setFarms(updated);
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     }
   }
 

@@ -13,6 +13,7 @@ import {
 import { Equipment, InspectionChecklist, InspectionItem } from '../../types';
 import { auth } from '../../services/firebase';
 import { Timestamp } from 'firebase/firestore';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InspectionChecklist'>;
 
@@ -61,7 +62,7 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
       setResults({});
       setNotes('');
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setSaving(false);
     }

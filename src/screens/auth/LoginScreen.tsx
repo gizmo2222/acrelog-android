@@ -4,6 +4,7 @@ import { Text, TextInput, Button, Surface } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { signIn, isBiometricAvailable, isBiometricEnabled } from '../../services/auth';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -27,7 +28,7 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       await signIn(email, password);
     } catch (e: any) {
-      Alert.alert('Login failed', e.message);
+      Alert.alert('Login failed', errorMessage(e));
     } finally {
       setLoading(false);
     }

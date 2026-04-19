@@ -16,6 +16,7 @@ import {
 } from '../../services/maintenance';
 import { Timestamp } from 'firebase/firestore';
 import { Equipment, MaintenanceTask } from '../../types';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MaintenanceSchedule'>;
 
@@ -145,7 +146,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       cancelForm();
       load();
     } catch (e: any) {
-      Alert.alert('Error saving task', e.message ?? 'Unknown error');
+      Alert.alert('Error saving task', errorMessage(e));
     }
   }
 

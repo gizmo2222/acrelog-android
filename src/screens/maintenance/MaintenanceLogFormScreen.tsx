@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
 import { getMaintenanceTasks, logMaintenance } from '../../services/maintenance';
 import { Equipment, MaintenanceTask, PartUsed } from '../../types';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MaintenanceLogForm'>;
 
@@ -89,7 +90,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
       navigation.goBack();
     } catch (e: any) {
       console.error('[MaintenanceLog] save error:', e);
-      Alert.alert('Error logging completion', e.message ?? 'Unknown error');
+      Alert.alert('Error logging completion', errorMessage(e));
     } finally {
       setSaving(false);
     }

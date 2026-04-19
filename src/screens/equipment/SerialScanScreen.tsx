@@ -5,6 +5,7 @@ import { Text, Button, ActivityIndicator } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getEquipmentBySerial } from '../../services/equipment';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SerialScan'>;
 
@@ -83,7 +84,7 @@ export default function SerialScanScreen({ navigation }: Props) {
         );
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setScanning(false);
     }

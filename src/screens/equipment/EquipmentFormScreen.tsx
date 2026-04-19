@@ -15,6 +15,7 @@ import { Category, EquipmentStatus } from '../../types';
 import SelectField from '../../components/SelectField';
 import AutocompleteInput from '../../components/AutocompleteInput';
 import { BRAND_SUGGESTIONS } from '../../constants/brandSuggestions';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentForm'>;
 
@@ -158,7 +159,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       }
     } catch (e: any) {
       console.error('[EquipmentForm] save error:', e);
-      Alert.alert('Error saving equipment', e.message ?? 'Unknown error');
+      Alert.alert('Error saving equipment', errorMessage(e));
     } finally {
       setSaving(false);
     }

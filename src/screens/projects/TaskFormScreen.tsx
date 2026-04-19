@@ -9,6 +9,7 @@ import { getEquipment } from '../../services/equipment';
 import { getUserFarms } from '../../services/farms';
 import { Equipment, TaskEquipmentLog } from '../../types';
 import { auth } from '../../services/firebase';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskForm'>;
 
@@ -63,7 +64,7 @@ export default function TaskFormScreen({ route, navigation }: Props) {
       setSelectedEquipId('');
       setHours('');
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setSaving(false);
     }

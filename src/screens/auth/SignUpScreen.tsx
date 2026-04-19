@@ -4,6 +4,7 @@ import { Text, TextInput, Button, Surface } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { signUp } from '../../services/auth';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -27,7 +28,7 @@ export default function SignUpScreen({ navigation }: Props) {
     try {
       await signUp(email, password, displayName);
     } catch (e: any) {
-      Alert.alert('Sign up failed', e.message);
+      Alert.alert('Sign up failed', errorMessage(e));
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { authenticateWithBiometrics } from '../../services/auth';
 import { useAuth } from '../../hooks/useAuth';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Biometric'>;
 
@@ -28,7 +29,7 @@ export default function BiometricScreen({ navigation }: Props) {
       // Auth state is already set from stored credentials; if biometric succeeds
       // the navigator will redirect via onAuthChanged
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ import { getEquipment } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus, getMaintenanceLogs } from '../../services/maintenance';
 import { getDowntimeRecords } from '../../services/equipment';
 import { Equipment, MaintenanceTask, MaintenanceLog, DowntimeRecord } from '../../types';
+import { errorMessage } from '../../utils/errorMessage';
 
 interface EquipmentSummary {
   equipment: Equipment;
@@ -54,7 +55,7 @@ export default function ReportsScreen() {
     );
     setSummaries(results);
     } catch (e: any) {
-      console.error('Reports load error:', e.message);
+      console.error('Reports load error:', errorMessage(e));
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import { RootStackParamList } from '../../navigation';
 import { createFarm } from '../../services/farms';
 import { useAuth } from '../../hooks/useAuth';
 import { ensureBuiltInCategories as initCategories } from '../../services/equipment';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateFarm'>;
 
@@ -22,7 +23,7 @@ export default function CreateFarmScreen({ navigation }: Props) {
       await initCategories(farm.id);
       setActiveFarm({ farmId: farm.id, farmName: farm.name, role: 'owner' });
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setLoading(false);
     }

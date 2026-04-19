@@ -14,6 +14,7 @@ import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, 
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants/equipment';
 import EmptyState from '../../components/EmptyState';
 import * as ImagePicker from 'expo-image-picker';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
 
@@ -109,7 +110,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       setMoveDialogVisible(false);
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert('Error', errorMessage(e));
     } finally {
       setMoving(false);
     }
@@ -141,7 +142,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           await deleteEquipmentPhoto(equipmentId, photoUrl);
           load();
         } catch (e: any) {
-          Alert.alert('Error deleting photo', e.message);
+          Alert.alert('Error deleting photo', errorMessage(e));
         }
       }},
     ]);
@@ -154,7 +155,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       await uploadEquipmentPhoto(equipmentId, activeFarm.farmId, uri);
       load();
     } catch (e: any) {
-      Alert.alert('Error uploading photo', e.message);
+      Alert.alert('Error uploading photo', errorMessage(e));
     } finally {
       setUploadingPhoto(false);
     }
