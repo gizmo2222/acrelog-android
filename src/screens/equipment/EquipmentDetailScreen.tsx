@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -114,27 +114,20 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     }
   }
 
-  async function handleAddPhoto() {
+  async function handleTakePhoto() {
     if (!activeFarm) return;
-    Alert.alert('Add Photo', undefined, [
-      {
-        text: 'Take Photo', onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-          const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
-          if (result.canceled) return;
-          await doUploadPhoto(result.assets[0].uri);
-        },
-      },
-      {
-        text: 'Choose from Library', onPress: async () => {
-          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
-          if (result.canceled) return;
-          await doUploadPhoto(result.assets[0].uri);
-        },
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+    if (result.canceled) return;
+    await doUploadPhoto(result.assets[0].uri);
+  }
+
+  async function handlePickPhoto() {
+    if (!activeFarm) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+    if (result.canceled) return;
+    await doUploadPhoto(result.assets[0].uri);
   }
 
   async function doUploadPhoto(uri: string) {
@@ -222,7 +215,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       </View>
 
       {/* Photo gallery */}
-      {(equipment.primaryImageUrl || (equipment.photos?.length ?? 0) > 0 || canEdit()) && (
+      {(equipment.primaryImageUrl || (equipment.photos?.length ?? 0) > 0) && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoGallery} contentContainerStyle={styles.photoGalleryContent}>
           {equipment.primaryImageUrl && (
             <Image source={{ uri: equipment.primaryImageUrl }} style={styles.galleryPhoto} />
@@ -230,13 +223,17 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           {equipment.photos?.map((p, i) => (
             <Image key={i} source={{ uri: p.url }} style={styles.galleryPhoto} />
           ))}
-          {canEdit() && equipment.status === 'active' && (
-            <TouchableOpacity style={styles.addPhotoBtn} onPress={handleAddPhoto} disabled={uploadingPhoto}>
-              <Text style={styles.addPhotoBtnText}>{uploadingPhoto ? '…' : '+'}</Text>
-              <Text style={styles.addPhotoBtnLabel}>Add Photo</Text>
-            </TouchableOpacity>
-          )}
         </ScrollView>
+      )}
+      {canEdit() && equipment.status === 'active' && (
+        <View style={styles.photoButtonRow}>
+          <Button icon="camera" mode="outlined" compact style={styles.photoBtn} onPress={handleTakePhoto} loading={uploadingPhoto} disabled={uploadingPhoto}>
+            Camera
+          </Button>
+          <Button icon="image-plus" mode="outlined" compact style={styles.photoBtn} onPress={handlePickPhoto} loading={uploadingPhoto} disabled={uploadingPhoto}>
+            Library
+          </Button>
+        </View>
       )}
 
       {/* Summary */}
@@ -496,12 +493,11 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingVertical: 8 },
   name: { fontWeight: 'bold', flex: 1 },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
-  photoGallery: { marginBottom: 8 },
+  photoGallery: { marginBottom: 0 },
   photoGalleryContent: { paddingHorizontal: 16, gap: 8 },
   galleryPhoto: { width: 200, height: 150, borderRadius: 8, resizeMode: 'cover' },
-  addPhotoBtn: { width: 100, height: 150, borderRadius: 8, borderWidth: 1.5, borderColor: '#ccc', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fafafa' },
-  addPhotoBtnText: { fontSize: 28, color: '#aaa', lineHeight: 32 },
-  addPhotoBtnLabel: { fontSize: 11, color: '#aaa', marginTop: 2 },
+  photoButtonRow: { flexDirection: 'row', gap: 8, marginHorizontal: 16, marginBottom: 8 },
+  photoBtn: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   chip: { marginRight: 8 },
   chipBroken: { backgroundColor: '#7b1fa2' },

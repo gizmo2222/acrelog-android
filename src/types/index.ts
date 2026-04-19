@@ -92,6 +92,7 @@ export interface MaintenanceTask {
   id: string;
   equipmentId: string;
   name: string;
+  notes?: string;
   imported: boolean;
   intervalHours?: number;
   intervalDays?: number;

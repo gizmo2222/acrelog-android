@@ -11,6 +11,7 @@ import {
   getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
   archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule,
 } from '../../services/maintenance';
+import { Timestamp } from 'firebase/firestore';
 import { Equipment, MaintenanceTask } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MaintenanceSchedule'>;
@@ -36,9 +37,14 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
 
   // Add/edit task form state
   const [taskName, setTaskName] = useState('');
+  const [taskNotes, setTaskNotes] = useState('');
   const [taskType, setTaskType] = useState<'recurring' | 'oneoff'>('recurring');
   const [intervalHours, setIntervalHours] = useState('');
   const [intervalDays, setIntervalDays] = useState('');
+  const [dueHours, setDueHours] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [lastDoneDate, setLastDoneDate] = useState('');
+  const [lastDoneHours, setLastDoneHours] = useState('');
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -55,28 +61,51 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   function startEdit(task: MaintenanceTask) {
     setEditingTask(task);
     setTaskName(task.name);
+    setTaskNotes(task.notes ?? '');
     const isOneOff = !task.intervalHours && !task.intervalDays;
     setTaskType(isOneOff ? 'oneoff' : 'recurring');
     setIntervalHours(task.intervalHours ? String(task.intervalHours) : '');
     setIntervalDays(task.intervalDays ? String(task.intervalDays) : '');
+    setDueHours(task.nextDueHours ? String(task.nextDueHours) : '');
+    setDueDate(task.nextDueAt ? task.nextDueAt.toDate().toISOString().split('T')[0] : '');
+    setLastDoneHours(task.lastCompletedHours ? String(task.lastCompletedHours) : '');
+    setLastDoneDate(task.lastCompletedAt ? task.lastCompletedAt.toDate().toISOString().split('T')[0] : '');
     setShowAddForm(true);
   }
 
   function cancelForm() {
     setEditingTask(null);
     setTaskName('');
+    setTaskNotes('');
     setTaskType('recurring');
     setIntervalHours('');
     setIntervalDays('');
+    setDueHours('');
+    setDueDate('');
+    setLastDoneDate('');
+    setLastDoneHours('');
     setShowAddForm(false);
   }
 
   async function handleSaveTask() {
     if (!taskName) return;
     try {
-      const updates: any = { name: taskName.trim() };
-      updates.intervalHours = taskType === 'recurring' && intervalHours ? parseInt(intervalHours) : null;
-      updates.intervalDays = taskType === 'recurring' && intervalDays ? parseInt(intervalDays) : null;
+      const updates: any = {
+        name: taskName.trim(),
+        notes: taskNotes.trim() || undefined,
+        intervalHours: taskType === 'recurring' && intervalHours ? parseInt(intervalHours) : null,
+        intervalDays: taskType === 'recurring' && intervalDays ? parseInt(intervalDays) : null,
+      };
+
+      if (taskType === 'oneoff') {
+        updates.nextDueHours = dueHours ? parseFloat(dueHours) : null;
+        updates.nextDueAt = dueDate ? Timestamp.fromDate(new Date(dueDate)) : null;
+      }
+
+      if (lastDoneDate || lastDoneHours) {
+        updates.lastCompletedAt = lastDoneDate ? Timestamp.fromDate(new Date(lastDoneDate)) : null;
+        updates.lastCompletedHours = lastDoneHours ? parseFloat(lastDoneHours) : null;
+      }
 
       if (editingTask) {
         await updateMaintenanceTask(editingTask.id, updates);
@@ -177,6 +206,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                 <Card.Content>
                   <Text variant="titleSmall" style={styles.sectionTitle}>{editingTask ? 'Edit Task' : 'New Task'}</Text>
                   <TextInput label="Task name *" value={taskName} onChangeText={setTaskName} mode="outlined" style={styles.input} />
+                  <TextInput label="Notes / Instructions" value={taskNotes} onChangeText={setTaskNotes} mode="outlined" style={styles.input} multiline numberOfLines={2} placeholder="What needs to be done, parts required, etc." />
                   <SegmentedButtons
                     value={taskType}
                     onValueChange={v => setTaskType(v as 'recurring' | 'oneoff')}
@@ -190,6 +220,20 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     <>
                       <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
                       <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
+                      <Text variant="labelSmall" style={styles.fieldHint}>Last completed (optional — seeds next due calculation)</Text>
+                      <View style={styles.twoCol}>
+                        <TextInput label="Date (YYYY-MM-DD)" value={lastDoneDate} onChangeText={setLastDoneDate} mode="outlined" style={styles.colInput} placeholder="2024-01-15" />
+                        <TextInput label="At hours" value={lastDoneHours} onChangeText={setLastDoneHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
+                      </View>
+                    </>
+                  )}
+                  {taskType === 'oneoff' && (
+                    <>
+                      <Text variant="labelSmall" style={styles.fieldHint}>Due (set at least one)</Text>
+                      <View style={styles.twoCol}>
+                        <TextInput label="By date (YYYY-MM-DD)" value={dueDate} onChangeText={setDueDate} mode="outlined" style={styles.colInput} placeholder="2024-06-01" />
+                        <TextInput label="By hours" value={dueHours} onChangeText={setDueHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
+                      </View>
                     </>
                   )}
                   <View style={styles.formRow}>
@@ -223,6 +267,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     </>
                   )}
                 </View>
+                {item.notes ? <Text variant="bodySmall" style={styles.taskNotes}>{item.notes}</Text> : null}
                 {item.intervalHours && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalHours} hours</Text>}
                 {item.intervalDays && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalDays} days</Text>}
                 {item.lastCompletedAt && (
@@ -362,6 +407,10 @@ const styles = StyleSheet.create({
   archivedCard: { opacity: 0.6 },
   archivedText: { color: '#999' },
   segmented: { marginBottom: 12 },
+  fieldHint: { color: '#888', marginBottom: 6, marginTop: 4 },
+  twoCol: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  colInput: { flex: 1 },
+  taskNotes: { color: '#666', marginBottom: 4, fontStyle: 'italic' },
   pendingChip: { backgroundColor: '#e3f2fd' },
   importedChip: { backgroundColor: '#f3e5f5', marginLeft: 4 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
