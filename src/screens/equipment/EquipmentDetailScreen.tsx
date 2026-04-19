@@ -115,11 +115,33 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   }
 
   async function handleAddPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
-    if (result.canceled || !activeFarm) return;
+    if (!activeFarm) return;
+    Alert.alert('Add Photo', undefined, [
+      {
+        text: 'Take Photo', onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+          const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+          if (result.canceled) return;
+          await doUploadPhoto(result.assets[0].uri);
+        },
+      },
+      {
+        text: 'Choose from Library', onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+          if (result.canceled) return;
+          await doUploadPhoto(result.assets[0].uri);
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  async function doUploadPhoto(uri: string) {
+    if (!activeFarm) return;
     setUploadingPhoto(true);
     try {
-      await uploadEquipmentPhoto(equipmentId, activeFarm.farmId, result.assets[0].uri);
+      await uploadEquipmentPhoto(equipmentId, activeFarm.farmId, uri);
       load();
     } catch (e: any) {
       Alert.alert('Error uploading photo', e.message);

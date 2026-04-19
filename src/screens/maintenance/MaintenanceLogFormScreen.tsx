@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
@@ -42,9 +42,24 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
     })();
   }, []);
 
-  async function pickPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
-    if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+  async function addPhoto() {
+    Alert.alert('Add Photo', undefined, [
+      {
+        text: 'Take Photo', onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+          const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+          if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+        },
+      },
+      {
+        text: 'Choose from Library', onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
+          if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   }
 
   async function pickReceipt() {
@@ -147,14 +162,17 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
         <Button icon="receipt" mode="outlined" onPress={pickReceipt} compact style={styles.mediaBtn}>
           Add Receipt ({receiptUris.length})
         </Button>
-        <Button icon="camera" mode="outlined" onPress={pickPhoto} compact style={styles.mediaBtn}>
+        <Button icon="camera" mode="outlined" onPress={addPhoto} compact style={styles.mediaBtn}>
           Add Photo ({photoUris.length})
         </Button>
       </View>
 
       <View style={styles.photoGrid}>
         {photoUris.map((uri, i) => (
-          <Image key={i} source={{ uri }} style={styles.thumb} />
+          <TouchableOpacity key={i} onPress={() => setPhotoUris(prev => prev.filter((_, j) => j !== i))}>
+            <Image source={{ uri }} style={styles.thumb} />
+            <View style={styles.thumbRemove}><Text style={styles.thumbRemoveText}>✕</Text></View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -183,5 +201,7 @@ const styles = StyleSheet.create({
   mediaBtn: { flex: 1 },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   thumb: { width: 72, height: 72, borderRadius: 4 },
+  thumbRemove: { position: 'absolute', top: 2, right: 2, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
+  thumbRemoveText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
   saveBtn: { marginBottom: 32 },
 });
