@@ -13,6 +13,7 @@ import {
 import { getFarm } from '../../services/farms';
 import { Category, Equipment, EquipmentStatus } from '../../types';
 import SelectField from '../../components/SelectField';
+import CameraModal from '../../components/CameraModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentForm'>;
 
@@ -26,6 +27,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(!!isEdit);
   const [saving, setSaving] = useState(false);
   const [primaryImageUri, setPrimaryImageUri] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
@@ -79,14 +81,8 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
     if (!result.canceled) setPrimaryImageUri(result.assets[0].uri);
   }
 
-  async function takePhoto() {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Camera access is needed to take photos.');
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: ImagePicker.CameraType.back });
-    if (!result.canceled) setPrimaryImageUri(result.assets[0].uri);
+  function takePhoto() {
+    setCameraOpen(true);
   }
 
   async function handleSave() {
@@ -238,6 +234,11 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       </Button>
     </ScrollView>
     </KeyboardAvoidingView>
+    <CameraModal
+      visible={cameraOpen}
+      onCapture={(uri) => { setCameraOpen(false); setPrimaryImageUri(uri); }}
+      onClose={() => setCameraOpen(false)}
+    />
   );
 }
 

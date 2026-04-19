@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Alert, Image, TouchableOpacity } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Divider, ActivityIndicator, IconButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
+import CameraModal from '../../components/CameraModal';
 import * as DocumentPicker from 'expo-document-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -27,6 +28,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
   const [parts, setParts] = useState<PartUsed[]>([]);
   const [receiptUris, setReceiptUris] = useState<string[]>([]);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [newPartName, setNewPartName] = useState('');
   const [newPartNumber, setNewPartNumber] = useState('');
   const [newPartQty, setNewPartQty] = useState('1');
@@ -42,11 +44,8 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
     })();
   }, []);
 
-  async function takePhoto() {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: 'back' });
-    if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+  function takePhoto() {
+    setCameraOpen(true);
   }
 
   async function pickPhoto() {
@@ -177,6 +176,11 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
         Log Completion
       </Button>
     </ScrollView>
+    <CameraModal
+      visible={cameraOpen}
+      onCapture={(uri) => { setCameraOpen(false); setPhotoUris(prev => [...prev, uri]); }}
+      onClose={() => setCameraOpen(false)}
+    />
   );
 }
 

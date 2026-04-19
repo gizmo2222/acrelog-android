@@ -8,6 +8,7 @@ import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
 import * as ImagePicker from 'expo-image-picker';
+import CameraModal from '../../components/CameraModal';
 import {
   getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
   archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule, uploadTaskPhoto,
@@ -47,6 +48,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const [lastDoneDate, setLastDoneDate] = useState('');
   const [lastDoneHours, setLastDoneHours] = useState('');
   const [taskPhotoUris, setTaskPhotoUris] = useState<string[]>([]);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -91,11 +93,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     setShowAddForm(false);
   }
 
-  async function takeTaskPhoto() {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: 'back' });
-    if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
+  function takeTaskPhoto() {
+    setCameraOpen(true);
   }
 
   async function pickTaskPhoto() {
@@ -429,6 +428,11 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       {canEdit && (
         <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => { cancelForm(); setShowAddForm(true); }} />
       )}
+      <CameraModal
+        visible={cameraOpen}
+        onCapture={(uri) => { setCameraOpen(false); setTaskPhotoUris(prev => [...prev, uri]); }}
+        onClose={() => setCameraOpen(false)}
+      />
     </View>
   );
 }
