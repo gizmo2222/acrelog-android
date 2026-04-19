@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, SegmentedButtons, Divider, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -187,20 +187,16 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       <TextInput label="Manufacturer URL" value={manufacturerUrl} onChangeText={setManufacturerUrl} mode="outlined" style={styles.input} keyboardType="url" autoCapitalize="none" />
 
       <Divider style={styles.divider} />
-      <Text variant="titleMedium" style={styles.sectionTitle}>Category</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-        {categories.map((cat) => (
-          <Button
-            key={cat.id}
-            mode={categoryId === cat.id ? 'contained' : 'outlined'}
-            onPress={() => { setCategoryId(cat.id); setCustomFields({}); }}
-            compact
-            style={styles.categoryBtn}
-          >
-            {cat.name}
-          </Button>
-        ))}
-      </ScrollView>
+      <SelectField
+        label="Category *"
+        value={categories.find(c => c.id === categoryId)?.name ?? ''}
+        options={categories.map(c => c.name)}
+        onChange={(name) => {
+          const cat = categories.find(c => c.name === name);
+          if (cat) { setCategoryId(cat.id); setCustomFields({}); }
+        }}
+        style={styles.input}
+      />
 
       {/* Dynamic custom fields for selected category */}
       {selectedCategory?.defaultFields.map((field) =>
@@ -247,8 +243,5 @@ const styles = StyleSheet.create({
   imageBtn: { flex: 1 },
   input: { marginBottom: 12 },
   divider: { marginVertical: 16 },
-  sectionTitle: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 8 },
-  categoryScroll: { marginBottom: 16 },
-  categoryBtn: { marginRight: 8 },
-  saveBtn: { marginTop: 8, marginBottom: 32 },
+saveBtn: { marginTop: 8, marginBottom: 32 },
 });
