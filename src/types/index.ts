@@ -93,6 +93,7 @@ export interface MaintenanceTask {
   equipmentId: string;
   name: string;
   notes?: string;
+  photoUrls?: string[];
   imported: boolean;
   intervalHours?: number;
   intervalDays?: number;

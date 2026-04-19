@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,9 +7,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
+import * as ImagePicker from 'expo-image-picker';
 import {
   getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
-  archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule,
+  archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule, uploadTaskPhoto,
 } from '../../services/maintenance';
 import { Timestamp } from 'firebase/firestore';
 import { Equipment, MaintenanceTask } from '../../types';
@@ -45,6 +46,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const [dueDate, setDueDate] = useState('');
   const [lastDoneDate, setLastDoneDate] = useState('');
   const [lastDoneHours, setLastDoneHours] = useState('');
+  const [taskPhotoUris, setTaskPhotoUris] = useState<string[]>([]);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -70,6 +72,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     setDueDate(task.nextDueAt ? task.nextDueAt.toDate().toISOString().split('T')[0] : '');
     setLastDoneHours(task.lastCompletedHours ? String(task.lastCompletedHours) : '');
     setLastDoneDate(task.lastCompletedAt ? task.lastCompletedAt.toDate().toISOString().split('T')[0] : '');
+    setTaskPhotoUris([]);
     setShowAddForm(true);
   }
 
@@ -84,7 +87,20 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     setDueDate('');
     setLastDoneDate('');
     setLastDoneHours('');
+    setTaskPhotoUris([]);
     setShowAddForm(false);
+  }
+
+  async function takeTaskPhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
+    if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
+  }
+
+  async function pickTaskPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8 });
+    if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
   }
 
   async function handleSaveTask() {
@@ -107,11 +123,23 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
         updates.lastCompletedHours = lastDoneHours ? parseFloat(lastDoneHours) : null;
       }
 
+      let savedId: string;
       if (editingTask) {
         await updateMaintenanceTask(editingTask.id, updates);
+        savedId = editingTask.id;
       } else {
-        await createMaintenanceTask({ equipmentId, imported: false, ...updates });
+        const created = await createMaintenanceTask({ equipmentId, imported: false, ...updates });
+        savedId = created.id;
       }
+
+      if (taskPhotoUris.length > 0 && activeFarm) {
+        const uploaded = await Promise.all(
+          taskPhotoUris.map(uri => uploadTaskPhoto(equipmentId, activeFarm.farmId, savedId, uri))
+        );
+        const existing = editingTask?.photoUrls ?? [];
+        await updateMaintenanceTask(savedId, { photoUrls: [...existing, ...uploaded] });
+      }
+
       cancelForm();
       load();
     } catch (e: any) {
@@ -236,6 +264,21 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                       </View>
                     </>
                   )}
+                  <Text variant="labelSmall" style={styles.fieldHint}>Reference photos (parts, part numbers, location)</Text>
+                  <View style={styles.twoCol}>
+                    <Button icon="camera" mode="outlined" compact style={styles.colInput} onPress={takeTaskPhoto}>Camera</Button>
+                    <Button icon="image-plus" mode="outlined" compact style={styles.colInput} onPress={pickTaskPhoto}>Library</Button>
+                  </View>
+                  {taskPhotoUris.length > 0 && (
+                    <View style={styles.photoGrid}>
+                      {taskPhotoUris.map((uri, i) => (
+                        <TouchableOpacity key={i} onPress={() => setTaskPhotoUris(prev => prev.filter((_, j) => j !== i))}>
+                          <Image source={{ uri }} style={styles.photoThumb} />
+                          <View style={styles.thumbRemove}><Text style={styles.thumbRemoveText}>✕</Text></View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
                   <View style={styles.formRow}>
                     <Button onPress={cancelForm}>Cancel</Button>
                     <Button mode="contained" onPress={handleSaveTask}>Save</Button>
@@ -268,6 +311,11 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                   )}
                 </View>
                 {item.notes ? <Text variant="bodySmall" style={styles.taskNotes}>{item.notes}</Text> : null}
+                {(item.photoUrls?.length ?? 0) > 0 && (
+                  <View style={styles.photoGrid}>
+                    {item.photoUrls!.map((url, i) => <Image key={i} source={{ uri: url }} style={styles.photoThumb} />)}
+                  </View>
+                )}
                 {item.intervalHours && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalHours} hours</Text>}
                 {item.intervalDays && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalDays} days</Text>}
                 {item.lastCompletedAt && (
@@ -411,6 +459,10 @@ const styles = StyleSheet.create({
   twoCol: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   colInput: { flex: 1 },
   taskNotes: { color: '#666', marginBottom: 4, fontStyle: 'italic' },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  photoThumb: { width: 64, height: 64, borderRadius: 4 },
+  thumbRemove: { position: 'absolute', top: 2, right: 2, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
+  thumbRemoveText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
   pendingChip: { backgroundColor: '#e3f2fd' },
   importedChip: { backgroundColor: '#f3e5f5', marginLeft: 4 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },

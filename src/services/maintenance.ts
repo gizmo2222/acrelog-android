@@ -159,6 +159,14 @@ export async function archiveMaintenanceTask(id: string, archived: boolean): Pro
   await updateDoc(doc(db, 'maintenanceTasks', id), { archived });
 }
 
+export async function uploadTaskPhoto(equipmentId: string, farmId: string, taskId: string, uri: string): Promise<string> {
+  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+  const fileId = Date.now().toString();
+  const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/tasks/${taskId}/${fileId}`);
+  await uploadString(storageRef, base64, 'base64');
+  return getDownloadURL(storageRef);
+}
+
 async function uploadMaintenanceFile(
   equipmentId: string,
   farmId: string,
