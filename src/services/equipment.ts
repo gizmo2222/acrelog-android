@@ -122,7 +122,7 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
     ],
   },
   {
-    name: 'Tractors & Vehicles',
+    name: 'Tractors',
     builtIn: true,
     defaultFields: [
       { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Propane', 'Electric'] },
@@ -143,13 +143,35 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
     ],
   },
   {
-    name: 'Trucks & UTVs',
+    name: 'Trucks',
     builtIn: true,
     defaultFields: [
       { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'] },
       { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'AWD'] },
       { key: 'payload', label: 'Payload Capacity (lbs)', type: 'number' },
       { key: 'towCapacity', label: 'Tow Capacity (lbs)', type: 'number' },
+    ],
+  },
+  {
+    name: 'UTVs & ATVs',
+    builtIn: true,
+    defaultFields: [
+      { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Gasoline', 'Diesel', 'Electric'] },
+      { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'AWD'] },
+      { key: 'engineSize', label: 'Engine Size (cc)', type: 'number' },
+      { key: 'seating', label: 'Seating Capacity', type: 'number' },
+      { key: 'payload', label: 'Payload Capacity (lbs)', type: 'number' },
+    ],
+  },
+  {
+    name: 'Attachments & Implements',
+    builtIn: true,
+    defaultFields: [
+      { key: 'attachmentType', label: 'Attachment Type', type: 'select', options: ['Bucket', 'Pallet Forks', 'Grapple', 'Bale Spear', 'Blade / Dozer', 'Box Scraper', 'Auger', 'Tiller', 'Mower', 'Sweeper', 'Broom', 'Snow Blower', 'Stump Grinder', 'Trencher', 'Mulcher', 'Other'] },
+      { key: 'compatibleMachine', label: 'Compatible Machine', type: 'select', options: ['Tractor', 'Skid Steer', 'Track Loader', 'Telehandler', 'Excavator', 'Universal'] },
+      { key: 'mountType', label: 'Mount / Coupler Type', type: 'select', options: ['Skid Steer Universal', 'Euro / Global', '3-Point Cat I', '3-Point Cat II', '3-Point Cat III', 'Rear PTO', 'Mid PTO', 'Pin-On', 'Other'] },
+      { key: 'workingWidth', label: 'Working Width (in)', type: 'number' },
+      { key: 'weightCapacity', label: 'Weight / Lift Capacity (lbs)', type: 'number' },
     ],
   },
 ];

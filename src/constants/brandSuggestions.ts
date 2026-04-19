@@ -1,7 +1,7 @@
 export type BrandEntry = { brand: string; models: string[] };
 
 export const BRAND_SUGGESTIONS: Record<string, BrandEntry[]> = {
-  'Tractors & Vehicles': [
+  'Tractors': [
     {
       brand: 'John Deere',
       models: [
@@ -114,46 +114,6 @@ export const BRAND_SUGGESTIONS: Record<string, BrandEntry[]> = {
       models: ['WC', 'WD', 'WD45', 'D-17', 'D-19', '170', '175', '185', '190', '200', '7060'],
     },
     {
-      brand: 'Ford',
-      models: ['F-150', 'F-250', 'F-250 Super Duty', 'F-350 Super Duty', 'F-450 Super Duty', 'F-550 Super Duty'],
-    },
-    {
-      brand: 'Chevrolet / GMC',
-      models: ['Silverado 1500', 'Silverado 2500HD', 'Silverado 3500HD', 'Sierra 2500HD', 'Sierra 3500HD'],
-    },
-    {
-      brand: 'Ram',
-      models: ['Ram 1500', 'Ram 2500', 'Ram 3500', 'Ram 3500 Dually'],
-    },
-    {
-      brand: 'Toyota',
-      models: ['Tacoma', 'Tundra', 'Land Cruiser 200'],
-    },
-    {
-      brand: 'Polaris',
-      models: ['Ranger 570', 'Ranger 900', 'Ranger XP 1000', 'Ranger XP Kinetic', 'General 1000'],
-    },
-    {
-      brand: 'Can-Am',
-      models: ['Defender HD8', 'Defender HD10', 'Defender MAX HD10', 'Maverick Trail'],
-    },
-    {
-      brand: 'John Deere Gator',
-      models: ['TS 4x2', 'TH 6x4', 'HPX615E', 'HPX815E', 'XUV 560', 'XUV 590E', 'XUV 835M', 'XUV 855M', 'XUV 865R'],
-    },
-    {
-      brand: 'Kawasaki',
-      models: ['Mule PRO-FXT', 'Mule PRO-FXR', 'Mule PRO-DX', 'Mule SX 4x4'],
-    },
-    {
-      brand: 'Yamaha',
-      models: ['Wolverine X4', 'Wolverine RMAX4', 'Viking VI'],
-    },
-    {
-      brand: 'Honda',
-      models: ['Pioneer 500', 'Pioneer 700', 'Pioneer 1000', 'Pioneer 1000-6'],
-    },
-    {
       brand: 'Kioti',
       models: ['CX2510', 'CS2210', 'DK4510', 'DK5510', 'DK6010', 'PX9020', 'HX9020'],
     },
@@ -168,6 +128,256 @@ export const BRAND_SUGGESTIONS: Record<string, BrandEntry[]> = {
     {
       brand: 'Yanmar',
       models: ['SA Series', 'YT2 Series', 'YT3 Series', 'YT4 Series'],
+    },
+  ],
+
+  'Trucks': [
+    {
+      brand: 'Ford',
+      models: ['F-150', 'F-150 Lightning', 'F-250 Super Duty', 'F-350 Super Duty', 'F-450 Super Duty', 'F-550 Super Duty'],
+    },
+    {
+      brand: 'Chevrolet',
+      models: ['Silverado 1500', 'Silverado 1500 EV', 'Silverado 2500HD', 'Silverado 3500HD'],
+    },
+    {
+      brand: 'GMC',
+      models: ['Sierra 1500', 'Sierra 2500HD', 'Sierra 3500HD'],
+    },
+    {
+      brand: 'Ram',
+      models: ['Ram 1500', 'Ram 1500 TRX', 'Ram 2500', 'Ram 3500', 'Ram 3500 Dually'],
+    },
+    {
+      brand: 'Toyota',
+      models: ['Tacoma', 'Tacoma TRD Pro', 'Tundra', 'Tundra TRD Pro', 'Land Cruiser 200'],
+    },
+    {
+      brand: 'Nissan',
+      models: ['Frontier', 'Titan', 'Titan XD'],
+    },
+    {
+      brand: 'Honda',
+      models: ['Ridgeline'],
+    },
+  ],
+
+  'UTVs & ATVs': [
+    {
+      brand: 'Polaris',
+      models: [
+        'Ranger 570', 'Ranger 570 Full-Size', 'Ranger 900', 'Ranger XP 1000', 'Ranger XP Kinetic',
+        'Ranger Crew 570', 'Ranger Crew XP 1000',
+        'General 1000', 'General XP 4 1000',
+        'RZR XP 1000', 'RZR Pro XP',
+        'Sportsman 450 H.O.', 'Sportsman 570', 'Sportsman 850', 'Sportsman XP 1000',
+      ],
+    },
+    {
+      brand: 'Can-Am',
+      models: [
+        'Defender HD7', 'Defender HD9', 'Defender HD10',
+        'Defender MAX HD10', 'Defender MAX Limited HD10',
+        'Maverick Trail 1000', 'Maverick Sport 1000R',
+        'Outlander 450', 'Outlander 570', 'Outlander 650', 'Outlander 850', 'Outlander 1000R',
+      ],
+    },
+    {
+      brand: 'John Deere Gator',
+      models: [
+        'TS 4x2', 'TH 6x4', 'TH 6x4 Diesel',
+        'HPX615E', 'HPX815E',
+        'XUV 560', 'XUV 590E', 'XUV 590M',
+        'XUV 835M', 'XUV 835R', 'XUV 855M', 'XUV 855R', 'XUV 865M', 'XUV 865R',
+        'RSX860M', 'RSX860E',
+      ],
+    },
+    {
+      brand: 'Kawasaki',
+      models: [
+        'Mule SX 4x4', 'Mule SX 4x4 FI',
+        'Mule PRO-FX', 'Mule PRO-FXT', 'Mule PRO-FXR', 'Mule PRO-DX', 'Mule PRO-DXT',
+        'Brute Force 300', 'Brute Force 750 4x4i',
+        'Teryx S LE', 'Teryx4 S LE',
+      ],
+    },
+    {
+      brand: 'Yamaha',
+      models: [
+        'Wolverine X2', 'Wolverine X4', 'Wolverine RMAX2 1000', 'Wolverine RMAX4 1000',
+        'Viking', 'Viking VI',
+        'Grizzly 700', 'Grizzly EPS',
+        'Kodiak 450', 'Kodiak 700',
+      ],
+    },
+    {
+      brand: 'Honda',
+      models: [
+        'Pioneer 500', 'Pioneer 700', 'Pioneer 700-4', 'Pioneer 1000', 'Pioneer 1000-6 Crew',
+        'FourTrax Foreman 520', 'FourTrax Rancher 420', 'FourTrax Recon 250',
+        'TRX520 Rubicon',
+      ],
+    },
+    {
+      brand: 'Kubota',
+      models: ['RTV-X900', 'RTV-X1100C', 'RTV-X1100CR', 'RTV-X1140', 'RTV500'],
+    },
+    {
+      brand: 'CFMOTO',
+      models: ['UForce 1000', 'ZForce 950 Sport', 'CForce 600', 'CForce 800'],
+    },
+    {
+      brand: 'Textron / Arctic Cat',
+      models: ['Alterra 700', 'Alterra TBX 700', 'Prowler Pro', 'Wildcat XX'],
+    },
+  ],
+
+  'Attachments & Implements': [
+    {
+      brand: 'John Deere',
+      models: [
+        '520M Loader', '540R Loader', '620R Loader', '640R Loader',
+        'iMatch Quick-Coupler',
+        'BW15079 Box Blade', 'BW14631 Tiller',
+        'LP42108 Pallet Forks', 'LP49228 Forks',
+        'BW13613 Bale Spear',
+      ],
+    },
+    {
+      brand: 'Case IH',
+      models: [
+        'L750 Loader', 'L755 Loader', 'L760 Loader', 'L765 Loader',
+        'Quick-Coupler',
+      ],
+    },
+    {
+      brand: 'Kubota',
+      models: [
+        'LA463 Loader', 'LA525 Loader', 'LA534 Loader', 'LA805 Loader', 'LA1154 Loader',
+        'BX2816 Tiller', 'RCK54 Mower Deck',
+        'WL210 Loader',
+      ],
+    },
+    {
+      brand: 'Land Pride',
+      models: [
+        'RCR1260 Rotary Cutter', 'RCR1872 Rotary Cutter', 'RCR2684 Rotary Cutter',
+        'FDR1648 Rotary Disc Mower',
+        'BB1548 Box Blade', 'BB1560 Box Blade', 'BB2596 Box Blade',
+        'RTO1542 Tiller', 'RTO1560 Tiller', 'RTO2542 Tiller',
+        'PD10 Post Hole Digger', 'PD15 Post Hole Digger',
+        'SR1548 Landscape Rake', 'SR1560 Landscape Rake',
+        'LS1548 Landscape Seeder',
+      ],
+    },
+    {
+      brand: 'Woods',
+      models: [
+        'RC Series Rotary Cutter', 'BW126X Batwing Cutter',
+        'BD6000X Backhoe', 'BD7000X Backhoe',
+        'BH75X Backhoe', 'BH90X Backhoe',
+        'RD Series Rotary Disc Mower',
+        'EQ Box Blade',
+        'TSG50 Stump Grinder',
+      ],
+    },
+    {
+      brand: 'Bobcat',
+      models: [
+        'Bucket 68"', 'Bucket 72"', 'Bucket 78"', 'Bucket 84"',
+        'Pallet Fork Frame', 'Utility Forks 48"', 'Utility Forks 60"',
+        'Grapple Bucket', 'Root Grapple',
+        'Auger Drive + 9" Bit', 'Auger Drive + 12" Bit', 'Auger Drive + 18" Bit',
+        'Broom 72"', 'Angle Broom',
+        'Snow Blower 72"', 'Snow Blower 84"',
+        'Stump Grinder',
+        'Trencher 36"', 'Trencher 48"',
+        'Mulcher',
+        'Landscape Rake',
+      ],
+    },
+    {
+      brand: 'Paladin / Pengo',
+      models: [
+        'Bobcat-style Pallet Forks', 'Heavy Duty Grapple',
+        'Tree Shear', 'Root Rake Grapple',
+        'Auger Drive XD', 'Pengo Auger 9"', 'Pengo Auger 12"', 'Pengo Auger 18"',
+        'Trencher T8', 'Trencher T16',
+      ],
+    },
+    {
+      brand: 'Titan Implement',
+      models: [
+        'Box Blade 60"', 'Box Blade 72"', 'Box Blade 84"',
+        'Pallet Forks 42"', 'Pallet Forks 48"',
+        'Bale Spear 49"',
+        'Rotary Tiller 48"', 'Rotary Tiller 60"', 'Rotary Tiller 72"',
+        'Landscape Rake 60"', 'Landscape Rake 72"',
+        'Rear Blade 60"', 'Rear Blade 72"',
+        'Log Grapple', 'Root Grapple',
+        'Skid Steer Bucket 72"', 'Skid Steer Bucket 84"',
+        'Post Hole Digger + 9" Bit',
+      ],
+    },
+    {
+      brand: 'Erskine Attachments',
+      models: [
+        'Snow Blower 72"', 'Snow Blower 84"', 'Snow Blower 96"',
+        'Bucket 66"', 'Bucket 72"', 'Bucket 78"',
+        'Sweepster Broom 72"',
+        'Trencher 36"', 'Trencher 48"', 'Trencher 60"',
+        'Auger Drive', 'Auger 9"', 'Auger 12"',
+      ],
+    },
+    {
+      brand: 'Craig Manufacturing',
+      models: [
+        'Skid Steer Grapple', 'Brush Grapple',
+        'Skid Steer Thumb', 'Excavator Thumb',
+        'Log Forks',
+      ],
+    },
+    {
+      brand: 'Brush Wolf / Fecon',
+      models: [
+        'FTX100', 'FTX148', 'FTX200',
+        'Bull Hog BH074', 'Bull Hog BH085',
+        'RTC72 Roller Drum Cutter',
+      ],
+    },
+    {
+      brand: 'Caterpillar',
+      models: [
+        'Work Tool Bucket 72"', 'Work Tool Bucket 84"',
+        'Multi-Purpose Bucket',
+        'Pallet Forks',
+        'Grapple Rake',
+        'Cold Planer',
+      ],
+    },
+    {
+      brand: 'Worksaver',
+      models: [
+        'Skid Steer Bale Spear', '3-Pt Bale Spear',
+        '3-Pt Pallet Forks',
+        'Hay Mover',
+        'Grain Bucket',
+      ],
+    },
+    {
+      brand: 'Westendorf',
+      models: [
+        'TA-26 Loader', 'TA-28 Loader', 'TA-46 Loader',
+        'WL-35 Loader', 'WL-42 Loader',
+      ],
+    },
+    {
+      brand: 'Alamo Industrial',
+      models: [
+        'Rhino SR Series Cutter', 'Rhino TW Series',
+        'Servis 15 Cutter', 'Servis 20 Cutter',
+        'Machete Batwing',
+      ],
     },
   ],
 
