@@ -53,6 +53,7 @@ export interface Category {
   name: string;
   builtIn: boolean;
   defaultFields: CategoryField[];
+  meterLabel?: 'hours' | 'miles';
 }
 
 // ─── Equipment ─────────────────────────────────────────────────────────────

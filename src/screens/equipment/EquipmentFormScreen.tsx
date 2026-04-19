@@ -203,20 +203,6 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <TextInput label="Name *" value={name} onChangeText={setName} mode="outlined" style={styles.input} />
-      <AutocompleteInput label="Brand *" value={brand} onChangeText={setBrand} suggestions={brandSuggestions} style={styles.input} />
-      <AutocompleteInput label="Model *" value={model} onChangeText={setModel} suggestions={modelSuggestions} style={styles.input} />
-      <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
-      <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
-      <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
-      {farmLocations.length > 0 ? (
-        <SelectField label="Storage Location" value={location} options={farmLocations} onChange={setLocation} allowClear style={styles.input} />
-      ) : (
-        <TextInput label="Storage Location" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} />
-      )}
-      <TextInput label="Manufacturer URL" value={manufacturerUrl} onChangeText={setManufacturerUrl} mode="outlined" style={styles.input} keyboardType="url" autoCapitalize="none" />
-
-      <Divider style={styles.divider} />
       <SelectField
         label="Category *"
         value={categories.find(c => c.id === categoryId)?.name ?? ''}
@@ -237,6 +223,21 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         }}
         style={styles.input}
       />
+
+      <TextInput label="Name *" value={name} onChangeText={setName} mode="outlined" style={styles.input} />
+      <AutocompleteInput label="Brand *" value={brand} onChangeText={setBrand} suggestions={brandSuggestions} style={styles.input} />
+      <AutocompleteInput label="Model *" value={model} onChangeText={setModel} suggestions={modelSuggestions} style={styles.input} />
+      <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
+      <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
+      <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
+      {farmLocations.length > 0 ? (
+        <SelectField label="Storage Location" value={location} options={farmLocations} onChange={setLocation} allowClear style={styles.input} />
+      ) : (
+        <TextInput label="Storage Location" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} />
+      )}
+      <TextInput label="Manufacturer URL" value={manufacturerUrl} onChangeText={setManufacturerUrl} mode="outlined" style={styles.input} keyboardType="url" autoCapitalize="none" />
+
+      {selectedCategory?.defaultFields.length ? <Divider style={styles.divider} /> : null}
 
       {selectedCategory?.defaultFields.map((field) =>
         field.type === 'select' && field.options?.length ? (

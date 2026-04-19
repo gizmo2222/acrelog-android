@@ -165,6 +165,10 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
   }
 
+  const meterLabel = category?.meterLabel ?? 'hours';
+  const meterUnit = meterLabel === 'miles' ? 'mi' : 'hrs';
+  const meterTitle = meterLabel === 'miles' ? 'TOTAL MILES' : 'TOTAL HOURS';
+
   const overallStatus: MaintenanceStatus = equipment.broken
     ? 'broken'
     : tasks.filter(t => !t.archived).reduce<MaintenanceStatus>((acc, t) => {
@@ -267,13 +271,13 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           {/* Hours + Maintenance — full-width row */}
           <View style={styles.statRowWide}>
             <View style={styles.statHoursSide}>
-              <Text style={styles.statLabel}>TOTAL HOURS</Text>
+              <Text style={styles.statLabel}>{meterTitle}</Text>
               <Text style={styles.statHoursValue}>{equipment.totalHours ?? 0}</Text>
               <Text
                 style={styles.statUpdateLink}
                 onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }}
               >
-                Update
+                {meterLabel === 'miles' ? 'Update Odometer' : 'Update Hours'}
               </Text>
             </View>
             <View style={styles.statSeparator} />
@@ -337,7 +341,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           <Card.Content>
             <View style={styles.sectionHeader}>
               <Text variant="titleMedium" style={styles.sectionTitle}>
-                Hours History ({readings.length})
+                {meterLabel === 'miles' ? 'Mileage History' : 'Hours History'} ({readings.length})
               </Text>
               <Button compact icon={showAllReadings ? 'chevron-up' : 'chevron-down'}
                 onPress={() => { setShowAllReadings(v => !v); setReadingsPage(1); }}>
@@ -351,7 +355,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
                     <Text variant="bodySmall" style={styles.readingDate}>
                       {r.recordedAt.toDate().toLocaleDateString()}
                     </Text>
-                    <Text variant="bodyMedium" style={styles.readingHours}>{r.hours} hrs</Text>
+                    <Text variant="bodyMedium" style={styles.readingHours}>{r.hours} {meterUnit}</Text>
                   </View>
                 ))}
                 {readings.length > readingsPage * READINGS_PAGE_SIZE && (
@@ -428,19 +432,21 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       </View>
       <Portal>
         <Dialog visible={hoursDialogVisible} onDismiss={() => setHoursDialogVisible(false)}>
-          <Dialog.Title>Update Hours</Dialog.Title>
+          <Dialog.Title>{meterLabel === 'miles' ? 'Update Mileage' : 'Update Hours'}</Dialog.Title>
           <Dialog.Content>
             <SegmentedButtons
               value={hoursMode}
               onValueChange={v => setHoursMode(v as 'add' | 'set')}
               buttons={[
-                { value: 'add', label: 'Add hours' },
+                { value: 'add', label: meterLabel === 'miles' ? 'Add miles' : 'Add hours' },
                 { value: 'set', label: 'Set total' },
               ]}
               style={{ marginBottom: 12 }}
             />
             <PaperTextInput
-              label={hoursMode === 'add' ? 'Hours to add' : 'New total hours'}
+              label={hoursMode === 'add'
+                ? (meterLabel === 'miles' ? 'Miles to add' : 'Hours to add')
+                : (meterLabel === 'miles' ? 'New odometer reading' : 'New total hours')}
               value={hoursInput}
               onChangeText={setHoursInput}
               mode="outlined"

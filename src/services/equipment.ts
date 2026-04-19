@@ -6,6 +6,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
   orderBy,
@@ -145,6 +146,7 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
   {
     name: 'Trucks',
     builtIn: true,
+    meterLabel: 'miles',
     defaultFields: [
       { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'] },
       { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'AWD'] },
@@ -187,7 +189,8 @@ export async function ensureBuiltInCategories(farmId: string): Promise<void> {
     const currentNames = new Set(BUILT_IN_CATEGORIES.map(c => c.name));
 
     const stale = snap.docs.filter(d => !currentNames.has(d.data().name as string));
-    const existingNames = new Set(snap.docs.map(d => d.data().name as string));
+    const existingDocs = snap.docs.filter(d => currentNames.has(d.data().name as string));
+    const existingNames = new Set(existingDocs.map(d => d.data().name as string));
     const missing = BUILT_IN_CATEGORIES.filter(cat => !existingNames.has(cat.name));
 
     await Promise.all([
@@ -196,6 +199,13 @@ export async function ensureBuiltInCategories(farmId: string): Promise<void> {
         const ref = doc(collection(db, 'categories'));
         return setDoc(ref, { ...cat, farmId, id: ref.id });
       }),
+      ...existingDocs.map((d) => {
+        const canonical = BUILT_IN_CATEGORIES.find(c => c.name === d.data().name)!;
+        const data = d.data();
+        if ((data.meterLabel ?? null) !== (canonical.meterLabel ?? null)) {
+          return updateDoc(d.ref, { meterLabel: canonical.meterLabel ?? deleteField() });
+        }
+      }).filter(Boolean),
     ]);
   } finally {
     _ensuringFarms.delete(farmId);
