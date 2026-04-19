@@ -161,6 +161,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     .slice(0, 6) ?? [];
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       {/* Header row */}
       <View style={styles.headerRow}>
@@ -477,6 +478,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       onCapture={(uri) => { setCameraOpen(false); doUploadPhoto(uri); }}
       onClose={() => setCameraOpen(false)}
     />
+    </>
   );
 }
 

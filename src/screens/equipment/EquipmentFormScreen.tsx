@@ -141,6 +141,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
+    <>
     <KeyboardAvoidingView style={styles.kavWrapper} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">
       {/* Primary image */}
@@ -239,6 +240,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       onCapture={(uri) => { setCameraOpen(false); setPrimaryImageUri(uri); }}
       onClose={() => setCameraOpen(false)}
     />
+    </>
   );
 }
 

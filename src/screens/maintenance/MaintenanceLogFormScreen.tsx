@@ -99,6 +99,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="titleMedium" style={styles.taskName}>{task?.name}</Text>
       <Text variant="bodySmall" style={styles.equipName}>{equipment?.name}</Text>
@@ -181,6 +182,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
       onCapture={(uri) => { setCameraOpen(false); setPhotoUris(prev => [...prev, uri]); }}
       onClose={() => setCameraOpen(false)}
     />
+    </>
   );
 }
 
