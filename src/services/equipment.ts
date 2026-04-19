@@ -320,6 +320,25 @@ export async function uploadEquipmentPhoto(
   return photo;
 }
 
+export async function uploadEquipmentPhotoUrl(equipmentId: string, farmId: string, uri: string): Promise<string> {
+  const blob = await uriToBlob(uri);
+  const photoId = Date.now().toString();
+  const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/photos/${photoId}.jpg`);
+  await uploadBytes(storageRef, blob);
+  return getDownloadURL(storageRef);
+}
+
+export async function setEquipmentPhotos(
+  equipmentId: string,
+  primaryImageUrl: string | null,
+  photoUrls: string[]
+): Promise<void> {
+  await updateDoc(doc(db, 'equipment', equipmentId), {
+    primaryImageUrl: primaryImageUrl ?? null,
+    photos: photoUrls.map(url => ({ url, uploadedAt: Timestamp.now() })),
+  });
+}
+
 export async function deleteEquipmentPhoto(equipmentId: string, photoUrl: string): Promise<void> {
   const snap = await getDoc(doc(db, 'equipment', equipmentId));
   const photos: EquipmentPhoto[] = snap.data()?.photos ?? [];

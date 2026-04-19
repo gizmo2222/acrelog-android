@@ -275,8 +275,8 @@ export default function EquipmentListScreen() {
               onPress={() => navigation.navigate('EquipmentDetail', { equipmentId: item.id })}
             >
               <Card.Content style={styles.cardContent}>
-                {item.primaryImageUrl ? (
-                  <Card.Cover source={{ uri: item.primaryImageUrl }} style={styles.thumbnail} />
+                {(item.primaryImageUrl || item.photos?.[0]?.url) ? (
+                  <Card.Cover source={{ uri: item.primaryImageUrl ?? item.photos![0].url }} style={styles.thumbnail} />
                 ) : null}
                 <View style={styles.cardText}>
                   <Text variant="titleMedium">{item.name}</Text>
