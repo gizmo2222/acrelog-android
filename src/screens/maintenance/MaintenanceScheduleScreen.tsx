@@ -94,7 +94,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   async function takeTaskPhoto() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: 'back' });
     if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
   }
 

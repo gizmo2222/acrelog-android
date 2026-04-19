@@ -118,7 +118,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     if (!activeFarm) return;
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: 'back' });
     if (result.canceled) return;
     await doUploadPhoto(result.assets[0].uri);
   }

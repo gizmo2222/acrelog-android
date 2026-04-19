@@ -45,7 +45,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
   async function takePhoto() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8, cameraType: 'back' });
     if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
   }
 

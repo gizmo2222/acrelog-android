@@ -283,7 +283,12 @@ export async function deleteEquipment(id: string): Promise<void> {
 // ─── Images ────────────────────────────────────────────────────────────────
 
 async function uriToBase64(uri: string): Promise<string> {
-  return FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+  // Android returns content:// URIs which FileSystem can't read directly — copy to cache first
+  const local = `${FileSystem.cacheDirectory}upload_${Date.now()}.jpg`;
+  await FileSystem.copyAsync({ from: uri, to: local });
+  const base64 = await FileSystem.readAsStringAsync(local, { encoding: FileSystem.EncodingType.Base64 });
+  FileSystem.deleteAsync(local, { idempotent: true });
+  return base64;
 }
 
 export async function uploadPrimaryImage(equipmentId: string, farmId: string, uri: string): Promise<string> {

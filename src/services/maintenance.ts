@@ -159,8 +159,16 @@ export async function archiveMaintenanceTask(id: string, archived: boolean): Pro
   await updateDoc(doc(db, 'maintenanceTasks', id), { archived });
 }
 
+async function uriToBase64(uri: string): Promise<string> {
+  const local = `${FileSystem.cacheDirectory}upload_${Date.now()}.jpg`;
+  await FileSystem.copyAsync({ from: uri, to: local });
+  const base64 = await FileSystem.readAsStringAsync(local, { encoding: FileSystem.EncodingType.Base64 });
+  FileSystem.deleteAsync(local, { idempotent: true });
+  return base64;
+}
+
 export async function uploadTaskPhoto(equipmentId: string, farmId: string, taskId: string, uri: string): Promise<string> {
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+  const base64 = await uriToBase64(uri);
   const fileId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/tasks/${taskId}/${fileId}`);
   await uploadString(storageRef, base64, 'base64');
@@ -173,7 +181,7 @@ async function uploadMaintenanceFile(
   uri: string,
   folder: string
 ): Promise<string> {
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+  const base64 = await uriToBase64(uri);
   const fileId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/maintenance/${folder}/${fileId}`);
   await uploadString(storageRef, base64, 'base64');
