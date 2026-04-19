@@ -96,13 +96,11 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
     ]);
   }
 
-  function movePhoto(index: number, dir: -1 | 1) {
+  function setAsPrimary(index: number) {
     setPhotos(prev => {
       const next = [...prev];
-      const swap = index + dir;
-      if (swap < 0 || swap >= next.length) return next;
-      [next[index], next[swap]] = [next[swap], next[index]];
-      return next;
+      const [picked] = next.splice(index, 1);
+      return [picked, ...next];
     });
   }
 
@@ -179,22 +177,17 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         {photos.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll} contentContainerStyle={styles.photoScrollContent}>
             {photos.map((p, i) => (
-              <View key={i} style={styles.photoItem}>
+              <View key={i} style={[styles.photoItem, i === 0 && styles.photoItemPrimary]}>
                 <Image source={{ uri: p.uri }} style={styles.photoThumb} />
-                {photos.length > 0 && i === 0 && (
-                  <View style={styles.primaryBadge}><Text style={styles.primaryBadgeText}>Primary</Text></View>
-                )}
+                {i === 0
+                  ? <View style={styles.primaryBadge}><Text style={styles.primaryBadgeText}>★ Primary</Text></View>
+                  : <TouchableOpacity style={styles.primaryBadge} onPress={() => setAsPrimary(i)}>
+                      <Text style={styles.primaryBadgeText}>Set Primary</Text>
+                    </TouchableOpacity>
+                }
                 <TouchableOpacity style={styles.photoDelete} onPress={() => removePhoto(i)}>
                   <Text style={styles.photoDeleteText}>✕</Text>
                 </TouchableOpacity>
-                <View style={styles.photoArrows}>
-                  <TouchableOpacity style={[styles.arrowBtn, i === 0 && styles.arrowBtnDisabled]} onPress={() => movePhoto(i, -1)} disabled={i === 0}>
-                    <Text style={styles.arrowText}>‹</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.arrowBtn, i === photos.length - 1 && styles.arrowBtnDisabled]} onPress={() => movePhoto(i, 1)} disabled={i === photos.length - 1}>
-                    <Text style={styles.arrowText}>›</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
             ))}
           </ScrollView>
@@ -281,15 +274,12 @@ const styles = StyleSheet.create({
   photoScroll: { marginBottom: 8 },
   photoScrollContent: { gap: 8, paddingBottom: 4 },
   photoItem: { position: 'relative', width: 120 },
-  photoThumb: { width: 120, height: 100, borderRadius: 8, resizeMode: 'cover' },
-  primaryBadge: { position: 'absolute', bottom: 28, left: 4, backgroundColor: 'rgba(46,125,50,0.85)', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2 },
-  primaryBadgeText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
+  photoItemPrimary: { borderWidth: 2, borderColor: '#2e7d32', borderRadius: 10 },
+  photoThumb: { width: 116, height: 100, borderRadius: 8, resizeMode: 'cover' },
+  primaryBadge: { position: 'absolute', bottom: 4, left: 4, right: 4, backgroundColor: 'rgba(46,125,50,0.85)', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 3, alignItems: 'center' },
+  primaryBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   photoDelete: { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
   photoDeleteText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  photoArrows: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  arrowBtn: { flex: 1, alignItems: 'center', backgroundColor: '#e0e0e0', borderRadius: 4, paddingVertical: 2, marginHorizontal: 1 },
-  arrowBtnDisabled: { opacity: 0.3 },
-  arrowText: { fontSize: 18, lineHeight: 22, color: '#333' },
   photoBtnRow: { flexDirection: 'row', gap: 8 },
   photoBtn: { flex: 1 },
   input: { marginBottom: 12 },
