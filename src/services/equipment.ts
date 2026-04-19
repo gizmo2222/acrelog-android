@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import {
   ref,
-  uploadString,
+  uploadBytes,
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
@@ -282,19 +282,20 @@ export async function deleteEquipment(id: string): Promise<void> {
 
 // ─── Images ────────────────────────────────────────────────────────────────
 
-async function uriToBase64(uri: string): Promise<string> {
-  // Android returns content:// URIs which FileSystem can't read directly — copy to cache first
+async function uriToBlob(uri: string): Promise<Blob> {
+  // Android content:// URIs can't be fetched directly — copy to file:// cache first
   const local = `${FileSystem.cacheDirectory}upload_${Date.now()}.jpg`;
   await FileSystem.copyAsync({ from: uri, to: local });
-  const base64 = await FileSystem.readAsStringAsync(local, { encoding: FileSystem.EncodingType.Base64 });
+  const response = await fetch(local);
+  const blob = await response.blob();
   FileSystem.deleteAsync(local, { idempotent: true });
-  return base64;
+  return blob;
 }
 
 export async function uploadPrimaryImage(equipmentId: string, farmId: string, uri: string): Promise<string> {
-  const base64 = await uriToBase64(uri);
+  const blob = await uriToBlob(uri);
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/primary.jpg`);
-  await uploadString(storageRef, base64, 'base64');
+  await uploadBytes(storageRef, blob);
   const url = await getDownloadURL(storageRef);
   await updateDoc(doc(db, 'equipment', equipmentId), { primaryImageUrl: url });
   return url;
@@ -306,10 +307,10 @@ export async function uploadEquipmentPhoto(
   uri: string,
   label?: string
 ): Promise<EquipmentPhoto> {
-  const base64 = await uriToBase64(uri);
+  const blob = await uriToBlob(uri);
   const photoId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/photos/${photoId}.jpg`);
-  await uploadString(storageRef, base64, 'base64');
+  await uploadBytes(storageRef, blob);
   const url = await getDownloadURL(storageRef);
   const photo: EquipmentPhoto = { url, label, uploadedAt: Timestamp.now() };
 

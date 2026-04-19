@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import {
   ref,
-  uploadString,
+  uploadBytes,
   getDownloadURL,
 } from 'firebase/storage';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -159,19 +159,21 @@ export async function archiveMaintenanceTask(id: string, archived: boolean): Pro
   await updateDoc(doc(db, 'maintenanceTasks', id), { archived });
 }
 
-async function uriToBase64(uri: string): Promise<string> {
+async function uriToBlob(uri: string): Promise<Blob> {
+  // Android content:// URIs can't be fetched directly — copy to file:// cache first
   const local = `${FileSystem.cacheDirectory}upload_${Date.now()}.jpg`;
   await FileSystem.copyAsync({ from: uri, to: local });
-  const base64 = await FileSystem.readAsStringAsync(local, { encoding: FileSystem.EncodingType.Base64 });
+  const response = await fetch(local);
+  const blob = await response.blob();
   FileSystem.deleteAsync(local, { idempotent: true });
-  return base64;
+  return blob;
 }
 
 export async function uploadTaskPhoto(equipmentId: string, farmId: string, taskId: string, uri: string): Promise<string> {
-  const base64 = await uriToBase64(uri);
+  const blob = await uriToBlob(uri);
   const fileId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/tasks/${taskId}/${fileId}`);
-  await uploadString(storageRef, base64, 'base64');
+  await uploadBytes(storageRef, blob);
   return getDownloadURL(storageRef);
 }
 
@@ -181,10 +183,10 @@ async function uploadMaintenanceFile(
   uri: string,
   folder: string
 ): Promise<string> {
-  const base64 = await uriToBase64(uri);
+  const blob = await uriToBlob(uri);
   const fileId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/maintenance/${folder}/${fileId}`);
-  await uploadString(storageRef, base64, 'base64');
+  await uploadBytes(storageRef, blob);
   return getDownloadURL(storageRef);
 }
 
