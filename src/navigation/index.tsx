@@ -1,11 +1,12 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme as NavDefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORS } from '../constants/theme';
 
 // Auth screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -61,6 +62,18 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+const navTheme = {
+  ...NavDefaultTheme,
+  colors: {
+    ...NavDefaultTheme.colors,
+    background: COLORS.background,
+    card: COLORS.surface,
+    text: COLORS.nearBlack,
+    border: COLORS.divider,
+    primary: COLORS.primary,
+  },
+};
+
 function MainTabs() {
   const insets = useSafeAreaInsets();
   return (
@@ -74,10 +87,10 @@ function MainTabs() {
           };
           return <Ionicons name={icons[route.name] ?? 'ellipse-outline'} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#2e7d32',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.mutedText,
         headerShown: false,
-        tabBarStyle: { paddingBottom: insets.bottom, height: 56 + insets.bottom },
+        tabBarStyle: { paddingBottom: insets.bottom, height: 56 + insets.bottom, backgroundColor: COLORS.surface, borderTopColor: COLORS.divider },
       })}
     >
       <Tab.Screen name="Equipment" component={EquipmentListScreen} />
@@ -99,7 +112,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <>

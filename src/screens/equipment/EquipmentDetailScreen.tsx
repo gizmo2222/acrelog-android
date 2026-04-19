@@ -519,7 +519,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingVertical: 8 },
   name: { fontWeight: 'bold', flex: 1 },
@@ -542,11 +542,11 @@ const styles = StyleSheet.create({
   statHoursSide: { flex: 1 },
   statMaintSide: { flex: 1 },
   statSeparator: { width: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginHorizontal: 14 },
-  statLabel: { fontSize: 10, color: '#888', letterSpacing: 0.5, marginBottom: 4 },
+  statLabel: { fontSize: 10, color: '#6b6b6b', letterSpacing: 0.5, marginBottom: 4 },
   statHoursValue: { fontSize: 36, fontWeight: 'bold', color: '#2e7d32', lineHeight: 40 },
   statUpdateLink: { fontSize: 12, color: '#2e7d32', fontWeight: '600', marginTop: 6 },
   statMaintenanceValue: { fontSize: 16, fontWeight: '700', marginTop: 2 },
-  statNote: { color: '#888', marginTop: 4, fontSize: 11 },
+  statNote: { color: '#6b6b6b', marginTop: 4, fontSize: 11 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
   statTile: { flexBasis: '47%', flexGrow: 1, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#ddd' },
   statValue: { fontSize: 14, color: '#222', fontWeight: '600', marginTop: 2 },

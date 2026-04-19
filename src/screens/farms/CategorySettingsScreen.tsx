@@ -205,7 +205,7 @@ export default function CategorySettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   hint: { color: '#666', marginBottom: 12 },
   newBtn: { marginBottom: 8 },
@@ -213,14 +213,14 @@ const styles = StyleSheet.create({
   catHeader: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
   catName: { fontWeight: 'bold' },
-  builtIn: { color: '#888', fontSize: 11 },
+  builtIn: { color: '#6b6b6b', fontSize: 11 },
   fieldChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   chip: { backgroundColor: '#e8f5e9' },
   divider: { marginVertical: 12 },
   miniDivider: { marginVertical: 8 },
   sectionLabel: { color: '#666', marginBottom: 6 },
   fieldRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
-  fieldType: { color: '#888', marginRight: 4 },
+  fieldType: { color: '#6b6b6b', marginRight: 4 },
   input: { marginBottom: 8 },
   segmented: { marginBottom: 8 },
   addFieldBtn: { alignSelf: 'flex-start', marginBottom: 12 },

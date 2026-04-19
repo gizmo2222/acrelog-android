@@ -154,7 +154,7 @@ export default function TaskFormScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 12 },
   card: { marginBottom: 12, borderRadius: 8 },
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   equipCard: { marginBottom: 4, borderRadius: 6 },
   selectedCard: { borderColor: '#2e7d32', borderWidth: 2 },
   equipRow: { flexDirection: 'row', alignItems: 'center' },
-  farmLabel: { color: '#888' },
+  farmLabel: { color: '#6b6b6b' },
   selectedChip: { backgroundColor: '#e8f5e9' },
   input: { marginBottom: 12 },
   doneBtn: { marginTop: 4 },

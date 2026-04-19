@@ -123,7 +123,7 @@ export default function FarmSelectorScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontWeight: 'bold', color: '#2e7d32', marginTop: 48 },
   subtitle: { color: '#666', marginBottom: 24 },

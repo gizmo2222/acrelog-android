@@ -152,14 +152,14 @@ export default function MaintenanceHistoryScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   headerRow: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
   taskName: { fontWeight: 'bold' },
-  date: { color: '#888', marginBottom: 4 },
+  date: { color: '#6b6b6b', marginBottom: 4 },
   notes: { color: '#555', marginTop: 4 },
   diagRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 8 },
   diagText: { flex: 1, color: '#555' },

@@ -344,7 +344,7 @@ function DetailRow({ label, value }: { label: string; value?: string }) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: '#f5f5f5' },
+  wrapper: { flex: 1, backgroundColor: '#f5f2ee' },
   farmName: { paddingHorizontal: 16, paddingTop: 12, fontWeight: 'bold', color: '#2e7d32' },
   tabs: { margin: 16, marginBottom: 0 },
   sectionTitle: { fontWeight: 'bold', marginBottom: 4, color: '#333' },

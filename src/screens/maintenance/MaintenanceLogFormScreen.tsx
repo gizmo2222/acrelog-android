@@ -181,10 +181,10 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   taskName: { fontWeight: 'bold', color: '#2e7d32' },
-  equipName: { color: '#888', marginBottom: 4 },
+  equipName: { color: '#6b6b6b', marginBottom: 4 },
   divider: { marginVertical: 16 },
   input: { marginBottom: 12 },
   inputSmall: { marginBottom: 8 },

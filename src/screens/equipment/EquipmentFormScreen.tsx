@@ -273,7 +273,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   kavWrapper: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   photoSection: { marginBottom: 16 },
   photoLabel: { marginBottom: 8, color: '#555' },

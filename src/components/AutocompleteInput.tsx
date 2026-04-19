@@ -82,14 +82,14 @@ export default function AutocompleteInput({
 
 const styles = StyleSheet.create({
   listContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#faf9f7',
     borderWidth: 1,
-    borderColor: '#d0d0d0',
+    borderColor: '#e8e4df',
     borderRadius: 4,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     marginTop: 2,
   },
@@ -99,10 +99,10 @@ const styles = StyleSheet.create({
   },
   itemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee',
+    borderBottomColor: '#e8e4df',
   },
   itemText: {
     fontSize: 14,
-    color: '#212121',
+    color: '#1a1a18',
   },
 });

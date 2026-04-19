@@ -183,7 +183,7 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
   selectorRow: { paddingHorizontal: 16, marginBottom: 8 },

@@ -143,7 +143,7 @@ export default function EquipmentListScreen() {
           <IconButton
             icon="swap-horizontal"
             size={16}
-            iconColor="#888"
+            iconColor="#6b6b6b"
             style={styles.farmSwitchIcon}
             onPress={() => setActiveFarm(null)}
           />
@@ -326,20 +326,20 @@ export default function EquipmentListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { paddingLeft: 16, paddingRight: 4, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
-  farmNameLabel: { color: '#888' },
+  farmNameLabel: { color: '#6b6b6b' },
   farmSwitchIcon: { margin: 0, marginLeft: 2 },
   searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 8 },
   search: { flex: 1 },
   filterIconWrap: { position: 'relative' },
   filterIcon: { margin: 0, marginLeft: 4 },
   filterBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#2e7d32' },
-  filterPanel: { backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 4, borderRadius: 8, paddingTop: 12, paddingHorizontal: 12 },
-  filterLabel: { color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  filterPanel: { backgroundColor: '#faf9f7', borderWidth: 1, borderColor: '#e8e4df', marginHorizontal: 16, marginBottom: 4, borderRadius: 8, paddingTop: 12, paddingHorizontal: 12 },
+  filterLabel: { color: '#6b6b6b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
   chipRow: { marginBottom: 10 },
   chipRowLast: { marginBottom: 4 },
   filterChip: { marginRight: 6 },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   thumbnail: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   cardText: { flex: 1 },
   subtitle: { color: '#666' },
-  category: { color: '#888', fontSize: 11 },
+  category: { color: '#6b6b6b', fontSize: 11 },
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#999', marginTop: 48 },

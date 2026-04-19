@@ -51,7 +51,7 @@ export default function BiometricScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', backgroundColor: '#f5f5f5', padding: 16 },
+  container: { flex: 1, justifyContent: 'center', backgroundColor: '#f5f2ee', padding: 16 },
   card: { padding: 32, borderRadius: 12, alignItems: 'center' },
   icon: { marginBottom: 16 },
   title: { fontWeight: 'bold', color: '#2e7d32' },

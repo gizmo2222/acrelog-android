@@ -79,13 +79,13 @@ export default function ProjectListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
   segment: { marginHorizontal: 16, marginBottom: 8 },
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
-  date: { color: '#888', marginTop: 2 },
+  date: { color: '#6b6b6b', marginTop: 2 },
   empty: { textAlign: 'center', color: '#999', padding: 32 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });

@@ -77,7 +77,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
               <IconButton icon="check" size={20} iconColor="#2e7d32" onPress={() => handleComplete(task.id)} />
             )}
             {canEdit && isCompleted && (
-              <IconButton icon="undo" size={18} iconColor="#888" onPress={() => handleReopen(task.id)} />
+              <IconButton icon="undo" size={18} iconColor="#6b6b6b" onPress={() => handleReopen(task.id)} />
             )}
           </View>
 
@@ -176,7 +176,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   strikethrough: { textDecorationLine: 'line-through', color: '#999' },
   due: { color: '#f57c00', marginTop: 2 },
-  completedAt: { color: '#888', marginTop: 2 },
+  completedAt: { color: '#6b6b6b', marginTop: 2 },
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   equipChip: { backgroundColor: '#e8f5e9' },
   logEquipBtn: { marginTop: 8, alignSelf: 'flex-start' },
