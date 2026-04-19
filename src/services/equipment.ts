@@ -33,44 +33,18 @@ import {
 
 export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
   {
-    name: 'Tractors & Vehicles',
+    name: 'Electrical & Power',
     builtIn: true,
     defaultFields: [
-      { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Propane', 'Electric'] },
-      { key: 'horsepower', label: 'Horsepower', type: 'number' },
-      { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'MFWD', 'AWD'] },
-      { key: 'transmission', label: 'Transmission', type: 'select', options: ['Manual', 'Powershift', 'CVT', 'Hydrostatic', 'Synchro'] },
-      { key: 'engineOilType', label: 'Engine Oil Type', type: 'text' },
+      { key: 'powerType', label: 'Power Type', type: 'select', options: ['Generator', 'Solar Panel', 'Wind Turbine', 'Transfer Switch', 'Panel', 'Motor', 'Battery Bank'] },
+      { key: 'voltage', label: 'Voltage', type: 'select', options: ['12V', '24V', '120V', '240V', '480V'] },
+      { key: 'wattage', label: 'Wattage / KW', type: 'number' },
     ],
   },
   {
-    name: 'Trucks & UTVs',
+    name: 'Hand Tools',
     builtIn: true,
-    defaultFields: [
-      { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'] },
-      { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'AWD'] },
-      { key: 'payload', label: 'Payload Capacity (lbs)', type: 'number' },
-      { key: 'towCapacity', label: 'Tow Capacity (lbs)', type: 'number' },
-    ],
-  },
-  {
-    name: 'Sprayers',
-    builtIn: true,
-    defaultFields: [
-      { key: 'mountType', label: 'Mount Type', type: 'select', options: ['Self-Propelled', 'Pull-Type', 'ATV/UTV', '3-Point Hitch'] },
-      { key: 'tankCapacity', label: 'Tank Capacity (gal)', type: 'number' },
-      { key: 'boomWidth', label: 'Boom Width (ft)', type: 'number' },
-      { key: 'nozzleType', label: 'Nozzle Type', type: 'text' },
-    ],
-  },
-  {
-    name: 'Tillage & Planting',
-    builtIn: true,
-    defaultFields: [
-      { key: 'equipmentType', label: 'Equipment Type', type: 'select', options: ['Plow', 'Disc', 'Field Cultivator', 'Chisel Plow', 'Subsoiler', 'Planter', 'Drill', 'Strip-Till'] },
-      { key: 'workingWidth', label: 'Working Width (ft)', type: 'number' },
-      { key: 'hitchType', label: 'Hitch Type', type: 'select', options: ['3-Point Cat I', '3-Point Cat II', '3-Point Cat III', 'Pull-Type', 'Toolbar'] },
-    ],
+    defaultFields: [],
   },
   {
     name: 'Harvesting',
@@ -82,16 +56,6 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
     ],
   },
   {
-    name: 'Trailers',
-    builtIn: true,
-    defaultFields: [
-      { key: 'trailerType', label: 'Trailer Type', type: 'select', options: ['Flatbed', 'Grain', 'Livestock', 'Utility', 'Equipment', 'Dump', 'Tanker'] },
-      { key: 'gvwr', label: 'GVWR (lbs)', type: 'number' },
-      { key: 'length', label: 'Length (ft)', type: 'number' },
-      { key: 'hitchType', label: 'Hitch Type', type: 'select', options: ['2" Ball', '2-5/16" Ball', 'Pintle', 'Gooseneck', '5th Wheel'] },
-    ],
-  },
-  {
     name: 'Irrigation',
     builtIn: true,
     defaultFields: [
@@ -99,6 +63,14 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
       { key: 'powerSource', label: 'Power Source', type: 'select', options: ['Electric', 'Diesel', 'Gasoline', 'Solar'] },
       { key: 'flowRate', label: 'Flow Rate (GPM)', type: 'number' },
       { key: 'pressure', label: 'Operating Pressure (PSI)', type: 'number' },
+    ],
+  },
+  {
+    name: 'Livestock Equipment',
+    builtIn: true,
+    defaultFields: [
+      { key: 'equipmentType', label: 'Equipment Type', type: 'select', options: ['Feeder', 'Waterer', 'Squeeze Chute', 'Headgate', 'Scale', 'Corral Panel', 'Bunk', 'Other'] },
+      { key: 'capacity', label: 'Capacity', type: 'text' },
     ],
   },
   {
@@ -121,20 +93,13 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
     ],
   },
   {
-    name: 'Livestock Equipment',
+    name: 'Sprayers',
     builtIn: true,
     defaultFields: [
-      { key: 'equipmentType', label: 'Equipment Type', type: 'select', options: ['Feeder', 'Waterer', 'Squeeze Chute', 'Headgate', 'Scale', 'Corral Panel', 'Bunk', 'Other'] },
-      { key: 'capacity', label: 'Capacity', type: 'text' },
-    ],
-  },
-  {
-    name: 'Electrical & Power',
-    builtIn: true,
-    defaultFields: [
-      { key: 'powerType', label: 'Power Type', type: 'select', options: ['Generator', 'Solar Panel', 'Wind Turbine', 'Transfer Switch', 'Panel', 'Motor', 'Battery Bank'] },
-      { key: 'voltage', label: 'Voltage', type: 'select', options: ['12V', '24V', '120V', '240V', '480V'] },
-      { key: 'wattage', label: 'Wattage / KW', type: 'number' },
+      { key: 'mountType', label: 'Mount Type', type: 'select', options: ['Self-Propelled', 'Pull-Type', 'ATV/UTV', '3-Point Hitch'] },
+      { key: 'tankCapacity', label: 'Tank Capacity (gal)', type: 'number' },
+      { key: 'boomWidth', label: 'Boom Width (ft)', type: 'number' },
+      { key: 'nozzleType', label: 'Nozzle Type', type: 'text' },
     ],
   },
   {
@@ -147,9 +112,44 @@ export const BUILT_IN_CATEGORIES: Omit<Category, 'id' | 'farmId'>[] = [
     ],
   },
   {
-    name: 'Hand Tools',
+    name: 'Tillage & Planting',
     builtIn: true,
-    defaultFields: [],
+    defaultFields: [
+      { key: 'equipmentType', label: 'Equipment Type', type: 'select', options: ['Plow', 'Disc', 'Field Cultivator', 'Chisel Plow', 'Subsoiler', 'Planter', 'Drill', 'Strip-Till'] },
+      { key: 'workingWidth', label: 'Working Width (ft)', type: 'number' },
+      { key: 'hitchType', label: 'Hitch Type', type: 'select', options: ['3-Point Cat I', '3-Point Cat II', '3-Point Cat III', 'Pull-Type', 'Toolbar'] },
+    ],
+  },
+  {
+    name: 'Tractors & Vehicles',
+    builtIn: true,
+    defaultFields: [
+      { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Propane', 'Electric'] },
+      { key: 'horsepower', label: 'Horsepower', type: 'number' },
+      { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'MFWD', 'AWD'] },
+      { key: 'transmission', label: 'Transmission', type: 'select', options: ['Manual', 'Powershift', 'CVT', 'Hydrostatic', 'Synchro'] },
+      { key: 'engineOilType', label: 'Engine Oil Type', type: 'text' },
+    ],
+  },
+  {
+    name: 'Trailers',
+    builtIn: true,
+    defaultFields: [
+      { key: 'trailerType', label: 'Trailer Type', type: 'select', options: ['Flatbed', 'Grain', 'Livestock', 'Utility', 'Equipment', 'Dump', 'Tanker'] },
+      { key: 'gvwr', label: 'GVWR (lbs)', type: 'number' },
+      { key: 'length', label: 'Length (ft)', type: 'number' },
+      { key: 'hitchType', label: 'Hitch Type', type: 'select', options: ['2" Ball', '2-5/16" Ball', 'Pintle', 'Gooseneck', '5th Wheel'] },
+    ],
+  },
+  {
+    name: 'Trucks & UTVs',
+    builtIn: true,
+    defaultFields: [
+      { key: 'fuelType', label: 'Fuel Type', type: 'select', options: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'] },
+      { key: 'driveType', label: 'Drive Type', type: 'select', options: ['2WD', '4WD', 'AWD'] },
+      { key: 'payload', label: 'Payload Capacity (lbs)', type: 'number' },
+      { key: 'towCapacity', label: 'Tow Capacity (lbs)', type: 'number' },
+    ],
   },
 ];
 
@@ -171,7 +171,8 @@ export async function ensureBuiltInCategories(farmId: string): Promise<void> {
 export async function getCategories(farmId: string): Promise<Category[]> {
   const q = query(collection(db, 'categories'), where('farmId', '==', farmId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function createCategory(farmId: string, name: string, defaultFields: Category['defaultFields'] = []): Promise<Category> {
