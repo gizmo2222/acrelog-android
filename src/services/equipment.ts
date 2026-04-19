@@ -184,16 +184,19 @@ export async function ensureBuiltInCategories(farmId: string): Promise<void> {
   try {
     const q = query(collection(db, 'categories'), where('farmId', '==', farmId), where('builtIn', '==', true));
     const snap = await getDocs(q);
+    const currentNames = new Set(BUILT_IN_CATEGORIES.map(c => c.name));
+
+    const stale = snap.docs.filter(d => !currentNames.has(d.data().name as string));
     const existingNames = new Set(snap.docs.map(d => d.data().name as string));
     const missing = BUILT_IN_CATEGORIES.filter(cat => !existingNames.has(cat.name));
-    if (missing.length === 0) return;
 
-    await Promise.all(
-      missing.map((cat) => {
+    await Promise.all([
+      ...stale.map(d => deleteDoc(d.ref)),
+      ...missing.map((cat) => {
         const ref = doc(collection(db, 'categories'));
         return setDoc(ref, { ...cat, farmId, id: ref.id });
-      })
-    );
+      }),
+    ]);
   } finally {
     _ensuringFarms.delete(farmId);
   }
