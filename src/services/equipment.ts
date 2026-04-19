@@ -15,10 +15,11 @@ import {
 } from 'firebase/firestore';
 import {
   ref,
-  uploadBytes,
+  uploadString,
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
+import * as FileSystem from 'expo-file-system';
 import { db, storage, auth } from './firebase';
 import {
   Equipment,
@@ -281,11 +282,14 @@ export async function deleteEquipment(id: string): Promise<void> {
 
 // ─── Images ────────────────────────────────────────────────────────────────
 
+async function uriToBase64(uri: string): Promise<string> {
+  return FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+}
+
 export async function uploadPrimaryImage(equipmentId: string, farmId: string, uri: string): Promise<string> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const base64 = await uriToBase64(uri);
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/primary.jpg`);
-  await uploadBytes(storageRef, blob);
+  await uploadString(storageRef, base64, 'base64');
   const url = await getDownloadURL(storageRef);
   await updateDoc(doc(db, 'equipment', equipmentId), { primaryImageUrl: url });
   return url;
@@ -297,11 +301,10 @@ export async function uploadEquipmentPhoto(
   uri: string,
   label?: string
 ): Promise<EquipmentPhoto> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const base64 = await uriToBase64(uri);
   const photoId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/photos/${photoId}.jpg`);
-  await uploadBytes(storageRef, blob);
+  await uploadString(storageRef, base64, 'base64');
   const url = await getDownloadURL(storageRef);
   const photo: EquipmentPhoto = { url, label, uploadedAt: Timestamp.now() };
 

@@ -13,9 +13,10 @@ import {
 } from 'firebase/firestore';
 import {
   ref,
-  uploadBytes,
+  uploadString,
   getDownloadURL,
 } from 'firebase/storage';
+import * as FileSystem from 'expo-file-system';
 import { db, storage, auth } from './firebase';
 import {
   MaintenanceTask,
@@ -164,11 +165,10 @@ async function uploadMaintenanceFile(
   uri: string,
   folder: string
 ): Promise<string> {
-  const response = await fetch(uri);
-  const blob = await response.blob();
+  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
   const fileId = Date.now().toString();
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/maintenance/${folder}/${fileId}`);
-  await uploadBytes(storageRef, blob);
+  await uploadString(storageRef, base64, 'base64');
   return getDownloadURL(storageRef);
 }
 

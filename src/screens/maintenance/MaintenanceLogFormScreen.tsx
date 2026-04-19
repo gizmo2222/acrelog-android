@@ -42,24 +42,16 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
     })();
   }, []);
 
-  async function addPhoto() {
-    Alert.alert('Add Photo', undefined, [
-      {
-        text: 'Take Photo', onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-          const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
-          if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
-        },
-      },
-      {
-        text: 'Choose from Library', onPress: async () => {
-          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
-          if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
-        },
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+  async function takePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+    if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+  }
+
+  async function pickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
+    if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
   }
 
   async function pickReceipt() {
@@ -160,10 +152,13 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
 
       <View style={styles.mediaRow}>
         <Button icon="receipt" mode="outlined" onPress={pickReceipt} compact style={styles.mediaBtn}>
-          Add Receipt ({receiptUris.length})
+          Receipt ({receiptUris.length})
         </Button>
-        <Button icon="camera" mode="outlined" onPress={addPhoto} compact style={styles.mediaBtn}>
-          Add Photo ({photoUris.length})
+        <Button icon="camera" mode="outlined" onPress={takePhoto} compact style={styles.mediaBtn}>
+          Camera ({photoUris.length})
+        </Button>
+        <Button icon="image-plus" mode="outlined" onPress={pickPhoto} compact style={styles.mediaBtn}>
+          Library
         </Button>
       </View>
 
