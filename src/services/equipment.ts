@@ -19,7 +19,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { db, storage, auth } from './firebase';
 import {
   Equipment,
