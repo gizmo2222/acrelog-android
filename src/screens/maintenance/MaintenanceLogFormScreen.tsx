@@ -43,7 +43,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
   }, []);
 
   async function pickPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
     if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
   }
 
