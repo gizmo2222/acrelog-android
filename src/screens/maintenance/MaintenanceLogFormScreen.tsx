@@ -50,8 +50,8 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
   }
 
   async function pickPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.7 });
-    if (!result.canceled) setPhotoUris(prev => [...prev, result.assets[0].uri]);
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.7, allowsMultipleSelection: true });
+    if (!result.canceled) setPhotoUris(prev => [...prev, ...result.assets.map(a => a.uri)]);
   }
 
   async function pickReceipt() {

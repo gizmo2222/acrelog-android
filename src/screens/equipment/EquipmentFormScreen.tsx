@@ -107,7 +107,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         customFields,
         status: 'active' as EquipmentStatus,
         totalHours: 0,
-        photos: [],
+        ...(!isEdit ? { photos: [] } : {}),
       };
       if (manufacturerUrl.trim()) data.manufacturerUrl = manufacturerUrl.trim();
 

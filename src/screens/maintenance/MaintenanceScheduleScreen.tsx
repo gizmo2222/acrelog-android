@@ -99,8 +99,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   }
 
   async function pickTaskPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8 });
-    if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsMultipleSelection: true });
+    if (!result.canceled) setTaskPhotoUris(prev => [...prev, ...result.assets.map(a => a.uri)]);
   }
 
   async function handleSaveTask() {

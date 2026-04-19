@@ -320,6 +320,18 @@ export async function uploadEquipmentPhoto(
   return photo;
 }
 
+export async function deleteEquipmentPhoto(equipmentId: string, photoUrl: string): Promise<void> {
+  const snap = await getDoc(doc(db, 'equipment', equipmentId));
+  const photos: EquipmentPhoto[] = snap.data()?.photos ?? [];
+  await updateDoc(doc(db, 'equipment', equipmentId), {
+    photos: photos.filter(p => p.url !== photoUrl),
+  });
+  try {
+    const match = photoUrl.match(/\/o\/(.+?)\?/);
+    if (match) await deleteObject(ref(storage, decodeURIComponent(match[1])));
+  } catch {}
+}
+
 // ─── Hours & Meter Readings ─────────────────────────────────────────────────
 
 async function logMeterReading(equipmentId: string, totalHours: number): Promise<void> {

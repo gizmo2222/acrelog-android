@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment, uploadEquipmentPhoto } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment, uploadEquipmentPhoto, deleteEquipmentPhoto } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { getUserFarms } from '../../services/farms';
 import { auth } from '../../services/firebase';
@@ -125,9 +125,25 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
 
   async function handlePickPhoto() {
     if (!activeFarm) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsMultipleSelection: true });
     if (result.canceled) return;
-    await doUploadPhoto(result.assets[0].uri);
+    for (const asset of result.assets) {
+      await doUploadPhoto(asset.uri);
+    }
+  }
+
+  async function handleDeletePhoto(photoUrl: string) {
+    Alert.alert('Delete photo?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await deleteEquipmentPhoto(equipmentId, photoUrl);
+          load();
+        } catch (e: any) {
+          Alert.alert('Error deleting photo', e.message);
+        }
+      }},
+    ]);
   }
 
   async function doUploadPhoto(uri: string) {
@@ -218,10 +234,19 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       {(equipment.primaryImageUrl || (equipment.photos?.length ?? 0) > 0) && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoGallery} contentContainerStyle={styles.photoGalleryContent}>
           {equipment.primaryImageUrl && (
-            <Image source={{ uri: equipment.primaryImageUrl }} style={styles.galleryPhoto} />
+            <View style={styles.galleryPhotoWrap}>
+              <Image source={{ uri: equipment.primaryImageUrl }} style={styles.galleryPhoto} />
+            </View>
           )}
           {equipment.photos?.map((p, i) => (
-            <Image key={i} source={{ uri: p.url }} style={styles.galleryPhoto} />
+            <View key={i} style={styles.galleryPhotoWrap}>
+              <Image source={{ uri: p.url }} style={styles.galleryPhoto} />
+              {canEdit() && equipment.status === 'active' && (
+                <TouchableOpacity style={styles.photoDeleteBtn} onPress={() => handleDeletePhoto(p.url)}>
+                  <Text style={styles.photoDeleteText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           ))}
         </ScrollView>
       )}
@@ -495,7 +520,10 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   photoGallery: { marginBottom: 0 },
   photoGalleryContent: { paddingHorizontal: 16, gap: 8 },
+  galleryPhotoWrap: { position: 'relative' },
   galleryPhoto: { width: 200, height: 150, borderRadius: 8, resizeMode: 'cover' },
+  photoDeleteBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
+  photoDeleteText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   photoButtonRow: { flexDirection: 'row', gap: 8, marginHorizontal: 16, marginBottom: 8 },
   photoBtn: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
