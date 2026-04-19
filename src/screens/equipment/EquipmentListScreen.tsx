@@ -6,7 +6,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipment, getCategories } from '../../services/equipment';
+import { getEquipment, getCategories, ensureBuiltInCategories } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceStatus } from '../../types';
 
@@ -65,6 +65,7 @@ export default function EquipmentListScreen() {
     if (!activeFarm) return;
     setLoading(true);
     try {
+      await ensureBuiltInCategories(activeFarm.farmId);
       const [eq, cats] = await Promise.all([
         getEquipment(activeFarm.farmId),
         getCategories(activeFarm.farmId),
