@@ -74,7 +74,7 @@ export interface Equipment {
   description: string;
   purchaseLocation: string;
   location: string;
-  totalHours: number;
+  totalHours: number;  // always initialized to 0 on create
   customFields: Record<string, string>;
   status: EquipmentStatus;
   broken?: boolean;

@@ -243,6 +243,27 @@ export async function updateEquipment(id: string, data: Partial<Equipment>): Pro
 }
 
 export async function archiveEquipment(id: string, status: EquipmentStatus): Promise<void> {
+  const snap = await getDoc(doc(db, 'equipment', id));
+  const eq = snap.data();
+
+  if (eq?.broken) {
+    // Preserve the break record in downtime history before clearing
+    const user = auth.currentUser!;
+    const openQ = query(collection(db, 'downtimeRecords'), where('equipmentId', '==', id));
+    const dtSnap = await getDocs(openQ);
+    const openRecords = dtSnap.docs.filter(d => !d.data().resolvedAt);
+    if (openRecords.length > 0) {
+      await Promise.all(openRecords.map(d => updateDoc(d.ref, { resolvedAt: serverTimestamp() })));
+    } else {
+      const dtRef = doc(collection(db, 'downtimeRecords'));
+      await setDoc(dtRef, {
+        id: dtRef.id, equipmentId: id,
+        startedAt: serverTimestamp(), resolvedAt: serverTimestamp(),
+        reason: eq.breakReason ?? 'Unknown', userId: user.uid,
+      });
+    }
+  }
+
   await updateDoc(doc(db, 'equipment', id), { status, broken: false, breakReason: null });
 }
 

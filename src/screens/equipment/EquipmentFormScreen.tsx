@@ -30,7 +30,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
-  const [serial, setSerial] = useState(prefillSerial ?? '');
+  const [serial, setSerial] = useState(isEdit ? '' : (prefillSerial ?? ''));
   const [description, setDescription] = useState('');
   const [purchaseLocation, setPurchaseLocation] = useState('');
   const [location, setLocation] = useState('');
@@ -193,7 +193,17 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         options={categories.map(c => c.name)}
         onChange={(name) => {
           const cat = categories.find(c => c.name === name);
-          if (cat) { setCategoryId(cat.id); setCustomFields({}); }
+          if (!cat) return;
+          const hasData = Object.values(customFields).some(v => v);
+          if (hasData) {
+            Alert.alert('Change Category?', 'Switching categories will clear the current field values.', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Change', onPress: () => { setCategoryId(cat.id); setCustomFields({}); } },
+            ]);
+          } else {
+            setCategoryId(cat.id);
+            setCustomFields({});
+          }
         }}
         style={styles.input}
       />

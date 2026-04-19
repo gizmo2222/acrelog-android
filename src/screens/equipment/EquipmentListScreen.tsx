@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, ScrollView, StyleSheet } from 'react-native';
+import { View, FlatList, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton, Divider } from 'react-native-paper';
+import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton, Divider, Badge } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -9,17 +9,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { getEquipment, getCategories, ensureBuiltInCategories } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceStatus } from '../../types';
+import { STATUS_COLORS } from '../../constants/equipment';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 type SortKey = 'name_asc' | 'name_desc' | 'hours_desc' | 'hours_asc' | 'maintenance';
-
-const STATUS_COLORS: Record<MaintenanceStatus, string> = {
-  ok: '#2e7d32',
-  due_soon: '#f57c00',
-  overdue: '#c62828',
-  broken: '#7b1fa2',
-};
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'name_asc', label: 'Name A–Z' },
@@ -46,6 +40,7 @@ export default function EquipmentListScreen() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'archived'>('active');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [maintenanceStatus, setMaintenanceStatus] = useState<Record<string, MaintenanceStatus>>({});
 
   // Filter/sort state
@@ -61,9 +56,15 @@ export default function EquipmentListScreen() {
     }, [activeFarm])
   );
 
-  async function load() {
+  async function refresh() {
+    setRefreshing(true);
+    await load(false);
+    setRefreshing(false);
+  }
+
+  async function load(showSpinner = true) {
     if (!activeFarm) return;
-    setLoading(true);
+    if (showSpinner) setLoading(true);
     try {
       await ensureBuiltInCategories(activeFarm.farmId);
       const [eq, cats] = await Promise.all([
@@ -160,13 +161,18 @@ export default function EquipmentListScreen() {
           onChangeText={setSearch}
           style={styles.search}
         />
-        <IconButton
-          icon="tune-variant"
-          size={24}
-          onPress={() => setShowFilters(v => !v)}
-          iconColor={activeFilterCount > 0 ? '#2e7d32' : '#666'}
-          style={styles.filterIcon}
-        />
+        <View style={styles.filterIconWrap}>
+          <IconButton
+            icon="tune-variant"
+            size={24}
+            onPress={() => setShowFilters(v => !v)}
+            iconColor={activeFilterCount > 0 ? '#2e7d32' : '#666'}
+            style={styles.filterIcon}
+          />
+          {activeFilterCount > 0 && (
+            <Badge style={styles.filterBadge} size={16}>{activeFilterCount}</Badge>
+          )}
+        </View>
       </View>
 
       {showFilters && (
@@ -260,6 +266,7 @@ export default function EquipmentListScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={['#2e7d32']} tintColor="#2e7d32" />}
         renderItem={({ item }) => {
           const mStatus = maintenanceStatus[item.id] ?? 'ok';
           return (
@@ -328,7 +335,9 @@ const styles = StyleSheet.create({
   farmSwitchIcon: { margin: 0, marginLeft: 2 },
   searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 8 },
   search: { flex: 1 },
+  filterIconWrap: { position: 'relative' },
   filterIcon: { margin: 0, marginLeft: 4 },
+  filterBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#2e7d32' },
   filterPanel: { backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 4, borderRadius: 8, paddingTop: 12, paddingHorizontal: 12 },
   filterLabel: { color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
   chipRow: { marginBottom: 10 },

@@ -1,32 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button, Chip, Card, Divider, Menu, IconButton, ActivityIndicator, Dialog, Portal, TextInput as PaperTextInput, SegmentedButtons } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment, uploadEquipmentPhoto } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { getUserFarms } from '../../services/farms';
 import { auth } from '../../services/firebase';
 import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, Farm, UserRole } from '../../types';
+import { STATUS_COLORS, STATUS_LABELS } from '../../constants/equipment';
+import * as ImagePicker from 'expo-image-picker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
 
-const STATUS_COLORS: Record<MaintenanceStatus, string> = {
-  ok: '#2e7d32',
-  due_soon: '#f57c00',
-  overdue: '#c62828',
-  broken: '#7b1fa2',
-};
-
-const STATUS_LABELS: Record<MaintenanceStatus, string> = {
-  ok: 'Up to date',
-  due_soon: 'Due soon',
-  overdue: 'Overdue',
-  broken: 'Broken',
-};
+const READINGS_PAGE_SIZE = 20;
 
 export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const { equipmentId } = route.params;
@@ -46,6 +36,8 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [moveDialogVisible, setMoveDialogVisible] = useState(false);
   const [otherFarms, setOtherFarms] = useState<{ farm: Farm; role: UserRole }[]>([]);
   const [moving, setMoving] = useState(false);
+  const [readingsPage, setReadingsPage] = useState(1);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -122,6 +114,20 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     }
   }
 
+  async function handleAddPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    if (result.canceled || !activeFarm) return;
+    setUploadingPhoto(true);
+    try {
+      await uploadEquipmentPhoto(equipmentId, activeFarm.farmId, result.assets[0].uri);
+      load();
+    } catch (e: any) {
+      Alert.alert('Error uploading photo', e.message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   const insets = useSafeAreaInsets();
 
   if (loading || !equipment) {
@@ -193,9 +199,22 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         )}
       </View>
 
-      {/* Primary image */}
-      {equipment.primaryImageUrl && (
-        <Image source={{ uri: equipment.primaryImageUrl }} style={styles.primaryImage} />
+      {/* Photo gallery */}
+      {(equipment.primaryImageUrl || (equipment.photos?.length ?? 0) > 0 || canEdit()) && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoGallery} contentContainerStyle={styles.photoGalleryContent}>
+          {equipment.primaryImageUrl && (
+            <Image source={{ uri: equipment.primaryImageUrl }} style={styles.galleryPhoto} />
+          )}
+          {equipment.photos?.map((p, i) => (
+            <Image key={i} source={{ uri: p.url }} style={styles.galleryPhoto} />
+          ))}
+          {canEdit() && equipment.status === 'active' && (
+            <TouchableOpacity style={styles.addPhotoBtn} onPress={handleAddPhoto} disabled={uploadingPhoto}>
+              <Text style={styles.addPhotoBtnText}>{uploadingPhoto ? '…' : '+'}</Text>
+              <Text style={styles.addPhotoBtnLabel}>Add Photo</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
       )}
 
       {/* Summary */}
@@ -277,18 +296,27 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
                 Hours History ({readings.length})
               </Text>
               <Button compact icon={showAllReadings ? 'chevron-up' : 'chevron-down'}
-                onPress={() => setShowAllReadings(v => !v)}>
+                onPress={() => { setShowAllReadings(v => !v); setReadingsPage(1); }}>
                 {showAllReadings ? 'Hide' : 'Show'}
               </Button>
             </View>
-            {showAllReadings && readings.map((r) => (
-              <View key={r.id} style={styles.readingRow}>
-                <Text variant="bodySmall" style={styles.readingDate}>
-                  {r.recordedAt.toDate().toLocaleDateString()}
-                </Text>
-                <Text variant="bodyMedium" style={styles.readingHours}>{r.hours} hrs</Text>
-              </View>
-            ))}
+            {showAllReadings && (
+              <>
+                {readings.slice(0, readingsPage * READINGS_PAGE_SIZE).map((r) => (
+                  <View key={r.id} style={styles.readingRow}>
+                    <Text variant="bodySmall" style={styles.readingDate}>
+                      {r.recordedAt.toDate().toLocaleDateString()}
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.readingHours}>{r.hours} hrs</Text>
+                  </View>
+                ))}
+                {readings.length > readingsPage * READINGS_PAGE_SIZE && (
+                  <Button compact onPress={() => setReadingsPage(p => p + 1)} style={{ marginTop: 8 }}>
+                    Load more ({readings.length - readingsPage * READINGS_PAGE_SIZE} remaining)
+                  </Button>
+                )}
+              </>
+            )}
           </Card.Content>
         </Card>
       )}
@@ -331,12 +359,16 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
 
       {/* Action buttons */}
       <View style={styles.actions}>
-        <Button mode="contained" icon="wrench" onPress={() => navigation.navigate('MaintenanceSchedule', { equipmentId })} style={styles.actionBtn}>
-          Maintenance
-        </Button>
-        <Button mode="outlined" icon="clipboard-check" onPress={() => navigation.navigate('InspectionChecklist', { equipmentId })} style={styles.actionBtn}>
-          Inspection
-        </Button>
+        {equipment.status === 'active' && (
+          <>
+            <Button mode="contained" icon="wrench" onPress={() => navigation.navigate('MaintenanceSchedule', { equipmentId })} style={styles.actionBtn}>
+              Maintenance
+            </Button>
+            <Button mode="outlined" icon="clipboard-check" onPress={() => navigation.navigate('InspectionChecklist', { equipmentId })} style={styles.actionBtn}>
+              Inspection
+            </Button>
+          </>
+        )}
         <Button mode="outlined" icon="history" onPress={() => navigation.navigate('MaintenanceHistory', { equipmentId })} style={styles.actionBtn}>
           History
         </Button>
@@ -442,7 +474,12 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingVertical: 8 },
   name: { fontWeight: 'bold', flex: 1 },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
-  primaryImage: { width: '100%', height: 200, resizeMode: 'cover' },
+  photoGallery: { marginBottom: 8 },
+  photoGalleryContent: { paddingHorizontal: 16, gap: 8 },
+  galleryPhoto: { width: 200, height: 150, borderRadius: 8, resizeMode: 'cover' },
+  addPhotoBtn: { width: 100, height: 150, borderRadius: 8, borderWidth: 1.5, borderColor: '#ccc', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fafafa' },
+  addPhotoBtnText: { fontSize: 28, color: '#aaa', lineHeight: 32 },
+  addPhotoBtnLabel: { fontSize: 11, color: '#aaa', marginTop: 2 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   chip: { marginRight: 8 },
   chipBroken: { backgroundColor: '#7b1fa2' },
