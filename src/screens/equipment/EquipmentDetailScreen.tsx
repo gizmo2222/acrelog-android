@@ -13,7 +13,6 @@ import { auth } from '../../services/firebase';
 import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, Farm, UserRole } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants/equipment';
 import * as ImagePicker from 'expo-image-picker';
-import CameraModal from '../../components/CameraModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EquipmentDetail'>;
 
@@ -39,7 +38,6 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [moving, setMoving] = useState(false);
   const [readingsPage, setReadingsPage] = useState(1);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -116,8 +114,13 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     }
   }
 
-  function handleTakePhoto() {
-    setCameraOpen(true);
+  async function handleTakePhoto() {
+    if (!activeFarm) return;
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
+    if (result.canceled) return;
+    await doUploadPhoto(result.assets[0].uri);
   }
 
   async function handlePickPhoto() {
@@ -473,12 +476,6 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         </Dialog>
       </Portal>
     </ScrollView>
-    <CameraModal
-      visible={cameraOpen}
-      onCapture={(uri) => { setCameraOpen(false); doUploadPhoto(uri); }}
-      onClose={() => setCameraOpen(false)}
-    />
-    </>
   );
 }
 
