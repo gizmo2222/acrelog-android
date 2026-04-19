@@ -160,6 +160,12 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
                   <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('archived'); }} title="Archive" />
                   <Menu.Item onPress={() => { setMenuVisible(false); handleArchive('sold'); }} title="Mark as Sold" />
                   <Menu.Item onPress={handleOpenMove} title="Move to Farm…" />
+                  <Divider />
+                  <Menu.Item
+                    title="Delete…"
+                    titleStyle={{ color: '#bbb' }}
+                    onPress={() => { setMenuVisible(false); Alert.alert('Archive First', 'Archive or mark as sold before deleting.'); }}
+                  />
                 </>
               ) : (
                 <>
@@ -195,43 +201,47 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       {/* Summary */}
       <Card style={styles.card}>
         <Card.Content>
-          <View style={styles.summaryGrid}>
-            {/* Hours tile — always first, prominent */}
-            <View style={[styles.statTile, styles.statTileHours]}>
-              <Text variant="labelSmall" style={styles.statLabel}>Total Hours</Text>
-              <Text variant="headlineSmall" style={styles.statHoursValue}>{equipment.totalHours ?? 0}</Text>
-              <Button compact mode="text" onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }} style={styles.statUpdateBtn}>
+          {/* Hours + Maintenance — full-width row */}
+          <View style={styles.statRowWide}>
+            <View style={styles.statHoursSide}>
+              <Text style={styles.statLabel}>TOTAL HOURS</Text>
+              <Text style={styles.statHoursValue}>{equipment.totalHours ?? 0}</Text>
+              <Text
+                style={styles.statUpdateLink}
+                onPress={() => { setHoursInput(''); setHoursDialogVisible(true); }}
+              >
                 Update
-              </Button>
+              </Text>
             </View>
-
-            {/* Maintenance status tile */}
-            <View style={[styles.statTile, { borderLeftColor: STATUS_COLORS[overallStatus] }]}>
-              <Text variant="labelSmall" style={styles.statLabel}>Maintenance</Text>
-              <Text variant="titleMedium" style={[styles.statValue, { color: STATUS_COLORS[overallStatus] }]}>
+            <View style={styles.statSeparator} />
+            <View style={styles.statMaintSide}>
+              <Text style={styles.statLabel}>MAINTENANCE</Text>
+              <Text style={[styles.statMaintenanceValue, { color: STATUS_COLORS[overallStatus] }]}>
                 {STATUS_LABELS[overallStatus]}
               </Text>
               {equipment.broken && equipment.breakReason
-                ? <Text variant="bodySmall" style={styles.statNote}>{equipment.breakReason}</Text>
+                ? <Text style={styles.statNote}>{equipment.breakReason}</Text>
                 : null}
             </View>
-
-            {/* Category-specific key fields */}
-            {summaryFields.map(field => (
-              <View key={field.key} style={styles.statTile}>
-                <Text variant="labelSmall" style={styles.statLabel}>{field.label}</Text>
-                <Text variant="titleSmall" style={styles.statValue}>{equipment.customFields[field.key]}</Text>
-              </View>
-            ))}
-
-            {/* Location if set */}
-            {equipment.location ? (
-              <View style={styles.statTile}>
-                <Text variant="labelSmall" style={styles.statLabel}>Location</Text>
-                <Text variant="titleSmall" style={styles.statValue}>{equipment.location}</Text>
-              </View>
-            ) : null}
           </View>
+
+          {/* Category fields + location — 2-column grid */}
+          {(summaryFields.length > 0 || equipment.location) && (
+            <View style={styles.summaryGrid}>
+              {summaryFields.map(field => (
+                <View key={field.key} style={styles.statTile}>
+                  <Text style={styles.statLabel}>{field.label.toUpperCase()}</Text>
+                  <Text style={styles.statValue}>{equipment.customFields[field.key]}</Text>
+                </View>
+              ))}
+              {equipment.location ? (
+                <View style={styles.statTile}>
+                  <Text style={styles.statLabel}>LOCATION</Text>
+                  <Text style={styles.statValue}>{equipment.location}</Text>
+                </View>
+              ) : null}
+            </View>
+          )}
 
           {/* Broken status banner */}
           {(equipment.status !== 'active' || equipment.broken) && (
@@ -438,15 +448,19 @@ const styles = StyleSheet.create({
   chipBroken: { backgroundColor: '#7b1fa2' },
   breakReason: { color: '#7b1fa2', flex: 1 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
-  // Summary grid
+  // Summary
+  statRowWide: { flexDirection: 'row', backgroundColor: '#f9f9f9', borderRadius: 8, padding: 14, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#2e7d32' },
+  statHoursSide: { flex: 1 },
+  statMaintSide: { flex: 1 },
+  statSeparator: { width: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginHorizontal: 14 },
+  statLabel: { fontSize: 10, color: '#888', letterSpacing: 0.5, marginBottom: 4 },
+  statHoursValue: { fontSize: 36, fontWeight: 'bold', color: '#2e7d32', lineHeight: 40 },
+  statUpdateLink: { fontSize: 12, color: '#2e7d32', fontWeight: '600', marginTop: 6 },
+  statMaintenanceValue: { fontSize: 16, fontWeight: '700', marginTop: 2 },
+  statNote: { color: '#888', marginTop: 4, fontSize: 11 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  statTile: { width: '47%', backgroundColor: '#f9f9f9', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#ddd' },
-  statTileHours: { borderLeftColor: '#2e7d32' },
-  statLabel: { color: '#888', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 },
-  statValue: { color: '#222', fontWeight: '600' },
-  statHoursValue: { color: '#2e7d32', fontWeight: 'bold', lineHeight: 36 },
-  statUpdateBtn: { marginTop: 2, marginLeft: -8, alignSelf: 'flex-start', height: 28 },
-  statNote: { color: '#888', marginTop: 2, fontSize: 11 },
+  statTile: { flexBasis: '47%', flexGrow: 1, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#ddd' },
+  statValue: { fontSize: 14, color: '#222', fontWeight: '600', marginTop: 2 },
   statusBanner: { marginTop: 8, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, alignSelf: 'flex-start' },
   statusBannerBroken: { backgroundColor: '#f3e5f5' },
   statusBannerArchived: { backgroundColor: '#f0f0f0' },

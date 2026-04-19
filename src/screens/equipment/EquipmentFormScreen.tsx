@@ -128,7 +128,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         if (primaryImageUri) {
           await uploadPrimaryImage(eq.id, activeFarm.farmId, primaryImageUri);
         }
-        navigation.navigate('EquipmentDetail', { equipmentId: eq.id });
+        navigation.replace('EquipmentDetail', { equipmentId: eq.id });
       }
     } catch (e: any) {
       console.error('[EquipmentForm] save error:', e);
