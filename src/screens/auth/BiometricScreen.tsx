@@ -29,7 +29,7 @@ export default function BiometricScreen({ navigation }: Props) {
       // Auth state is already set from stored credentials; if biometric succeeds
       // the navigator will redirect via onAuthChanged
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Sign-in failed', errorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -56,6 +56,6 @@ const styles = StyleSheet.create({
   card: { padding: 32, borderRadius: 12, alignItems: 'center' },
   icon: { marginBottom: 16 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
-  subtitle: { color: '#666', textAlign: 'center', marginVertical: 12 },
+  subtitle: { color: '#6b6b6b', textAlign: 'center', marginVertical: 12 },
   button: { marginTop: 16, width: '100%' },
 });

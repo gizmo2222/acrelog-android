@@ -55,7 +55,7 @@ export default function FarmSelectorScreen({ navigation }: Props) {
       const updated = await getUserFarms(user.uid);
       setFarms(updated);
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Could not join farm', errorMessage(e));
     }
   }
 
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontWeight: 'bold', color: '#2e7d32', marginTop: 48 },
-  subtitle: { color: '#666', marginBottom: 24 },
+  subtitle: { color: '#6b6b6b', marginBottom: 24 },
   card: { marginBottom: 12, borderRadius: 8 },
   roleChip: { marginTop: 8, alignSelf: 'flex-start' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { color: '#666', textAlign: 'center', marginBottom: 24 },
+  emptyText: { color: '#6b6b6b', textAlign: 'center', marginBottom: 24 },
   button: { marginTop: 8, width: '100%' },
   fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#2e7d32' },
   signOut: { marginBottom: 16 },

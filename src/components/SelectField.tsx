@@ -51,5 +51,5 @@ export default function SelectField({ label, value, options, onChange, allowClea
 
 const styles = StyleSheet.create({
   selected: { color: '#2e7d32', fontWeight: '600' },
-  clear: { color: '#999' },
+  clear: { color: '#6b6b6b' },
 });

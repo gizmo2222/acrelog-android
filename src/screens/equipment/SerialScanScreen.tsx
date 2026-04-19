@@ -84,7 +84,7 @@ export default function SerialScanScreen({ navigation }: Props) {
         );
       }
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Scan failed', errorMessage(e));
     } finally {
       setScanning(false);
     }

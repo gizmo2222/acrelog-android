@@ -67,9 +67,11 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   }
 
   async function handleArchive(status: 'archived' | 'sold') {
-    Alert.alert('Confirm', `Mark as ${status}?`, [
+    const title = status === 'sold' ? 'Mark as Sold?' : 'Archive Equipment?';
+    const actionLabel = status === 'sold' ? 'Mark as Sold' : 'Archive';
+    Alert.alert(title, "This can be undone from the equipment's overflow menu.", [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', onPress: async () => { await archiveEquipment(equipmentId, status); navigation.goBack(); } },
+      { text: actionLabel, onPress: async () => { await archiveEquipment(equipmentId, status); navigation.goBack(); } },
     ]);
   }
 
@@ -315,7 +317,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           {/* Broken status banner */}
           {(equipment.status !== 'active' || equipment.broken) && (
             <View style={[styles.statusBanner, equipment.broken ? styles.statusBannerBroken : styles.statusBannerArchived]}>
-              <Text variant="labelMedium" style={{ color: equipment.broken ? '#7b1fa2' : '#666' }}>
+              <Text variant="labelMedium" style={{ color: equipment.broken ? '#7b1fa2' : '#6b6b6b' }}>
                 {equipment.broken ? 'BROKEN' : equipment.status.toUpperCase()}
               </Text>
             </View>
@@ -472,7 +474,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           <Dialog.Title>Mark as Broken</Dialog.Title>
           <Dialog.Content>
             <PaperTextInput
-              label="Reason *"
+              label="What's wrong? *"
               value={breakReason}
               onChangeText={setBreakReason}
               mode="outlined"
@@ -481,7 +483,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setBrokenDialogVisible(false)}>Cancel</Button>
-            <Button onPress={confirmBroken} disabled={!breakReason.trim()}>Confirm</Button>
+            <Button onPress={confirmBroken} disabled={!breakReason.trim()}>Mark Broken</Button>
           </Dialog.Actions>
         </Dialog>
 

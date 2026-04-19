@@ -207,7 +207,7 @@ export default function CategorySettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  hint: { color: '#666', marginBottom: 12 },
+  hint: { color: '#6b6b6b', marginBottom: 12 },
   newBtn: { marginBottom: 8 },
   card: { marginBottom: 8, borderRadius: 8 },
   catHeader: { flexDirection: 'row', alignItems: 'center' },
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   chip: { backgroundColor: '#e8f5e9' },
   divider: { marginVertical: 12 },
   miniDivider: { marginVertical: 8 },
-  sectionLabel: { color: '#666', marginBottom: 6 },
+  sectionLabel: { color: '#6b6b6b', marginBottom: 6 },
   fieldRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
   fieldType: { color: '#6b6b6b', marginRight: 4 },
   input: { marginBottom: 8 },

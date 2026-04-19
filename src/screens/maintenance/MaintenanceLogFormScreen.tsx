@@ -70,7 +70,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
 
   async function handleSave() {
     if (!task || !hours || !activeFarm) {
-      Alert.alert('Please enter hours at completion');
+      Alert.alert('Hours required', 'Enter the current hours at the time of completion.');
       return;
     }
     setSaving(true);

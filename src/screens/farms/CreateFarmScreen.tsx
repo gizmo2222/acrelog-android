@@ -23,7 +23,7 @@ export default function CreateFarmScreen({ navigation }: Props) {
       await initCategories(farm.id);
       setActiveFarm({ farmId: farm.id, farmName: farm.name, role: 'owner' });
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Could not create farm', errorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', backgroundColor: '#f5f2ee', padding: 16 },
   card: { padding: 24, borderRadius: 12 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
-  subtitle: { color: '#666', marginBottom: 24 },
+  subtitle: { color: '#6b6b6b', marginBottom: 24 },
   input: { marginBottom: 12 },
   button: { marginTop: 8 },
 });

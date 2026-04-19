@@ -64,7 +64,7 @@ export default function TaskFormScreen({ route, navigation }: Props) {
       setSelectedEquipId('');
       setHours('');
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Could not save task', errorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 12 },
   card: { marginBottom: 12, borderRadius: 8 },
-  sectionLabel: { color: '#666', marginBottom: 8 },
+  sectionLabel: { color: '#6b6b6b', marginBottom: 8 },
   logRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   flex: { flex: 1 },
   search: { marginBottom: 8 },

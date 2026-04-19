@@ -93,6 +93,6 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   date: { color: '#6b6b6b', marginTop: 2 },
-  empty: { textAlign: 'center', color: '#999', padding: 32 },
+  empty: { textAlign: 'center', color: '#6b6b6b', padding: 32 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });

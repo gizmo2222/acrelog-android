@@ -25,7 +25,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ];
 
 const MAINT_FILTER_OPTIONS: { value: MaintenanceStatus | 'all'; label: string; color: string }[] = [
-  { value: 'all', label: 'All', color: '#666' },
+  { value: 'all', label: 'All', color: '#6b6b6b' },
   { value: 'broken', label: 'Broken', color: '#7b1fa2' },
   { value: 'overdue', label: 'Overdue', color: '#c62828' },
   { value: 'due_soon', label: 'Due Soon', color: '#f57c00' },
@@ -169,7 +169,7 @@ export default function EquipmentListScreen() {
             icon="tune-variant"
             size={24}
             onPress={() => setShowFilters(v => !v)}
-            iconColor={activeFilterCount > 0 ? '#2e7d32' : '#666'}
+            iconColor={activeFilterCount > 0 ? '#2e7d32' : '#6b6b6b'}
             style={styles.filterIcon}
           />
           {activeFilterCount > 0 && (
@@ -326,10 +326,11 @@ export default function EquipmentListScreen() {
       {activeFarm?.role !== 'worker' && activeFarm?.role !== 'auditor' && (
         <>
           <FAB
-            icon="camera"
-            style={[styles.fab, { bottom: 80 + insets.bottom, backgroundColor: '#555' }]}
+            icon="barcode-scan"
+            label="Scan Serial"
+            style={[styles.fab, { bottom: 72 + insets.bottom, backgroundColor: '#4a4540' }]}
             onPress={() => navigation.navigate('SerialScan')}
-            small
+            size="small"
           />
           <FAB
             icon="plus"
@@ -367,10 +368,10 @@ const styles = StyleSheet.create({
   cardContent: { flexDirection: 'row', alignItems: 'center' },
   thumbnail: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   cardText: { flex: 1 },
-  subtitle: { color: '#666' },
+  subtitle: { color: '#6b6b6b' },
   category: { color: '#6b6b6b', fontSize: 11 },
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
-  empty: { textAlign: 'center', color: '#999', marginTop: 48 },
+  empty: { textAlign: 'center', color: '#6b6b6b', marginTop: 48 },
   fab: { position: 'absolute', right: 16, backgroundColor: '#2e7d32' },
 });

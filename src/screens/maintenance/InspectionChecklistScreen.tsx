@@ -62,7 +62,7 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
       setResults({});
       setNotes('');
     } catch (e: any) {
-      Alert.alert('Error', errorMessage(e));
+      Alert.alert('Could not save inspection', errorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
   itemLabel: { flex: 1 },
   divider: { marginVertical: 12 },
   input: { marginBottom: 12 },
-  empty: { textAlign: 'center', color: '#999', padding: 32 },
+  empty: { textAlign: 'center', color: '#6b6b6b', padding: 32 },
   createBtn: { marginHorizontal: 16, marginBottom: 12 },
-  itemsLabel: { color: '#666', marginBottom: 4 },
+  itemsLabel: { color: '#6b6b6b', marginBottom: 4 },
   newItemRow: { flexDirection: 'row', alignItems: 'center' },
   flex: { flex: 1 },
   formRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 8 },

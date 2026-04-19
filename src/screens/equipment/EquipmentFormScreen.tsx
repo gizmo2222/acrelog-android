@@ -109,7 +109,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
 
   async function handleSave() {
     if (!name || !brand || !model || !categoryId || !activeFarm) {
-      Alert.alert('Please fill in name, brand, model, and category');
+      Alert.alert('Required fields missing', 'Name, brand, model, and category are required.');
       return;
     }
     setSaving(true);
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   photoSection: { marginBottom: 16 },
-  photoLabel: { marginBottom: 8, color: '#555' },
+  photoLabel: { marginBottom: 8, color: '#6b6b6b' },
   photoScroll: { marginBottom: 8 },
   photoScrollContent: { gap: 8, paddingBottom: 4 },
   photoItem: { position: 'relative', width: 120 },

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', backgroundColor: '#f5f2ee', padding: 16 },
   card: { padding: 24, borderRadius: 12 },
   title: { textAlign: 'center', fontWeight: 'bold', color: '#2e7d32' },
-  subtitle: { textAlign: 'center', color: '#666', marginBottom: 24 },
+  subtitle: { textAlign: 'center', color: '#6b6b6b', marginBottom: 24 },
   input: { marginBottom: 12 },
   button: { marginTop: 8 },
 });
