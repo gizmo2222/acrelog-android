@@ -204,7 +204,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
                   <Divider />
                   <Menu.Item
                     title="Delete…"
-                    titleStyle={{ color: '#bbb' }}
+                    titleStyle={{ color: '#6b6b6b' }}
                     onPress={() => { setMenuVisible(false); Alert.alert('Archive First', 'Archive or mark as sold before deleting.'); }}
                   />
                 </>
@@ -422,10 +422,10 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         </Button>
         {canEdit() && equipment.status === 'active' && (
           equipment.broken
-            ? <Button mode="outlined" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
+            ? <Button mode="text" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
                 Clear Broken Status
               </Button>
-            : <Button mode="outlined" icon="alert-outline" onPress={handleMarkBroken} style={[styles.actionBtn, styles.brokenBtn]} textColor="#7b1fa2">
+            : <Button mode="text" icon="alert-outline" onPress={handleMarkBroken} style={styles.actionBtn} textColor="#7b1fa2">
                 Mark as Broken
               </Button>
         )}
@@ -483,7 +483,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
               <Text variant="bodyMedium">You have no other farms to move this equipment to.</Text>
             ) : (
               <>
-                <Text variant="bodySmall" style={{ color: '#666', marginBottom: 12 }}>
+                <Text variant="bodySmall" style={{ color: '#6b6b6b', marginBottom: 12 }}>
                   The equipment will be moved and you can re-assign its category in the new farm.
                 </Text>
                 {otherFarms.map(({ farm }) => (
@@ -538,33 +538,32 @@ const styles = StyleSheet.create({
   breakReason: { color: '#7b1fa2', flex: 1 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
   // Summary
-  statRowWide: { flexDirection: 'row', backgroundColor: '#f9f9f9', borderRadius: 8, padding: 14, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#2e7d32' },
+  statRowWide: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, padding: 14, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: '#2e7d32' },
   statHoursSide: { flex: 1 },
   statMaintSide: { flex: 1 },
-  statSeparator: { width: StyleSheet.hairlineWidth, backgroundColor: '#ddd', marginHorizontal: 14 },
+  statSeparator: { width: StyleSheet.hairlineWidth, backgroundColor: '#e8e4df', marginHorizontal: 14 },
   statLabel: { fontSize: 10, color: '#6b6b6b', letterSpacing: 0.5, marginBottom: 4 },
   statHoursValue: { fontSize: 36, fontWeight: 'bold', color: '#2e7d32', lineHeight: 40 },
   statUpdateLink: { fontSize: 12, color: '#2e7d32', fontWeight: '600', marginTop: 6 },
   statMaintenanceValue: { fontSize: 16, fontWeight: '700', marginTop: 2 },
   statNote: { color: '#6b6b6b', marginTop: 4, fontSize: 11 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  statTile: { flexBasis: '47%', flexGrow: 1, backgroundColor: '#f9f9f9', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#ddd' },
-  statValue: { fontSize: 14, color: '#222', fontWeight: '600', marginTop: 2 },
+  statTile: { flexBasis: '47%', flexGrow: 1, backgroundColor: '#faf9f7', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#e8e4df' },
+  statValue: { fontSize: 14, color: '#1a1a18', fontWeight: '600', marginTop: 2 },
   statusBanner: { marginTop: 8, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, alignSelf: 'flex-start' },
   statusBannerBroken: { backgroundColor: '#f3e5f5' },
-  statusBannerArchived: { backgroundColor: '#f0f0f0' },
+  statusBannerArchived: { backgroundColor: '#ede9e3' },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
-  readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
-  readingDate: { color: '#666' },
+  readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e8e4df' },
+  readingDate: { color: '#6b6b6b' },
   readingHours: { fontWeight: '500' },
-  detailLabel: { color: '#666', flex: 1 },
+  detailLabel: { color: '#6b6b6b', flex: 1 },
   detailValue: { flex: 2, textAlign: 'right' },
   taskRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   taskName: { flex: 1 },
-  empty: { color: '#999', textAlign: 'center', padding: 8 },
+  empty: { color: '#6b6b6b', textAlign: 'center', padding: 8 },
   actions: { padding: 16, gap: 8 },
   actionBtn: { marginBottom: 4 },
-  brokenBtn: { borderColor: '#7b1fa2' },
 });

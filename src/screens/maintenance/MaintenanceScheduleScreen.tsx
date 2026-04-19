@@ -296,53 +296,57 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
           return (
             <Card style={styles.card}>
               <Card.Content>
-                <View style={styles.taskHeader}>
-                  <Text variant="titleSmall" style={styles.flex}>{item.name}</Text>
-                  <Chip compact style={{ backgroundColor: STATUS_COLORS[status] }} textStyle={{ color: 'white' }}>
-                    {status === 'ok' ? 'OK' : status === 'due_soon' ? 'Due Soon' : 'Overdue'}
-                  </Chip>
-                  {item.imported && <Chip compact style={styles.importedChip}>Imported</Chip>}
-                  {canEdit && (
-                    <>
-                      <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
-                      <IconButton icon="archive-outline" size={18} onPress={() => { archiveMaintenanceTask(item.id, true); load(); }} />
-                      <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
-                    </>
-                  )}
+                {/* Tier 1: name + status chip */}
+                <View style={styles.taskTier1}>
+                  <Text variant="titleSmall" style={styles.taskName}>{item.name}</Text>
+                  <View style={styles.taskChips}>
+                    <Chip compact style={{ backgroundColor: STATUS_COLORS[status] }} textStyle={{ color: 'white' }}>
+                      {status === 'ok' ? 'OK' : status === 'due_soon' ? 'Due Soon' : 'Overdue'}
+                    </Chip>
+                    {item.imported && <Chip compact style={styles.importedChip}>Imported</Chip>}
+                  </View>
                 </View>
+
+                {/* Tier 2: schedule meta + last done */}
+                <View style={styles.taskMeta}>
+                  {item.intervalHours ? <Text variant="bodySmall" style={styles.interval}>Every {item.intervalHours} hrs</Text> : null}
+                  {item.intervalDays ? <Text variant="bodySmall" style={styles.interval}>Every {item.intervalDays} days</Text> : null}
+                  {item.nextDueHours ? <Text variant="bodySmall" style={[styles.interval, { color: STATUS_COLORS[status] }]}>Due at {item.nextDueHours} hrs</Text> : null}
+                  {item.nextDueAt ? <Text variant="bodySmall" style={[styles.interval, { color: STATUS_COLORS[status] }]}>Due {item.nextDueAt.toDate().toLocaleDateString()}</Text> : null}
+                  {item.lastCompletedAt ? (
+                    <Text variant="bodySmall" style={styles.lastDone}>
+                      Last done {item.lastCompletedAt.toDate().toLocaleDateString()}
+                      {item.lastCompletedHours ? ` · ${item.lastCompletedHours} hrs` : ''}
+                    </Text>
+                  ) : null}
+                </View>
+
                 {item.notes ? <Text variant="bodySmall" style={styles.taskNotes}>{item.notes}</Text> : null}
                 {(item.photoUrls?.length ?? 0) > 0 && (
                   <View style={styles.photoGrid}>
                     {item.photoUrls!.map((url, i) => <Image key={i} source={{ uri: url }} style={styles.photoThumb} />)}
                   </View>
                 )}
-                {item.intervalHours && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalHours} hours</Text>}
-                {item.intervalDays && <Text variant="bodySmall" style={styles.interval}>Every {item.intervalDays} days</Text>}
-                {item.lastCompletedAt && (
-                  <Text variant="bodySmall" style={styles.lastDone}>
-                    Last done: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
-                  </Text>
-                )}
-                {item.nextDueHours && (
-                  <Text variant="bodySmall" style={{ color: STATUS_COLORS[status] }}>
-                    Due at: {item.nextDueHours} hrs
-                  </Text>
-                )}
-                {item.nextDueAt && (
-                  <Text variant="bodySmall" style={{ color: STATUS_COLORS[status] }}>
-                    Due by: {item.nextDueAt.toDate().toLocaleDateString()}
-                  </Text>
-                )}
-                {canLog && (
-                  <Button
-                    mode="contained"
-                    compact
-                    style={styles.logBtn}
-                    onPress={() => navigation.navigate('MaintenanceLogForm', { taskId: item.id, equipmentId })}
-                  >
-                    Log Completion
-                  </Button>
-                )}
+
+                {/* Actions row */}
+                <View style={styles.taskActions}>
+                  {canLog && (
+                    <Button
+                      mode="contained"
+                      style={styles.logBtn}
+                      onPress={() => navigation.navigate('MaintenanceLogForm', { taskId: item.id, equipmentId })}
+                    >
+                      Log Completion
+                    </Button>
+                  )}
+                  {canEdit && (
+                    <View style={styles.taskIcons}>
+                      <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                      <IconButton icon="archive-outline" size={18} onPress={() => { archiveMaintenanceTask(item.id, true); load(); }} />
+                      <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
+                    </View>
+                  )}
+                </View>
               </Card.Content>
             </Card>
           );
@@ -357,31 +361,33 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                 {oneOffTasks.map(item => (
                   <Card key={item.id} style={styles.card}>
                     <Card.Content>
-                      <View style={styles.taskHeader}>
-                        <Text variant="titleSmall" style={styles.flex}>{item.name}</Text>
+                      <View style={styles.taskTier1}>
+                        <Text variant="titleSmall" style={styles.taskName}>{item.name}</Text>
                         <Chip compact style={styles.pendingChip} textStyle={{ color: '#1565c0' }}>Pending</Chip>
+                      </View>
+                      {item.lastCompletedAt ? (
+                        <Text variant="bodySmall" style={styles.lastDone}>
+                          Last done {item.lastCompletedAt.toDate().toLocaleDateString()}
+                          {item.lastCompletedHours ? ` · ${item.lastCompletedHours} hrs` : ''}
+                        </Text>
+                      ) : null}
+                      <View style={styles.taskActions}>
+                        {canLog && (
+                          <Button
+                            mode="contained"
+                            style={styles.logBtn}
+                            onPress={() => navigation.navigate('MaintenanceLogForm', { taskId: item.id, equipmentId })}
+                          >
+                            Log Completion
+                          </Button>
+                        )}
                         {canEdit && (
-                          <>
+                          <View style={styles.taskIcons}>
                             <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
                             <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
-                          </>
+                          </View>
                         )}
                       </View>
-                      {item.lastCompletedAt && (
-                        <Text variant="bodySmall" style={styles.lastDone}>
-                          Last done: {item.lastCompletedAt.toDate().toLocaleDateString()} at {item.lastCompletedHours} hrs
-                        </Text>
-                      )}
-                      {canLog && (
-                        <Button
-                          mode="contained"
-                          compact
-                          style={styles.logBtn}
-                          onPress={() => navigation.navigate('MaintenanceLogForm', { taskId: item.id, equipmentId })}
-                        >
-                          Log Completion
-                        </Button>
-                      )}
                     </Card.Content>
                   </Card>
                 ))}
@@ -445,20 +451,25 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8 },
   formRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  listHeader: { padding: 16, paddingBottom: 4, color: '#666' },
-  taskHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  interval: { color: '#666' },
+  listHeader: { padding: 16, paddingBottom: 4, color: '#6b6b6b' },
+  taskTier1: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },
+  taskName: { flex: 1, marginRight: 8 },
+  taskChips: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  taskMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+  taskActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  taskIcons: { flexDirection: 'row', alignItems: 'center' },
+  interval: { color: '#6b6b6b' },
   lastDone: { color: '#6b6b6b' },
-  logBtn: { marginTop: 8, alignSelf: 'flex-start' },
-  empty: { textAlign: 'center', color: '#999', padding: 32 },
+  logBtn: { flex: 1 },
+  empty: { textAlign: 'center', color: '#6b6b6b', padding: 32 },
   archivedToggle: { marginHorizontal: 16, marginTop: 8, alignSelf: 'flex-start' },
   archivedCard: { opacity: 0.6 },
-  archivedText: { color: '#999' },
+  archivedText: { color: '#6b6b6b' },
   segmented: { marginBottom: 12 },
   fieldHint: { color: '#6b6b6b', marginBottom: 6, marginTop: 4 },
   twoCol: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   colInput: { flex: 1 },
-  taskNotes: { color: '#666', marginBottom: 4, fontStyle: 'italic' },
+  taskNotes: { color: '#6b6b6b', marginBottom: 4, fontStyle: 'italic' },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
   photoThumb: { width: 64, height: 64, borderRadius: 4 },
   thumbRemove: { position: 'absolute', top: 2, right: 2, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
