@@ -312,7 +312,7 @@ export async function uploadEquipmentPhoto(
   const storageRef = ref(storage, `farms/${farmId}/equipment/${equipmentId}/photos/${photoId}.jpg`);
   await uploadBytes(storageRef, blob);
   const url = await getDownloadURL(storageRef);
-  const photo: EquipmentPhoto = { url, label, uploadedAt: Timestamp.now() };
+  const photo: EquipmentPhoto = { url, uploadedAt: Timestamp.now(), ...(label !== undefined ? { label } : {}) };
 
   const snap = await getDoc(doc(db, 'equipment', equipmentId));
   const existing: EquipmentPhoto[] = snap.data()?.photos ?? [];
