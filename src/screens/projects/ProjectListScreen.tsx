@@ -1,51 +1,92 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button } from 'react-native-paper';
+import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button, ProgressBar } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Timestamp } from 'firebase/firestore';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getProjects, createProject } from '../../services/projects';
+import { getProjects, getTasks, createProject } from '../../services/projects';
+import DatePickerField from '../../components/DatePickerField';
 import { Project } from '../../types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+interface ProjectSummary {
+  project: Project;
+  taskCount: number;
+  completedCount: number;
+}
+
+function toISO(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 export default function ProjectListScreen() {
   const navigation = useNavigation<Nav>();
   const { activeFarm } = useAuth();
   const insets = useSafeAreaInsets();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [summaries, setSummaries] = useState<ProjectSummary[]>([]);
   const [filter, setFilter] = useState<'active' | 'archived'>('active');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newDueDate, setNewDueDate] = useState('');
   const [showDialog, setShowDialog] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       if (!activeFarm) return;
-      getProjects(activeFarm.farmId)
-        .then(p => { setProjects(p); setLoading(false); })
-        .catch(e => { console.error('Projects load error:', e.message); setLoading(false); });
+      loadProjects();
     }, [activeFarm])
   );
+
+  async function loadProjects() {
+    if (!activeFarm) return;
+    setLoading(true);
+    try {
+      const projects = await getProjects(activeFarm.farmId);
+      const results = await Promise.all(
+        projects.map(async (project) => {
+          const tasks = await getTasks(project.id);
+          return {
+            project,
+            taskCount: tasks.length,
+            completedCount: tasks.filter(t => t.status === 'completed').length,
+          };
+        })
+      );
+      setSummaries(results);
+    } catch (e: any) {
+      console.error('Projects load error:', e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleCreate() {
     if (!newName.trim() || !activeFarm) return;
     setCreating(true);
     try {
-      const p = await createProject(activeFarm.farmId, newName.trim());
+      const dueDate = newDueDate ? new Date(newDueDate + 'T00:00:00') : undefined;
+      const p = await createProject(activeFarm.farmId, newName.trim(), dueDate);
       setShowDialog(false);
       setNewName('');
+      setNewDueDate('');
       navigation.navigate('ProjectDetail', { projectId: p.id });
     } finally {
       setCreating(false);
     }
   }
 
-  const filtered = projects.filter(p => p.status === filter);
+  function isOverdue(project: Project) {
+    if (!project.dueDate) return false;
+    return project.dueDate.toMillis() < Date.now();
+  }
+
+  const filtered = summaries.filter(s => s.project.status === filter);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
@@ -65,17 +106,41 @@ export default function ProjectListScreen() {
 
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Card style={styles.card} onPress={() => navigation.navigate('ProjectDetail', { projectId: item.id })}>
-            <Card.Content>
-              <Text variant="titleMedium">{item.name}</Text>
-              <Text variant="bodySmall" style={styles.date}>
-                Created {item.createdAt.toDate().toLocaleDateString()}
-              </Text>
-            </Card.Content>
-          </Card>
-        )}
+        keyExtractor={(item) => item.project.id}
+        renderItem={({ item }) => {
+          const overdue = isOverdue(item.project);
+          const progress = item.taskCount > 0 ? item.completedCount / item.taskCount : 0;
+          return (
+            <Card style={styles.card} onPress={() => navigation.navigate('ProjectDetail', { projectId: item.project.id })}>
+              <Card.Content>
+                <Text variant="titleMedium">{item.project.name}</Text>
+                <View style={styles.metaRow}>
+                  <Text variant="bodySmall" style={styles.date}>
+                    Created {item.project.createdAt.toDate().toLocaleDateString()}
+                  </Text>
+                  {item.project.dueDate && (
+                    <Text variant="bodySmall" style={[styles.dueLabel, overdue && styles.overdueLabel]}>
+                      {overdue ? 'Overdue · ' : 'Due '}
+                      {item.project.dueDate.toDate().toLocaleDateString()}
+                    </Text>
+                  )}
+                </View>
+                {item.taskCount > 0 && (
+                  <View style={styles.progressRow}>
+                    <ProgressBar
+                      progress={progress}
+                      color="#2e7d32"
+                      style={styles.progressBar}
+                    />
+                    <Text variant="bodySmall" style={styles.progressText}>
+                      {item.completedCount}/{item.taskCount}
+                    </Text>
+                  </View>
+                )}
+              </Card.Content>
+            </Card>
+          );
+        }}
         ListEmptyComponent={
           <EmptyState
             icon="clipboard-list-outline"
@@ -90,7 +155,7 @@ export default function ProjectListScreen() {
         <FAB
           icon="plus"
           style={[styles.fab, { bottom: 16 + insets.bottom }]}
-          onPress={() => { setNewName(''); setShowDialog(true); }}
+          onPress={() => { setNewName(''); setNewDueDate(''); setShowDialog(true); }}
         />
       )}
 
@@ -104,7 +169,13 @@ export default function ProjectListScreen() {
               onChangeText={setNewName}
               mode="outlined"
               autoFocus
-              onSubmitEditing={handleCreate}
+              style={styles.dialogInput}
+            />
+            <DatePickerField
+              label="Due date"
+              value={newDueDate}
+              onChange={setNewDueDate}
+              optional
             />
           </Dialog.Content>
           <Dialog.Actions>
@@ -126,6 +197,13 @@ const styles = StyleSheet.create({
   segment: { marginHorizontal: 16, marginBottom: 8 },
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
-  date: { color: '#6b6b6b', marginTop: 2 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  date: { color: '#6b6b6b' },
+  dueLabel: { color: '#6b6b6b' },
+  overdueLabel: { color: '#c62828', fontWeight: '600' },
+  progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 },
+  progressBar: { flex: 1, height: 6, borderRadius: 3 },
+  progressText: { color: '#6b6b6b', minWidth: 32, textAlign: 'right' },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
+  dialogInput: { marginBottom: 12 },
 });

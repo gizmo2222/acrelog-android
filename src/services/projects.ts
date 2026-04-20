@@ -26,7 +26,7 @@ export async function getProjects(farmId: string): Promise<Project[]> {
     .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
-export async function createProject(farmId: string, name: string): Promise<Project> {
+export async function createProject(farmId: string, name: string, dueDate?: Date): Promise<Project> {
   const user = auth.currentUser!;
   const ref = doc(collection(db, 'projects'));
   const project: Project = {
@@ -34,11 +34,16 @@ export async function createProject(farmId: string, name: string): Promise<Proje
     farmId,
     name,
     status: 'active',
+    ...(dueDate ? { dueDate: Timestamp.fromDate(dueDate) } : {}),
     createdAt: serverTimestamp() as any,
     createdBy: user.uid,
   };
   await setDoc(ref, project);
   return project;
+}
+
+export async function updateProject(id: string, data: Partial<Pick<Project, 'name' | 'dueDate'>>): Promise<void> {
+  await updateDoc(doc(db, 'projects', id), data);
 }
 
 export async function getTask(taskId: string): Promise<Task | null> {
@@ -110,6 +115,10 @@ export async function completeTask(id: string): Promise<void> {
     completedAt: serverTimestamp(),
     completedBy: user.uid,
   });
+}
+
+export async function startTask(id: string): Promise<void> {
+  await updateDoc(doc(db, 'tasks', id), { status: 'in_progress' as TaskStatus });
 }
 
 export async function reopenTask(id: string): Promise<void> {

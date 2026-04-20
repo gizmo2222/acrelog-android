@@ -14,7 +14,17 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { Farm, FarmMembership, UserRole } from '../types';
+import { Farm, FarmMembership, FarmMember, UserRole } from '../types';
+
+async function syncFarmMember(farmId: string, userId: string, role: UserRole, displayName: string): Promise<void> {
+  await setDoc(doc(db, 'farmMembers', `${farmId}_${userId}`), { farmId, userId, role, displayName });
+}
+
+export async function getFarmMembers(farmId: string): Promise<FarmMember[]> {
+  const q = query(collection(db, 'farmMembers'), where('farmId', '==', farmId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as FarmMember));
+}
 
 export async function createFarm(name: string): Promise<Farm> {
   const user = auth.currentUser!;
@@ -26,10 +36,15 @@ export async function createFarm(name: string): Promise<Farm> {
   };
   await setDoc(ref, farm);
 
-  // Add membership to user profile
-  await updateDoc(doc(db, 'users', user.uid), {
-    farmMemberships: arrayUnion({ farmId: ref.id, role: 'owner' } as FarmMembership),
-  });
+  const userSnap = await getDoc(doc(db, 'users', user.uid));
+  const displayName = userSnap.data()?.displayName || user.email || user.uid;
+
+  await Promise.all([
+    updateDoc(doc(db, 'users', user.uid), {
+      farmMemberships: arrayUnion({ farmId: ref.id, role: 'owner' } as FarmMembership),
+    }),
+    syncFarmMember(ref.id, user.uid, 'owner', displayName),
+  ]);
 
   return { id: ref.id, ...farm } as Farm;
 }
@@ -71,13 +86,16 @@ export async function applyPendingInvites(uid: string, email: string): Promise<v
   const snap = await getDocs(q);
   if (snap.empty) return;
 
-  const { deleteDoc } = await import('firebase/firestore');
+  const userSnap = await getDoc(doc(db, 'users', uid));
+  const displayName = userSnap.data()?.displayName || email;
+
   await Promise.all(
     snap.docs.map(async (inviteDoc) => {
       const { farmId, role } = inviteDoc.data();
       await updateDoc(doc(db, 'users', uid), {
         farmMemberships: arrayUnion({ farmId, role } as FarmMembership),
       });
+      await syncFarmMember(farmId, uid, role, displayName);
       await deleteDoc(inviteDoc.ref);
     })
   );
@@ -111,9 +129,15 @@ export async function redeemQRInvite(token: string, uid: string): Promise<string
   const farmSnap = await getDoc(doc(db, 'farms', data.farmId));
   const farmName = farmSnap.exists() ? farmSnap.data().name : 'Unknown Farm';
 
-  await updateDoc(doc(db, 'users', uid), {
-    farmMemberships: arrayUnion({ farmId: data.farmId, role: data.role } as FarmMembership),
-  });
+  const userSnap = await getDoc(doc(db, 'users', uid));
+  const displayName = userSnap.data()?.displayName || uid;
+
+  await Promise.all([
+    updateDoc(doc(db, 'users', uid), {
+      farmMemberships: arrayUnion({ farmId: data.farmId, role: data.role } as FarmMembership),
+    }),
+    syncFarmMember(data.farmId, uid, data.role, displayName),
+  ]);
 
   return farmName;
 }
@@ -136,7 +160,10 @@ export async function leaveFarm(farmId: string): Promise<void> {
   const memberships: FarmMembership[] = userSnap.data()?.farmMemberships ?? [];
   const membership = memberships.find(m => m.farmId === farmId);
   if (membership) {
-    await updateDoc(doc(db, 'users', user.uid), { farmMemberships: arrayRemove(membership) });
+    await Promise.all([
+      updateDoc(doc(db, 'users', user.uid), { farmMemberships: arrayRemove(membership) }),
+      deleteDoc(doc(db, 'farmMembers', `${farmId}_${user.uid}`)).catch(() => {}),
+    ]);
   }
 }
 
@@ -169,4 +196,5 @@ export async function updateFarmMemberRole(
     m.farmId === farmId ? { ...m, role: newRole } : m
   );
   await updateDoc(doc(db, 'users', targetUid), { farmMemberships: updated });
+  await updateDoc(doc(db, 'farmMembers', `${farmId}_${targetUid}`), { role: newRole }).catch(() => {});
 }

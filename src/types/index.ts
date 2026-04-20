@@ -4,7 +4,8 @@ export type UserRole = 'owner' | 'worker' | 'mechanic' | 'auditor';
 export type EquipmentStatus = 'active' | 'archived' | 'sold';
 export type MaintenanceStatus = 'ok' | 'due_soon' | 'overdue' | 'broken';
 export type ProjectStatus = 'active' | 'archived';
-export type TaskStatus = 'pending' | 'completed';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed';
+export type TaskPriority = 'high' | 'medium' | 'low';
 
 // ─── User ──────────────────────────────────────────────────────────────────
 
@@ -179,8 +180,14 @@ export interface Project {
   farmId: string;
   name: string;
   status: ProjectStatus;
+  dueDate?: Timestamp;
   createdAt: Timestamp;
   createdBy: string;
+}
+
+export interface TaskPart {
+  name: string;
+  cost?: number;
 }
 
 export interface Task {
@@ -189,9 +196,22 @@ export interface Task {
   name: string;
   dueDate?: Timestamp;
   status: TaskStatus;
+  priority?: TaskPriority;
+  notes?: string;
+  assignedToId?: string;
+  assignedToName?: string;
+  parts?: TaskPart[];
   completedAt?: Timestamp;
   completedBy?: string;
   createdAt: Timestamp;
+}
+
+export interface FarmMember {
+  id: string;
+  farmId: string;
+  userId: string;
+  displayName: string;
+  role: UserRole;
 }
 
 export interface TaskEquipmentLog {

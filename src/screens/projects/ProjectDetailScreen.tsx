@@ -1,21 +1,38 @@
 import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, Chip, IconButton, TextInput, Button, Divider, Menu, ActivityIndicator, Dialog, Portal } from 'react-native-paper';
+import { Text, Card, Chip, IconButton, TextInput, Button, Divider, Menu, ActivityIndicator, Dialog, Portal, ProgressBar } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
+import { Timestamp, deleteField } from 'firebase/firestore';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import {
-  getProject, getTasks, createTask, completeTask, reopenTask,
-  updateProjectStatus, deleteProject, deleteTask, renameProject,
+  getProject, getTasks, createTask, completeTask, reopenTask, startTask,
+  updateProjectStatus, deleteProject, deleteTask, updateProject,
   getTaskEquipmentLogs,
 } from '../../services/projects';
-import { Project, Task, TaskEquipmentLog } from '../../types';
+import DatePickerField from '../../components/DatePickerField';
+import { Project, Task, TaskEquipmentLog, TaskPriority } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProjectDetail'>;
+
+const PRIORITY_COLORS: Record<TaskPriority, string> = {
+  high: '#c62828',
+  medium: '#f57c00',
+  low: '#9e9e9e',
+};
+const PRIORITY_BG: Record<TaskPriority, string> = {
+  high: '#ffebee',
+  medium: '#fff3e0',
+  low: '#f5f5f5',
+};
+
+function toISO(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 export default function ProjectDetailScreen({ route, navigation }: Props) {
   const { projectId } = route.params;
@@ -28,9 +45,10 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   const [addingTask, setAddingTask] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [equipmentLogs, setEquipmentLogs] = useState<Record<string, TaskEquipmentLog[]>>({});
-  const [renameVisible, setRenameVisible] = useState(false);
-  const [renameName, setRenameName] = useState('');
-  const [renaming, setRenaming] = useState(false);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [editing, setEditing] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [projectId]));
 
@@ -69,35 +87,15 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   async function handleDeleteTask(task: Task) {
     Alert.alert(`Delete "${task.name}"?`, "This can't be undone.", [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive', onPress: async () => {
-          await deleteTask(task.id);
-          load();
-        }
-      },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await deleteTask(task.id); load(); } },
     ]);
-  }
-
-  async function handleComplete(taskId: string) {
-    await completeTask(taskId);
-    load();
-  }
-
-  async function handleReopen(taskId: string) {
-    await reopenTask(taskId);
-    load();
   }
 
   async function handleArchive() {
     setMenuVisible(false);
-    Alert.alert('Archive project?', 'You can restore it later from the Archived tab.', [
+    Alert.alert('Archive project?', 'You can restore it from the Archived tab.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Archive', onPress: async () => {
-          await updateProjectStatus(projectId, 'archived');
-          navigation.goBack();
-        }
-      },
+      { text: 'Archive', onPress: async () => { await updateProjectStatus(projectId, 'archived'); navigation.goBack(); } },
     ]);
   }
 
@@ -110,41 +108,54 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete', style: 'destructive', onPress: async () => {
-            try {
-              await deleteProject(projectId);
-              navigation.goBack();
-            } catch (e: any) {
-              Alert.alert("Couldn't delete project", errorMessage(e));
-            }
+            try { await deleteProject(projectId); navigation.goBack(); }
+            catch (e: any) { Alert.alert("Couldn't delete project", errorMessage(e)); }
           }
         },
       ]
     );
   }
 
-  async function handleRename() {
-    if (!renameName.trim()) return;
-    setRenaming(true);
+  async function handleSaveEdit() {
+    if (!editName.trim()) return;
+    setEditing(true);
     try {
-      await renameProject(projectId, renameName.trim());
-      setRenameVisible(false);
-      navigation.setOptions({ title: renameName.trim() });
-      setProject(p => p ? { ...p, name: renameName.trim() } : p);
+      const update: any = { name: editName.trim() };
+      if (editDueDate) {
+        update.dueDate = Timestamp.fromDate(new Date(editDueDate + 'T00:00:00'));
+      } else if (project?.dueDate) {
+        update.dueDate = deleteField();
+      }
+      await updateProject(projectId, update);
+      setEditVisible(false);
+      navigation.setOptions({ title: editName.trim() });
+      setProject(p => p ? { ...p, name: editName.trim(), ...(editDueDate ? { dueDate: Timestamp.fromDate(new Date(editDueDate + 'T00:00:00')) } : { dueDate: undefined }) } : p);
     } catch (e: any) {
-      Alert.alert("Couldn't rename project", errorMessage(e));
+      Alert.alert("Couldn't update project", errorMessage(e));
     } finally {
-      setRenaming(false);
+      setEditing(false);
     }
   }
 
+  const canEdit = activeFarm?.role !== 'auditor';
+  const inProgress = tasks.filter(t => t.status === 'in_progress');
   const pending = tasks.filter(t => t.status === 'pending');
   const completed = tasks.filter(t => t.status === 'completed');
-  const canEdit = activeFarm?.role !== 'auditor';
+  const openTasks = [...inProgress, ...pending];
+  const taskCount = tasks.length;
+  const completedCount = completed.length;
+  const progress = taskCount > 0 ? completedCount / taskCount : 0;
+  const totalCost = tasks.reduce((sum, t) => sum + (t.parts ?? []).reduce((s, p) => s + (p.cost ?? 0), 0), 0);
+  const isOverdue = project?.dueDate && project.dueDate.toMillis() < Date.now();
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
-  function renderTask(task: Task, isCompleted: boolean) {
+  function renderTask(task: Task) {
+    const isCompleted = task.status === 'completed';
+    const isInProgress = task.status === 'in_progress';
     const logs = equipmentLogs[task.id] ?? [];
+    const partCost = (task.parts ?? []).reduce((s, p) => s + (p.cost ?? 0), 0);
+
     return (
       <Card
         style={[styles.card, isCompleted && styles.completedCard]}
@@ -153,56 +164,80 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
       >
         <Card.Content>
           <View style={styles.taskRow}>
-            <Text variant="bodyLarge" style={[styles.flex, isCompleted && styles.strikethrough]}>
-              {task.name}
-            </Text>
+            <View style={styles.taskNameRow}>
+              <Text variant="bodyLarge" style={[styles.flex, isCompleted && styles.strikethrough]}>
+                {task.name}
+              </Text>
+              {task.priority && (
+                <Chip
+                  compact
+                  style={{ backgroundColor: PRIORITY_BG[task.priority], marginLeft: 4 }}
+                  textStyle={{ color: PRIORITY_COLORS[task.priority], fontSize: 11 }}
+                >
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                </Chip>
+              )}
+            </View>
             {canEdit && (
               <IconButton icon="trash-can-outline" size={18} iconColor="#9e9e9e" onPress={() => handleDeleteTask(task)} />
             )}
           </View>
 
-          {task.dueDate && (
-            <Text variant="bodySmall" style={styles.due}>
-              Due {task.dueDate.toDate().toLocaleDateString()}
-            </Text>
-          )}
+          <View style={styles.taskMeta}>
+            {isInProgress && (
+              <Chip compact style={styles.inProgressChip} textStyle={{ color: '#1565c0', fontSize: 11 }}>In Progress</Chip>
+            )}
+            {task.dueDate && (
+              <Text variant="bodySmall" style={styles.due}>Due {task.dueDate.toDate().toLocaleDateString()}</Text>
+            )}
+            {task.assignedToName && (
+              <Text variant="bodySmall" style={styles.assignee}>→ {task.assignedToName}</Text>
+            )}
+            {isCompleted && task.completedAt && (
+              <Text variant="bodySmall" style={styles.completedAt}>
+                Done {task.completedAt.toDate().toLocaleDateString()}
+              </Text>
+            )}
+          </View>
 
-          {isCompleted && task.completedAt && (
-            <Text variant="bodySmall" style={styles.completedAt}>
-              Completed {task.completedAt.toDate().toLocaleDateString()}
-            </Text>
-          )}
-
-          {logs.length > 0 && (
+          {(logs.length > 0 || partCost > 0) && (
             <View style={styles.logsRow}>
               {logs.map((l) => (
-                <Chip key={l.id} compact icon="tractor" style={styles.equipChip}>
-                  {l.hours} hrs
-                </Chip>
+                <Chip key={l.id} compact icon="tractor" style={styles.equipChip}>{l.hours} hrs</Chip>
               ))}
+              {partCost > 0 && (
+                <Chip compact icon="currency-usd" style={styles.costChip}>${partCost.toFixed(2)}</Chip>
+              )}
             </View>
           )}
 
           {canEdit && !isCompleted && (
-            <Button
-              compact
-              mode="contained"
-              icon="check-circle-outline"
-              style={styles.completeBtn}
-              buttonColor="#2e7d32"
-              onPress={() => handleComplete(task.id)}
-            >
-              Mark Complete
-            </Button>
+            <View style={styles.taskActions}>
+              {!isInProgress && (
+                <Button
+                  compact
+                  mode="outlined"
+                  icon="play-outline"
+                  style={styles.startBtn}
+                  onPress={() => { startTask(task.id); load(); }}
+                >
+                  Start
+                </Button>
+              )}
+              <Button
+                compact
+                mode="contained"
+                icon="check-circle-outline"
+                style={styles.completeBtn}
+                buttonColor="#2e7d32"
+                onPress={() => { completeTask(task.id); load(); }}
+              >
+                Mark Complete
+              </Button>
+            </View>
           )}
           {canEdit && isCompleted && (
-            <Button
-              compact
-              mode="text"
-              icon="undo"
-              style={styles.completeBtn}
-              onPress={() => handleReopen(task.id)}
-            >
+            <Button compact mode="text" icon="undo" style={styles.reopenBtn} onPress={() => { reopenTask(task.id); load(); }}>
               Reopen
             </Button>
           )}
@@ -214,34 +249,50 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text variant="titleLarge" style={styles.title} numberOfLines={1}>
-          {project?.name ?? 'Project'}
-        </Text>
+        <Text variant="titleLarge" style={styles.title} numberOfLines={1}>{project?.name ?? 'Project'}</Text>
         <Menu
           visible={menuVisible}
           onDismiss={() => setMenuVisible(false)}
           anchor={<IconButton icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
         >
           <Menu.Item
-            onPress={() => { setMenuVisible(false); setRenameName(project?.name ?? ''); setRenameVisible(true); }}
-            title="Rename Project"
+            onPress={() => { setMenuVisible(false); setEditName(project?.name ?? ''); setEditDueDate(project?.dueDate ? toISO(project.dueDate.toDate()) : ''); setEditVisible(true); }}
+            title="Edit Project"
             leadingIcon="pencil-outline"
           />
-          <Menu.Item
-            onPress={handleArchive}
-            title="Archive Project"
-            leadingIcon="archive-outline"
-          />
+          <Menu.Item onPress={handleArchive} title="Archive Project" leadingIcon="archive-outline" />
           <Divider />
-          <Menu.Item
-            onPress={handleDelete}
-            title="Delete Project"
-            leadingIcon="trash-can-outline"
-            titleStyle={{ color: '#c62828' }}
-          />
+          <Menu.Item onPress={handleDelete} title="Delete Project" leadingIcon="trash-can-outline" titleStyle={{ color: '#c62828' }} />
         </Menu>
       </View>
 
+      {/* Progress header */}
+      {taskCount > 0 && (
+        <View style={styles.progressSection}>
+          <View style={styles.progressMeta}>
+            <Text variant="bodySmall" style={styles.progressText}>
+              {completedCount}/{taskCount} tasks done
+              {totalCost > 0 ? ` · Est. $${totalCost.toFixed(2)}` : ''}
+            </Text>
+            {project?.dueDate && (
+              <Text variant="bodySmall" style={[styles.dueText, isOverdue && styles.overdueText]}>
+                {isOverdue ? 'Overdue · ' : 'Due '}
+                {project.dueDate.toDate().toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+          <ProgressBar progress={progress} color="#2e7d32" style={styles.progressBar} />
+        </View>
+      )}
+
+      {!taskCount && project?.dueDate && (
+        <Text variant="bodySmall" style={[styles.dueSolo, isOverdue && styles.overdueText]}>
+          {isOverdue ? 'Overdue · ' : 'Due '}
+          {project.dueDate.toDate().toLocaleDateString()}
+        </Text>
+      )}
+
+      {/* Add task row */}
       {canEdit && (
         <View style={styles.addRow}>
           <TextInput
@@ -253,55 +304,54 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
             onSubmitEditing={handleAddTask}
             returnKeyType="done"
           />
-          <IconButton
-            icon="plus"
-            mode="contained"
-            onPress={handleAddTask}
-            disabled={addingTask}
-            containerColor="#2e7d32"
-            iconColor="white"
-          />
+          <IconButton icon="plus" mode="contained" onPress={handleAddTask} disabled={addingTask} containerColor="#2e7d32" iconColor="white" />
         </View>
       )}
 
       <ScrollView contentContainerStyle={[styles.list, { paddingBottom: 32 + insets.bottom }]}>
-        <Text variant="labelLarge" style={styles.sectionLabel}>Pending ({pending.length})</Text>
-        {pending.length === 0
-          ? <EmptyState
-              icon="checkbox-blank-outline"
-              title="No pending tasks"
-              subtitle={canEdit ? 'Add a task above to get started.' : undefined}
-            />
-          : pending.map(t => renderTask(t, false))
+        {/* In Progress */}
+        {inProgress.length > 0 && (
+          <>
+            <Text variant="labelLarge" style={styles.sectionLabel}>In Progress ({inProgress.length})</Text>
+            {inProgress.map(t => renderTask(t))}
+          </>
+        )}
+
+        {/* To Do */}
+        <Text variant="labelLarge" style={styles.sectionLabel}>To Do ({pending.length})</Text>
+        {pending.length === 0 && inProgress.length === 0
+          ? <EmptyState icon="checkbox-blank-outline" title="No open tasks" subtitle={canEdit ? 'Add a task above.' : undefined} />
+          : pending.map(t => renderTask(t))
         }
 
+        {/* Done */}
         {completed.length > 0 && (
           <>
             <Divider style={styles.divider} />
-            <Text variant="labelLarge" style={styles.sectionLabel}>Completed ({completed.length})</Text>
-            {completed.map(t => renderTask(t, true))}
+            <Text variant="labelLarge" style={styles.sectionLabel}>Done ({completed.length})</Text>
+            {completed.map(t => renderTask(t))}
           </>
         )}
       </ScrollView>
 
+      {/* Edit project dialog */}
       <Portal>
-        <Dialog visible={renameVisible} onDismiss={() => setRenameVisible(false)}>
-          <Dialog.Title>Rename Project</Dialog.Title>
+        <Dialog visible={editVisible} onDismiss={() => setEditVisible(false)}>
+          <Dialog.Title>Edit Project</Dialog.Title>
           <Dialog.Content>
             <TextInput
               label="Project name"
-              value={renameName}
-              onChangeText={setRenameName}
+              value={editName}
+              onChangeText={setEditName}
               mode="outlined"
               autoFocus
-              onSubmitEditing={handleRename}
+              style={styles.dialogInput}
             />
+            <DatePickerField label="Due date" value={editDueDate} onChange={setEditDueDate} optional />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setRenameVisible(false)}>Cancel</Button>
-            <Button onPress={handleRename} loading={renaming} disabled={!renameName.trim() || renaming}>
-              Save
-            </Button>
+            <Button onPress={() => setEditVisible(false)}>Cancel</Button>
+            <Button onPress={handleSaveEdit} loading={editing} disabled={!editName.trim() || editing}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -314,19 +364,35 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingTop: 8 },
   title: { fontWeight: 'bold', color: '#2e7d32', flex: 1 },
+  progressSection: { marginHorizontal: 16, marginTop: 4, marginBottom: 8 },
+  progressMeta: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  progressText: { color: '#6b6b6b' },
+  progressBar: { height: 6, borderRadius: 3 },
+  dueText: { color: '#6b6b6b' },
+  overdueText: { color: '#c62828', fontWeight: '600' },
+  dueSolo: { marginHorizontal: 16, marginTop: 4, marginBottom: 8, color: '#6b6b6b' },
   addRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   addInput: { flex: 1, marginRight: 4 },
   list: { paddingHorizontal: 16, paddingTop: 4 },
   sectionLabel: { color: '#6b6b6b', marginBottom: 8, marginTop: 8 },
   card: { marginBottom: 8, borderRadius: 8 },
   completedCard: { opacity: 0.6 },
-  taskRow: { flexDirection: 'row', alignItems: 'center' },
+  taskRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  taskNameRow: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   flex: { flex: 1 },
   strikethrough: { textDecorationLine: 'line-through', color: '#6b6b6b' },
-  due: { color: '#f57c00', marginTop: 2 },
-  completedAt: { color: '#6b6b6b', marginTop: 2 },
+  taskMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4, marginBottom: 2 },
+  inProgressChip: { backgroundColor: '#e3f2fd' },
+  due: { color: '#f57c00' },
+  assignee: { color: '#6b6b6b' },
+  completedAt: { color: '#6b6b6b' },
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   equipChip: { backgroundColor: '#e8f5e9' },
-  completeBtn: { marginTop: 8, alignSelf: 'flex-start' },
+  costChip: { backgroundColor: '#fff8e1' },
+  taskActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  startBtn: { flex: 1 },
+  completeBtn: { flex: 2 },
+  reopenBtn: { marginTop: 6, alignSelf: 'flex-start' },
   divider: { marginTop: 8, marginBottom: 4 },
+  dialogInput: { marginBottom: 12 },
 });
