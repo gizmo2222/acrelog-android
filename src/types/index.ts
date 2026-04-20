@@ -179,6 +179,7 @@ export interface Project {
   id: string;
   farmId: string;
   name: string;
+  description?: string;
   status: ProjectStatus;
   dueDate?: Timestamp;
   createdAt: Timestamp;

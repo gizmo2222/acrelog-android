@@ -48,6 +48,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   const [editVisible, setEditVisible] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const [editing, setEditing] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [projectId]));
@@ -91,12 +92,18 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
     ]);
   }
 
-  async function handleArchive() {
+  async function handleArchiveToggle() {
     setMenuVisible(false);
-    Alert.alert('Archive project?', 'You can restore it from the Archived tab.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Archive', onPress: async () => { await updateProjectStatus(projectId, 'archived'); navigation.goBack(); } },
-    ]);
+    const isArchived = project?.status === 'archived';
+    if (isArchived) {
+      await updateProjectStatus(projectId, 'active');
+      setProject(p => p ? { ...p, status: 'active' } : p);
+    } else {
+      Alert.alert('Archive project?', 'You can restore it from the Archived tab.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Archive', onPress: async () => { await updateProjectStatus(projectId, 'archived'); navigation.goBack(); } },
+      ]);
+    }
   }
 
   async function handleDelete() {
@@ -120,7 +127,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
     if (!editName.trim()) return;
     setEditing(true);
     try {
-      const update: any = { name: editName.trim() };
+      const update: any = { name: editName.trim(), description: editDescription.trim() || '' };
       if (editDueDate) {
         update.dueDate = Timestamp.fromDate(new Date(editDueDate + 'T00:00:00'));
       } else if (project?.dueDate) {
@@ -129,7 +136,12 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
       await updateProject(projectId, update);
       setEditVisible(false);
       navigation.setOptions({ title: editName.trim() });
-      setProject(p => p ? { ...p, name: editName.trim(), ...(editDueDate ? { dueDate: Timestamp.fromDate(new Date(editDueDate + 'T00:00:00')) } : { dueDate: undefined }) } : p);
+      setProject(p => p ? {
+        ...p,
+        name: editName.trim(),
+        description: editDescription.trim() || undefined,
+        ...(editDueDate ? { dueDate: Timestamp.fromDate(new Date(editDueDate + 'T00:00:00')) } : { dueDate: undefined }),
+      } : p);
     } catch (e: any) {
       Alert.alert("Couldn't update project", errorMessage(e));
     } finally {
@@ -256,15 +268,29 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
           anchor={<IconButton icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
         >
           <Menu.Item
-            onPress={() => { setMenuVisible(false); setEditName(project?.name ?? ''); setEditDueDate(project?.dueDate ? toISO(project.dueDate.toDate()) : ''); setEditVisible(true); }}
+            onPress={() => {
+              setMenuVisible(false);
+              setEditName(project?.name ?? '');
+              setEditDueDate(project?.dueDate ? toISO(project.dueDate.toDate()) : '');
+              setEditDescription(project?.description ?? '');
+              setEditVisible(true);
+            }}
             title="Edit Project"
             leadingIcon="pencil-outline"
           />
-          <Menu.Item onPress={handleArchive} title="Archive Project" leadingIcon="archive-outline" />
+          <Menu.Item
+            onPress={handleArchiveToggle}
+            title={project?.status === 'archived' ? 'Restore Project' : 'Archive Project'}
+            leadingIcon={project?.status === 'archived' ? 'restore' : 'archive-outline'}
+          />
           <Divider />
           <Menu.Item onPress={handleDelete} title="Delete Project" leadingIcon="trash-can-outline" titleStyle={{ color: '#c62828' }} />
         </Menu>
       </View>
+
+      {project?.description ? (
+        <Text variant="bodySmall" style={styles.description}>{project.description}</Text>
+      ) : null}
 
       {/* Progress header */}
       {taskCount > 0 && (
@@ -347,6 +373,15 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
               autoFocus
               style={styles.dialogInput}
             />
+            <TextInput
+              label="Description (optional)"
+              value={editDescription}
+              onChangeText={setEditDescription}
+              mode="outlined"
+              multiline
+              numberOfLines={3}
+              style={styles.dialogInput}
+            />
             <DatePickerField label="Due date" value={editDueDate} onChange={setEditDueDate} optional />
           </Dialog.Content>
           <Dialog.Actions>
@@ -394,5 +429,6 @@ const styles = StyleSheet.create({
   completeBtn: { flex: 2 },
   reopenBtn: { marginTop: 6, alignSelf: 'flex-start' },
   divider: { marginTop: 8, marginBottom: 4 },
+  description: { color: '#6b6b6b', marginHorizontal: 16, marginTop: 2, marginBottom: 8 },
   dialogInput: { marginBottom: 12 },
 });

@@ -42,7 +42,7 @@ export async function createProject(farmId: string, name: string, dueDate?: Date
   return project;
 }
 
-export async function updateProject(id: string, data: Partial<Pick<Project, 'name' | 'dueDate'>>): Promise<void> {
+export async function updateProject(id: string, data: Partial<Pick<Project, 'name' | 'description' | 'dueDate'>>): Promise<void> {
   await updateDoc(doc(db, 'projects', id), data);
 }
 
