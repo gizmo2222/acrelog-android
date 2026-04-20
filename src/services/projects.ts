@@ -72,7 +72,11 @@ export async function renameProject(id: string, name: string): Promise<void> {
 
 export async function deleteProject(projectId: string): Promise<void> {
   const tasks = await getTasks(projectId);
-  await Promise.all(tasks.map(t => deleteDoc(doc(db, 'tasks', t.id))));
+  await Promise.all(tasks.map(async t => {
+    const logsSnap = await getDocs(query(collection(db, 'taskEquipmentLogs'), where('taskId', '==', t.id)));
+    await Promise.all(logsSnap.docs.map(d => deleteDoc(d.ref)));
+    await deleteDoc(doc(db, 'tasks', t.id));
+  }));
   await deleteDoc(doc(db, 'projects', projectId));
 }
 
