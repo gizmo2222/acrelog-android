@@ -6,11 +6,11 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, updateEquipment, uploadEquipmentPhoto, deleteEquipmentPhoto } from '../../services/equipment';
+import { getEquipmentById, getCategories, archiveEquipment, markBroken, clearBroken, deleteEquipment, addHours, setHours, getMeterReadings, getDowntimeRecords, updateEquipment, uploadEquipmentPhoto, deleteEquipmentPhoto } from '../../services/equipment';
 import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
 import { getUserFarms } from '../../services/farms';
 import { auth } from '../../services/firebase';
-import { Equipment, Category, MaintenanceTask, MeterReading, MaintenanceStatus, Farm, UserRole } from '../../types';
+import { Equipment, Category, MaintenanceTask, MeterReading, DowntimeRecord, MaintenanceStatus, Farm, UserRole } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants/equipment';
 import EmptyState from '../../components/EmptyState';
 import * as ImagePicker from 'expo-image-picker';
@@ -40,6 +40,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const [moving, setMoving] = useState(false);
   const [readingsPage, setReadingsPage] = useState(1);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [downtimeRecords, setDowntimeRecords] = useState<DowntimeRecord[]>([]);
 
   useFocusEffect(
     useCallback(() => { load(); }, [equipmentId])
@@ -52,12 +53,14 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
     if (eq && activeFarm) {
       const cats = await getCategories(activeFarm.farmId);
       setCategory(cats.find(c => c.id === eq.categoryId) ?? null);
-      const [t, r] = await Promise.all([
+      const [t, r, dt] = await Promise.all([
         getMaintenanceTasks(equipmentId),
         getMeterReadings(equipmentId),
+        getDowntimeRecords(equipmentId),
       ]);
       setTasks(t);
       setReadings(r);
+      setDowntimeRecords(dt);
     }
     setLoading(false);
   }
@@ -369,6 +372,39 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
                 )}
               </>
             )}
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Downtime history */}
+      {downtimeRecords.length > 0 && (
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Downtime History ({downtimeRecords.length})
+            </Text>
+            {downtimeRecords.map(d => {
+              const durationMs = d.resolvedAt
+                ? d.resolvedAt.toMillis() - d.startedAt.toMillis()
+                : Date.now() - d.startedAt.toMillis();
+              const hours = Math.round(durationMs / 3600000 * 10) / 10;
+              return (
+                <View key={d.id} style={styles.readingRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodySmall" style={{ color: '#7b1fa2', fontWeight: '600' }}>
+                      {d.resolvedAt ? 'Resolved' : 'Ongoing'}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.readingDate}>
+                      {d.startedAt.toDate().toLocaleDateString()}
+                      {d.resolvedAt ? ` → ${d.resolvedAt.toDate().toLocaleDateString()}` : ''}
+                      {' · '}
+                      {hours} hrs down
+                    </Text>
+                    <Text variant="bodySmall">{d.reason}</Text>
+                  </View>
+                </View>
+              );
+            })}
           </Card.Content>
         </Card>
       )}
