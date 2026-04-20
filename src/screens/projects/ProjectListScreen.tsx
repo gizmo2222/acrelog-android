@@ -29,7 +29,7 @@ export default function ProjectListScreen() {
   const { activeFarm } = useAuth();
   const insets = useSafeAreaInsets();
   const [summaries, setSummaries] = useState<ProjectSummary[]>([]);
-  const [filter, setFilter] = useState<'active' | 'archived'>('active');
+  const [filter, setFilter] = useState<'active' | 'completed' | 'archived'>('active');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -103,6 +103,7 @@ export default function ProjectListScreen() {
         onValueChange={(v) => setFilter(v as any)}
         buttons={[
           { value: 'active', label: 'Active' },
+          { value: 'completed', label: 'Completed' },
           { value: 'archived', label: 'Archived' },
         ]}
         style={styles.segment}
@@ -150,7 +151,7 @@ export default function ProjectListScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="clipboard-list-outline"
-            title={filter === 'active' ? 'No active projects' : 'No archived projects'}
+            title={filter === 'active' ? 'No active projects' : filter === 'completed' ? 'No completed projects' : 'No archived projects'}
             subtitle={filter === 'active' ? 'Tap + to start your first project.' : undefined}
           />
         }

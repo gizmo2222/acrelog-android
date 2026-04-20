@@ -92,6 +92,20 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
     ]);
   }
 
+  async function handleCompleteToggle() {
+    setMenuVisible(false);
+    const isCompleted = project?.status === 'completed';
+    if (isCompleted) {
+      await updateProjectStatus(projectId, 'active');
+      setProject(p => p ? { ...p, status: 'active' } : p);
+    } else {
+      Alert.alert('Mark project complete?', 'It will move to the Completed tab.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Complete', onPress: async () => { await updateProjectStatus(projectId, 'completed'); navigation.goBack(); } },
+      ]);
+    }
+  }
+
   async function handleArchiveToggle() {
     setMenuVisible(false);
     const isArchived = project?.status === 'archived';
@@ -282,6 +296,13 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
             title="Edit Project"
             leadingIcon="pencil-outline"
           />
+          {project?.status !== 'archived' && (
+            <Menu.Item
+              onPress={handleCompleteToggle}
+              title={project?.status === 'completed' ? 'Reopen Project' : 'Mark Complete'}
+              leadingIcon={project?.status === 'completed' ? 'restore' : 'check-circle-outline'}
+            />
+          )}
           <Menu.Item
             onPress={handleArchiveToggle}
             title={project?.status === 'archived' ? 'Restore Project' : 'Archive Project'}
