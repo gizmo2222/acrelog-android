@@ -11,6 +11,7 @@ import { getMaintenanceTasks, getMaintenanceStatus, getMaintenanceLogs } from '.
 import { getDowntimeRecords } from '../../services/equipment';
 import { Equipment, MaintenanceTask, MaintenanceLog, DowntimeRecord } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
+import EmptyState from '../../components/EmptyState';
 
 interface EquipmentSummary {
   equipment: Equipment;
@@ -95,6 +96,19 @@ export default function ReportsScreen() {
   const insets = useSafeAreaInsets();
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
+
+  if (summaries.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text variant="headlineSmall" style={styles.title}>Reports</Text>
+        <EmptyState
+          icon="chart-bar"
+          title="No active equipment"
+          subtitle="Add equipment to start tracking maintenance status and generate reports."
+        />
+      </View>
+    );
+  }
 
   const totalOverdue = summaries.reduce((a, s) => a + s.overdueCount, 0);
   const totalDueSoon = summaries.reduce((a, s) => a + s.dueSoonCount, 0);
