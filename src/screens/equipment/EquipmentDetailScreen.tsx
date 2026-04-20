@@ -334,6 +334,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           <DetailRow label="Model" value={equipment.model} />
           <DetailRow label="Serial #" value={equipment.serialNumber} />
           {equipment.purchaseLocation ? <DetailRow label="Purchase Location" value={equipment.purchaseLocation} /> : null}
+          {equipment.purchaseDate ? <DetailRow label="Purchase Date" value={new Date(equipment.purchaseDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} /> : null}
           {equipment.description ? <DetailRow label="Description" value={equipment.description} /> : null}
           {equipment.manufacturerUrl ? <DetailRow label="Manufacturer URL" value={equipment.manufacturerUrl} /> : null}
         </Card.Content>

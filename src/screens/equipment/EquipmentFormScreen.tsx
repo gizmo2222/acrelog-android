@@ -14,6 +14,7 @@ import { getFarm } from '../../services/farms';
 import { Category, EquipmentStatus } from '../../types';
 import SelectField from '../../components/SelectField';
 import AutocompleteInput from '../../components/AutocompleteInput';
+import DatePickerField from '../../components/DatePickerField';
 import { BRAND_SUGGESTIONS } from '../../constants/brandSuggestions';
 import { errorMessage } from '../../utils/errorMessage';
 
@@ -39,6 +40,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const [serial, setSerial] = useState(isEdit ? '' : (prefillSerial ?? ''));
   const [description, setDescription] = useState('');
   const [purchaseLocation, setPurchaseLocation] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState('');
   const [location, setLocation] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [manufacturerUrl, setManufacturerUrl] = useState('');
@@ -65,6 +67,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         setSerial(eq.serialNumber);
         setDescription(eq.description);
         setPurchaseLocation(eq.purchaseLocation);
+        setPurchaseDate(eq.purchaseDate ?? '');
         setLocation(eq.location);
         setCategoryId(eq.categoryId);
         setManufacturerUrl(eq.manufacturerUrl ?? '');
@@ -123,6 +126,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         serialNumber: serial.trim(),
         description: description.trim(),
         purchaseLocation: purchaseLocation.trim(),
+        purchaseDate: purchaseDate || undefined,
         location: location.trim(),
         customFields,
         status: 'active' as EquipmentStatus,
@@ -231,6 +235,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
       <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
       <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
+      <DatePickerField label="Purchase Date" value={purchaseDate} onChange={setPurchaseDate} optional />
       {farmLocations.length > 0 ? (
         <SelectField label="Storage Location" value={location} options={farmLocations} onChange={setLocation} allowClear style={styles.input} />
       ) : (

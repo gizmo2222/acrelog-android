@@ -329,6 +329,7 @@ export default function EquipmentListScreen() {
             icon="barcode-scan"
             label="Scan Serial"
             style={[styles.fab, { bottom: 72 + insets.bottom, backgroundColor: '#4a4540' }]}
+            color="#ffffff"
             onPress={() => navigation.navigate('SerialScan')}
             size="small"
           />
