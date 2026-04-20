@@ -23,8 +23,8 @@ const fontConfig = {
   bodyMedium:    { fontFamily: 'Barlow_400Regular', fontWeight: '400' as const },
   bodySmall:     { fontFamily: 'Barlow_400Regular', fontWeight: '400' as const },
   labelLarge:    { fontFamily: 'Barlow_600SemiBold', fontWeight: '600' as const },
-  labelMedium:   { fontFamily: 'Barlow_600SemiBold', fontWeight: '500' as const },
-  labelSmall:    { fontFamily: 'Barlow_600SemiBold', fontWeight: '500' as const },
+  labelMedium:   { fontFamily: 'Barlow_600SemiBold', fontWeight: '600' as const },
+  labelSmall:    { fontFamily: 'Barlow_600SemiBold', fontWeight: '600' as const },
   default:       { fontFamily: 'Barlow_400Regular', fontWeight: '400' as const },
 };
 

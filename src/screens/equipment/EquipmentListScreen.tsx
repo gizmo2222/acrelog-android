@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   thumbnail: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   cardText: { flex: 1 },
   subtitle: { color: '#6b6b6b' },
-  category: { color: '#6b6b6b', fontSize: 11 },
+  category: { color: '#6b6b6b', fontSize: 12 },
   statusChip: { marginTop: 4, alignSelf: 'flex-start' },
   archivedChip: { marginTop: 4, alignSelf: 'flex-start' },
   empty: { textAlign: 'center', color: '#6b6b6b', marginTop: 48 },

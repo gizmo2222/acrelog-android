@@ -178,5 +178,5 @@ const styles = StyleSheet.create({
   colItem: { height: ITEM_HEIGHT, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   colItemSelected: { backgroundColor: '#c8e6c9', borderRadius: 6 },
   colText: { fontSize: 15, color: '#4a4540' },
-  colTextSelected: { color: '#2e7d32', fontWeight: '700' },
+  colTextSelected: { color: '#2e7d32', fontFamily: 'Barlow_600SemiBold', fontWeight: '600' },
 });
