@@ -173,14 +173,13 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
   const meterUnit = meterLabel === 'miles' ? 'mi' : 'hrs';
   const meterTitle = meterLabel === 'miles' ? 'TOTAL MILES' : 'TOTAL HOURS';
 
-  const overallStatus: MaintenanceStatus = equipment.broken
-    ? 'broken'
-    : tasks.filter(t => !t.archived).reduce<MaintenanceStatus>((acc, t) => {
-        const s = getMaintenanceStatus(t, equipment.totalHours);
-        if (s === 'overdue') return 'overdue';
-        if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
-        return acc;
-      }, 'ok');
+  const overallStatus: MaintenanceStatus = tasks.filter(t => !t.archived).reduce<MaintenanceStatus>((acc, t) => {
+    const s = getMaintenanceStatus(t, equipment.totalHours, equipment.broken);
+    if (s === 'broken') return 'broken';
+    if (s === 'overdue' && acc !== 'broken') return 'overdue';
+    if (s === 'due_soon' && acc === 'ok') return 'due_soon';
+    return acc;
+  }, equipment.broken ? 'broken' : 'ok');
 
   // Pick the most informative custom fields for the summary (all of them, up to 6)
   const summaryFields = category?.defaultFields

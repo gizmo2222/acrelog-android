@@ -79,14 +79,13 @@ export default function EquipmentListScreen() {
       const tasksByEquipment = await getMaintenanceTasksForEquipment(activeEq.map(e => e.id));
       const statuses: Record<string, MaintenanceStatus> = {};
       for (const e of activeEq) {
-        if (e.broken) { statuses[e.id] = 'broken'; continue; }
         const tasks = tasksByEquipment[e.id] ?? [];
         statuses[e.id] = tasks.reduce<MaintenanceStatus>((acc, t) => {
-          const s = getMaintenanceStatus(t, e.totalHours);
-          if (s === 'overdue') return 'overdue';
-          if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
+          const s = getMaintenanceStatus(t, e.totalHours, e.broken);
+          if (s === 'broken' || s === 'overdue') return acc === 'broken' ? 'broken' : s;
+          if (s === 'due_soon' && acc === 'ok') return 'due_soon';
           return acc;
-        }, 'ok');
+        }, e.broken ? 'broken' : 'ok');
       }
       setMaintenanceStatus(statuses);
     } catch (e: any) {

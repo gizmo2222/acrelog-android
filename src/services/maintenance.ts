@@ -38,7 +38,8 @@ function computeNextDue(task: MaintenanceTask, completedAt: Timestamp, completed
   return { nextDueHours, nextDueAt };
 }
 
-export function getMaintenanceStatus(task: MaintenanceTask, currentHours: number): MaintenanceStatus {
+export function getMaintenanceStatus(task: MaintenanceTask, currentHours: number, isBroken = false): MaintenanceStatus {
+  if (isBroken) return 'broken';
   const now = Date.now();
   const soonWindow = 7 * 24 * 60 * 60 * 1000; // 7 days
   const hoursSoonWindow = 10;
