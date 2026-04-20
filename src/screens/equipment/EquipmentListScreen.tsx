@@ -330,7 +330,7 @@ export default function EquipmentListScreen() {
           const isSelected = selectedIds.has(item.id);
           return (
             <Card
-              style={[styles.card, isSelected && styles.cardSelected]}
+              style={[styles.card, isSelected && styles.cardSelected, item.status === 'active' && (mStatus === 'broken' ? styles.cardBorderBroken : mStatus === 'overdue' ? styles.cardBorderOverdue : mStatus === 'due_soon' ? styles.cardBorderDueSoon : styles.cardBorderOk)]}
               onPress={() => selectionMode ? toggleSelected(item.id) : navigation.navigate('EquipmentDetail', { equipmentId: item.id })}
               onLongPress={() => statusFilter === 'active' && !selectionMode && activeFarm?.role !== 'auditor' && activeFarm?.role !== 'worker' ? enterSelectionMode(item.id) : undefined}
             >
@@ -436,6 +436,10 @@ const styles = StyleSheet.create({
   filterDivider: { marginTop: 4 },
   segment: { marginHorizontal: 16, marginVertical: 8 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
+  cardBorderOk: { borderLeftWidth: 3, borderLeftColor: '#2e7d32' },
+  cardBorderDueSoon: { borderLeftWidth: 3, borderLeftColor: '#f57c00' },
+  cardBorderOverdue: { borderLeftWidth: 3, borderLeftColor: '#c62828' },
+  cardBorderBroken: { borderLeftWidth: 3, borderLeftColor: '#7b1fa2' },
   cardContent: { flexDirection: 'row', alignItems: 'center' },
   thumbnail: { width: 64, height: 64, borderRadius: 8, marginRight: 12 },
   cardText: { flex: 1 },

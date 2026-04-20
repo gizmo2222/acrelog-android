@@ -201,7 +201,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
 
     return (
       <Card
-        style={[styles.card, isCompleted && styles.completedCard]}
+        style={[styles.card, isCompleted ? styles.taskCardCompleted : isInProgress ? styles.taskCardInProgress : styles.taskCardPending]}
         key={task.id}
         onPress={() => navigation.navigate('TaskEdit', { taskId: task.id, projectId })}
       >
@@ -231,7 +231,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
               <Chip compact style={styles.inProgressChip} textStyle={{ color: '#d4870a', fontSize: 11 }}>In Progress</Chip>
             )}
             {task.dueDate && (
-              <Text variant="bodySmall" style={styles.due}>Due {task.dueDate.toDate().toLocaleDateString()}</Text>
+              <Text variant="bodySmall" style={[styles.due, !isCompleted && task.dueDate.toMillis() < Date.now() && styles.dueOverdue]}>Due {task.dueDate.toDate().toLocaleDateString()}</Text>
             )}
             {task.assignedToName && (
               <Text variant="bodySmall" style={styles.assignee}>→ {task.assignedToName}</Text>
@@ -443,13 +443,17 @@ const styles = StyleSheet.create({
   sectionLabel: { color: '#6b6b6b', marginBottom: 8, marginTop: 8 },
   card: { marginBottom: 8, borderRadius: 8 },
   completedCard: { opacity: 0.6 },
+  taskCardPending: { borderLeftWidth: 3, borderLeftColor: '#e8e4df' },
+  taskCardInProgress: { borderLeftWidth: 3, borderLeftColor: '#d4870a' },
+  taskCardCompleted: { borderLeftWidth: 3, borderLeftColor: '#2e7d32', opacity: 0.6 },
   taskRow: { flexDirection: 'row', alignItems: 'flex-start' },
   taskNameRow: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   flex: { flex: 1 },
   strikethrough: { textDecorationLine: 'line-through', color: '#6b6b6b' },
   taskMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4, marginBottom: 2 },
   inProgressChip: { backgroundColor: '#fff3e0' },
-  due: { color: '#f57c00' },
+  due: { color: '#6b6b6b' },
+  dueOverdue: { color: '#f57c00' },
   assignee: { color: '#6b6b6b' },
   completedAt: { color: '#6b6b6b' },
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },

@@ -122,7 +122,7 @@ export default function ProjectListScreen() {
           const overdue = isOverdue(item.project);
           const progress = item.taskCount > 0 ? item.completedCount / item.taskCount : 0;
           return (
-            <Card style={styles.card} onPress={() => navigation.navigate('ProjectDetail', { projectId: item.project.id })}>
+            <Card style={[styles.card, overdue && styles.cardOverdue]} onPress={() => navigation.navigate('ProjectDetail', { projectId: item.project.id })}>
               <Card.Content>
                 <Text variant="titleMedium">{item.project.name}</Text>
                 <View style={styles.metaRow}>
@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
   segment: { marginHorizontal: 16, marginBottom: 8, marginTop: 8 },
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
+  cardOverdue: { borderLeftWidth: 3, borderLeftColor: '#c62828' },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   date: { color: '#6b6b6b' },
   dueLabel: { color: '#6b6b6b' },

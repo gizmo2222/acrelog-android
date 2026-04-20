@@ -138,13 +138,13 @@ export default function ReportsScreen() {
       <View style={styles.statBar}>
         <View style={styles.statItem}>
           <View style={[styles.statDot, { backgroundColor: '#c62828' }]} />
-          <Text style={styles.statBarNum}>{totalOverdue}</Text>
+          <Text style={[styles.statBarNum, totalOverdue > 0 && styles.statBarNumRed]}>{totalOverdue}</Text>
           <Text style={styles.statBarLabel}>Overdue</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <View style={[styles.statDot, { backgroundColor: '#f57c00' }]} />
-          <Text style={styles.statBarNum}>{totalDueSoon}</Text>
+          <Text style={[styles.statBarNum, totalDueSoon > 0 && styles.statBarNumOrange]}>{totalDueSoon}</Text>
           <Text style={styles.statBarLabel}>Due Soon</Text>
         </View>
         <View style={styles.statDivider} />
@@ -218,6 +218,8 @@ const styles = StyleSheet.create({
   statItem: { flex: 1, alignItems: 'center', gap: 8 },
   statDot: { width: 8, height: 8, borderRadius: 4 },
   statBarNum: { fontSize: 28, fontFamily: 'BarlowCondensed_700Bold', fontWeight: '700', color: '#1a1a18', lineHeight: 32, letterSpacing: -0.5 },
+  statBarNumRed: { color: '#c62828' },
+  statBarNumOrange: { color: '#f57c00' },
   statBarLabel: { fontSize: 12, color: '#6b6b6b', letterSpacing: 0.3 },
   statDivider: { width: 1, backgroundColor: '#e8e4df', marginVertical: 4 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
