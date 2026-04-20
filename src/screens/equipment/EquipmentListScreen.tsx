@@ -6,7 +6,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getEquipment, getCategories, ensureBuiltInCategories } from '../../services/equipment';
+import { getEquipment, getCategories, ensureBuiltInCategories, archiveEquipment } from '../../services/equipment';
 import { getMaintenanceTasksForEquipment, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceStatus } from '../../types';
 import { STATUS_COLORS } from '../../constants/equipment';
@@ -43,6 +43,11 @@ export default function EquipmentListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [maintenanceStatus, setMaintenanceStatus] = useState<Record<string, MaintenanceStatus>>({});
+
+  // Selection mode
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [archiving, setArchiving] = useState(false);
 
   // Filter/sort state
   const [showFilters, setShowFilters] = useState(false);
@@ -108,6 +113,48 @@ export default function EquipmentListScreen() {
 
   function clearFilters() { setCategoryFilter(null); setMaintFilter('all'); setSortBy('name_asc'); }
 
+  function enterSelectionMode(id: string) {
+    setSelectionMode(true);
+    setSelectedIds(new Set([id]));
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function exitSelectionMode() {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }
+
+  async function handleBulkArchive() {
+    Alert.alert(
+      `Archive ${selectedIds.size} item${selectedIds.size === 1 ? '' : 's'}?`,
+      'They can be restored from the Archived tab.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Archive', onPress: async () => {
+            setArchiving(true);
+            try {
+              await Promise.all([...selectedIds].map(id => archiveEquipment(id, 'archived')));
+              exitSelectionMode();
+              load();
+            } catch (e: any) {
+              Alert.alert('Error', e.message ?? 'Could not archive equipment.');
+            } finally {
+              setArchiving(false);
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const filtered = equipment
     .filter(e => {
       const matchesStatus = statusFilter === 'active' ? e.status === 'active' : e.status !== 'active';
@@ -139,22 +186,32 @@ export default function EquipmentListScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text variant="headlineSmall" style={styles.title}>Equipment</Text>
-          <IconButton
-            icon="swap-horizontal"
-            size={16}
-            iconColor="#6b6b6b"
-            style={styles.farmSwitchIcon}
-            onPress={() => setActiveFarm(null)}
-          />
-          <Text variant="bodySmall" style={styles.farmNameLabel} onPress={() => setActiveFarm(null)}>
-            {activeFarm?.farmName}
-          </Text>
+      {selectionMode ? (
+        <View style={styles.selectionBar}>
+          <Text variant="titleMedium" style={styles.selectionCount}>{selectedIds.size} selected</Text>
+          <View style={styles.selectionActions}>
+            <IconButton icon="archive-outline" size={22} iconColor="#2e7d32" onPress={handleBulkArchive} disabled={selectedIds.size === 0 || archiving} />
+            <IconButton icon="close" size={22} onPress={exitSelectionMode} />
+          </View>
         </View>
-        <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
-      </View>
+      ) : (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text variant="headlineSmall" style={styles.title}>Equipment</Text>
+            <IconButton
+              icon="swap-horizontal"
+              size={16}
+              iconColor="#6b6b6b"
+              style={styles.farmSwitchIcon}
+              onPress={() => setActiveFarm(null)}
+            />
+            <Text variant="bodySmall" style={styles.farmNameLabel} onPress={() => setActiveFarm(null)}>
+              {activeFarm?.farmName}
+            </Text>
+          </View>
+          <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
+        </View>
+      )}
 
       <View style={styles.searchRow}>
         <Searchbar
@@ -271,12 +328,22 @@ export default function EquipmentListScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={['#2e7d32']} tintColor="#2e7d32" />}
         renderItem={({ item }) => {
           const mStatus = maintenanceStatus[item.id] ?? 'ok';
+          const isSelected = selectedIds.has(item.id);
           return (
             <Card
-              style={styles.card}
-              onPress={() => navigation.navigate('EquipmentDetail', { equipmentId: item.id })}
+              style={[styles.card, isSelected && styles.cardSelected]}
+              onPress={() => selectionMode ? toggleSelected(item.id) : navigation.navigate('EquipmentDetail', { equipmentId: item.id })}
+              onLongPress={() => statusFilter === 'active' && !selectionMode && activeFarm?.role !== 'auditor' && activeFarm?.role !== 'worker' ? enterSelectionMode(item.id) : undefined}
             >
               <Card.Content style={styles.cardContent}>
+                {selectionMode && (
+                  <IconButton
+                    icon={isSelected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
+                    size={22}
+                    iconColor={isSelected ? '#2e7d32' : '#9e9e9e'}
+                    style={styles.checkIcon}
+                  />
+                )}
                 {(item.primaryImageUrl || item.photos?.[0]?.url) ? (
                   <Card.Cover source={{ uri: item.primaryImageUrl ?? item.photos![0].url }} style={styles.thumbnail} />
                 ) : null}
@@ -322,7 +389,7 @@ export default function EquipmentListScreen() {
         }
       />
 
-      {activeFarm?.role !== 'worker' && activeFarm?.role !== 'auditor' && (
+      {!selectionMode && activeFarm?.role !== 'worker' && activeFarm?.role !== 'auditor' && (
         <>
           <FAB
             icon="barcode-scan"
@@ -346,6 +413,11 @@ export default function EquipmentListScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  selectionBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 16, paddingRight: 4, backgroundColor: '#e8f5e9', borderBottomWidth: 1, borderBottomColor: '#c8e6c9' },
+  selectionCount: { color: '#2e7d32', fontWeight: '600' },
+  selectionActions: { flexDirection: 'row' },
+  cardSelected: { borderWidth: 2, borderColor: '#2e7d32' },
+  checkIcon: { margin: 0, marginRight: 4 },
   header: { paddingLeft: 16, paddingRight: 4, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   title: { fontWeight: 'bold', color: '#2e7d32' },
