@@ -32,7 +32,7 @@ export async function createFarm(name: string): Promise<Farm> {
   const ref = doc(collection(db, 'farms'));
   const farm: Omit<Farm, 'id'> = {
     name,
-    createdAt: serverTimestamp() as any,
+    createdAt: serverTimestamp() as unknown as Timestamp,
     createdBy: user.uid,
   };
   await setDoc(ref, farm);

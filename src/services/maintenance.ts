@@ -290,7 +290,7 @@ export async function createInspectionChecklist(
   data: Omit<InspectionChecklist, 'id' | 'createdAt'>
 ): Promise<InspectionChecklist> {
   const ref = doc(collection(db, 'inspectionChecklists'));
-  const checklist: InspectionChecklist = { ...data, id: ref.id, createdAt: serverTimestamp() as any };
+  const checklist: InspectionChecklist = { ...data, id: ref.id, createdAt: serverTimestamp() as unknown as Timestamp };
   await setDoc(ref, checklist);
   return checklist;
 }

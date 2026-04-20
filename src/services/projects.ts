@@ -35,7 +35,7 @@ export async function createProject(farmId: string, name: string, dueDate?: Date
     name,
     status: 'active',
     ...(dueDate ? { dueDate: Timestamp.fromDate(dueDate) } : {}),
-    createdAt: serverTimestamp() as any,
+    createdAt: serverTimestamp() as unknown as Timestamp,
     createdBy: user.uid,
   };
   await setDoc(ref, project);
@@ -124,7 +124,7 @@ export async function createTask(
     name,
     ...(dueDate ? { dueDate: Timestamp.fromDate(dueDate) } : {}),
     status: 'pending',
-    createdAt: serverTimestamp() as any,
+    createdAt: serverTimestamp() as unknown as Timestamp,
   };
   await setDoc(ref, task);
   return task;
@@ -199,7 +199,7 @@ export async function logEquipmentUsage(
     equipmentId,
     equipmentFarmId,
     hours,
-    loggedAt: serverTimestamp() as any,
+    loggedAt: serverTimestamp() as unknown as Timestamp,
     userId: user.uid,
   };
   await setDoc(ref, log);

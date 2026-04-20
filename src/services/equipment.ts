@@ -434,7 +434,7 @@ export async function logDowntime(equipmentId: string, reason: string): Promise<
   const record: DowntimeRecord = {
     id: ref.id,
     equipmentId,
-    startedAt: serverTimestamp() as any,
+    startedAt: serverTimestamp() as unknown as Timestamp,
     reason,
     userId: user.uid,
   };
