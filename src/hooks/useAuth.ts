@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthChanged, getUserProfile, isBiometricEnabled, authenticateWithBiometrics } from '../services/auth';
 import { applyPendingInvites } from '../services/farms';
+import { scheduleMaintenenanceNotifications } from '../services/notifications';
 import { UserProfile, ActiveFarm } from '../types';
 
 interface AuthContextValue {
@@ -26,6 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activeFarm, setActiveFarm] = useState<ActiveFarm | null>(null);
+
+  function setActiveFarmAndNotify(farm: ActiveFarm | null) {
+    setActiveFarm(farm);
+    if (farm) {
+      scheduleMaintenenanceNotifications(farm.farmId).catch(() => {});
+    }
+  }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return React.createElement(
     AuthContext.Provider,
-    { value: { user, profile, activeFarm, setActiveFarm, loading } },
+    { value: { user, profile, activeFarm, setActiveFarm: setActiveFarmAndNotify, loading } },
     children
   );
 }
