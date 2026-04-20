@@ -11,11 +11,12 @@ import {
   getTask, updateTask, completeTask, reopenTask, startTask,
   getTaskEquipmentLogs, deleteTaskEquipmentLog,
   getTaskComments, createTaskComment, deleteTaskComment,
+  scheduleNextRecurrence,
 } from '../../services/projects';
 import { getFarmMembers } from '../../services/farms';
 import { getEquipment, getCategories } from '../../services/equipment';
 import DatePickerField from '../../components/DatePickerField';
-import { Task, TaskEquipmentLog, TaskComment, Equipment, Category, FarmMember, TaskPriority, TaskStatus, TaskPart } from '../../types';
+import { Task, TaskEquipmentLog, TaskComment, Equipment, Category, FarmMember, TaskPriority, TaskStatus, TaskPart, TaskRecurrence } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskEdit'>;
@@ -56,6 +57,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [assigneeMenuVisible, setAssigneeMenuVisible] = useState(false);
+  const [recurrence, setRecurrence] = useState<TaskRecurrence | undefined>(undefined);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [postingComment, setPostingComment] = useState(false);
@@ -79,6 +81,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     setAssignedToId(t.assignedToId);
     setAssignedToName(t.assignedToName);
     setNotes(t.notes ?? '');
+    setRecurrence(t.recurrence);
     setParts((t.parts ?? []).map(p => ({ name: p.name, cost: p.cost != null ? String(p.cost) : '' })));
     setLogs(l);
     setComments(c);
@@ -128,6 +131,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
         notes: notes.trim() || '',
         parts: taskParts,
         ...(priority ? { priority } : { priority: deleteField() }),
+        ...(recurrence ? { recurrence } : { recurrence: deleteField() }),
         ...(assignedToId ? { assignedToId, assignedToName } : { assignedToId: deleteField(), assignedToName: deleteField() }),
       };
       if (dueDate) {
@@ -138,6 +142,9 @@ export default function TaskEditScreen({ route, navigation }: Props) {
       if (status === 'completed' && task?.status !== 'completed') {
         await completeTask(taskId);
         delete update.status;
+        if (recurrence && task) {
+          await scheduleNextRecurrence({ ...task, name: name.trim(), recurrence, dueDate: dueDate ? Timestamp.fromDate(new Date(dueDate + 'T00:00:00')) : task.dueDate });
+        }
       } else if (status !== 'completed' && task?.status === 'completed') {
         await reopenTask(taskId);
         delete update.status;
@@ -152,7 +159,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     } finally {
       setSaving(false);
     }
-  }, [name, parts, status, notes, priority, assignedToId, assignedToName, dueDate, task, taskId]);
+  }, [name, parts, status, notes, priority, recurrence, assignedToId, assignedToName, dueDate, task, taskId]);
 
 
   useEffect(() => {
@@ -241,6 +248,26 @@ export default function TaskEditScreen({ route, navigation }: Props) {
                 style={[styles.priorityChip, priority === p && { backgroundColor: PRIORITY_BG[p] }]}
               >
                 {p.charAt(0).toUpperCase() + p.slice(1)}
+              </Chip>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Recurrence */}
+      {canEdit && (
+        <View style={styles.section}>
+          <Text variant="labelSmall" style={styles.fieldLabel}>Repeats</Text>
+          <View style={styles.chipRow}>
+            {(['daily', 'weekly', 'monthly', 'yearly'] as TaskRecurrence[]).map(r => (
+              <Chip
+                key={r}
+                compact
+                selected={recurrence === r}
+                onPress={() => setRecurrence(recurrence === r ? undefined : r)}
+                style={recurrence === r ? styles.recurrenceChipSelected : undefined}
+              >
+                {r.charAt(0).toUpperCase() + r.slice(1)}
               </Chip>
             ))}
           </View>
@@ -438,6 +465,7 @@ const styles = StyleSheet.create({
   input: { marginBottom: 4 },
   chipRow: { flexDirection: 'row', gap: 8 },
   priorityChip: { marginRight: 0 },
+  recurrenceChipSelected: { backgroundColor: '#e8f5e9' },
   assigneeBtn: { alignSelf: 'flex-start' },
   assigneeBtnContent: { flexDirection: 'row-reverse' },
   divider: { marginTop: 16 },

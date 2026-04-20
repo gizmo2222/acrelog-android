@@ -151,6 +151,32 @@ export async function updateTask(id: string, data: Partial<Task>): Promise<void>
   await updateDoc(doc(db, 'tasks', id), data);
 }
 
+export async function scheduleNextRecurrence(task: Task): Promise<void> {
+  if (!task.recurrence) return;
+  const base = task.dueDate ? task.dueDate.toDate() : new Date();
+  const next = new Date(base);
+  if (task.recurrence === 'daily') next.setDate(next.getDate() + 1);
+  else if (task.recurrence === 'weekly') next.setDate(next.getDate() + 7);
+  else if (task.recurrence === 'monthly') next.setMonth(next.getMonth() + 1);
+  else if (task.recurrence === 'yearly') next.setFullYear(next.getFullYear() + 1);
+
+  const ref = doc(collection(db, 'tasks'));
+  const newTask: Task = {
+    id: ref.id,
+    projectId: task.projectId,
+    name: task.name,
+    status: 'pending',
+    recurrence: task.recurrence,
+    dueDate: Timestamp.fromDate(next),
+    ...(task.priority ? { priority: task.priority } : {}),
+    ...(task.assignedToId ? { assignedToId: task.assignedToId, assignedToName: task.assignedToName } : {}),
+    ...(task.notes ? { notes: task.notes } : {}),
+    ...(task.parts?.length ? { parts: task.parts } : {}),
+    createdAt: serverTimestamp() as unknown as Timestamp,
+  };
+  await setDoc(ref, newTask);
+}
+
 // ─── Equipment Logs ────────────────────────────────────────────────────────
 
 export async function logEquipmentUsage(
