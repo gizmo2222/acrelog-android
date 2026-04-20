@@ -250,7 +250,7 @@ export default function FarmSettingsScreen() {
                         <Text variant="bodySmall" style={{ color: '#6b6b6b', textTransform: 'capitalize' }}>{m.role}</Text>
                       </View>
                       {activeFarm?.role === 'owner' && m.userId !== activeFarm.farmId.split('_')[0] && (
-                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
                           <Menu
                             visible={roleMenuId === m.id}
                             onDismiss={() => setRoleMenuId(null)}

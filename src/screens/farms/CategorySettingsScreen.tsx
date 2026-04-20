@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   catName: { fontWeight: 'bold' },
   builtIn: { color: '#6b6b6b', fontSize: 12 },
-  fieldChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
+  fieldChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   chip: { backgroundColor: '#e8f5e9' },
   divider: { marginVertical: 12 },
   miniDivider: { marginVertical: 8 },

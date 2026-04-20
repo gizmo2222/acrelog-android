@@ -13,8 +13,6 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-console.log('[Firebase] projectId:', firebaseConfig.projectId ?? 'MISSING');
-
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // initializeAuth throws if called twice (e.g. hot reload), fall back to getAuth

@@ -94,7 +94,6 @@ export default function EquipmentListScreen() {
       }
       setMaintenanceStatus(statuses);
     } catch (e: any) {
-      console.error('Equipment load error:', e.message);
       Alert.alert('Could not load equipment', e.message ?? 'Check your connection and try again.');
     } finally {
       setLoading(false);
@@ -357,7 +356,7 @@ export default function EquipmentListScreen() {
                       style={[styles.statusChip, { backgroundColor: STATUS_COLORS[mStatus] }]}
                       textStyle={{ color: 'white' }}
                     >
-                      {mStatus === 'ok' ? 'Up to date' : mStatus === 'due_soon' ? 'Due soon' : mStatus === 'overdue' ? 'Overdue' : 'Broken'}
+                      {mStatus === 'ok' ? 'Up to Date' : mStatus === 'due_soon' ? 'Due Soon' : mStatus === 'overdue' ? 'Overdue' : 'Broken'}
                     </Chip>
                   )}
                   {item.status !== 'active' && (
@@ -430,7 +429,7 @@ const styles = StyleSheet.create({
   filterBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: '#2e7d32' },
   filterPanel: { backgroundColor: '#faf9f7', borderWidth: 1, borderColor: '#e8e4df', marginHorizontal: 16, marginBottom: 4, borderRadius: 8, paddingTop: 12, paddingHorizontal: 12 },
   filterLabel: { color: '#6b6b6b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  chipRow: { marginBottom: 10 },
+  chipRow: { marginBottom: 8 },
   chipRowLast: { marginBottom: 4 },
   filterChip: { marginRight: 6 },
   clearFilters: { color: '#c62828', textAlign: 'right', marginBottom: 8 },

@@ -37,9 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[Auth] subscribing to auth state');
     return onAuthChanged(async (u) => {
-      console.log('[Auth] state changed, user:', u?.uid ?? 'null');
       setUser(u);
       if (u) {
         if (u.email) await applyPendingInvites(u.uid, u.email);

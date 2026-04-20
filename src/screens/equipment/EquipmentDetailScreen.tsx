@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, flex: 1 },
-  readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e8e4df' },
+  readingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e8e4df' },
   readingDate: { color: '#6b6b6b' },
   readingHours: { fontWeight: '500' },
   detailLabel: { color: '#6b6b6b', flex: 1 },
@@ -619,6 +619,6 @@ const styles = StyleSheet.create({
   actions: { padding: 16, gap: 8 },
   actionBtn: { marginBottom: 4 },
   actionDivider: { marginTop: 8, marginBottom: 4 },
-  heroCard: { marginBottom: 20 },
+  heroCard: { marginBottom: 16 },
   maintCard: { marginTop: 8 },
 });

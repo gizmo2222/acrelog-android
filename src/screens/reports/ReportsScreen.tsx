@@ -145,7 +145,7 @@ export default function ReportsScreen() {
         <View style={styles.statItem}>
           <View style={[styles.statDot, { backgroundColor: '#f57c00' }]} />
           <Text style={styles.statBarNum}>{totalDueSoon}</Text>
-          <Text style={styles.statBarLabel}>Due soon</Text>
+          <Text style={styles.statBarLabel}>Due Soon</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   farmNameLabel: { color: '#6b6b6b' },
   farmSwitchIcon: { margin: 0, marginLeft: 2 },
   statBar: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, marginHorizontal: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e8e4df', paddingVertical: 14 },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
+  statItem: { flex: 1, alignItems: 'center', gap: 8 },
   statDot: { width: 8, height: 8, borderRadius: 4 },
   statBarNum: { fontSize: 28, fontFamily: 'BarlowCondensed_700Bold', fontWeight: '700', color: '#1a1a18', lineHeight: 32, letterSpacing: -0.5 },
   statBarLabel: { fontSize: 12, color: '#6b6b6b', letterSpacing: 0.3 },

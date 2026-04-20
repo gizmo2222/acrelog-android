@@ -166,7 +166,6 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         navigation.replace('EquipmentDetail', { equipmentId: eqId! });
       }
     } catch (e: any) {
-      console.error('[EquipmentForm] save error:', e);
       Alert.alert('Error saving equipment', errorMessage(e));
     } finally {
       setSaving(false);
@@ -299,11 +298,11 @@ const styles = StyleSheet.create({
   photoSection: { marginBottom: 16 },
   photoLabel: { marginBottom: 8, color: '#6b6b6b' },
   photoScroll: { marginBottom: 8 },
-  photoScrollContent: { gap: 8, paddingBottom: 4 },
+  photoScrollContent: { gap: 8, paddingBottom: 8 },
   photoItem: { position: 'relative', width: 120 },
   photoItemPrimary: { borderWidth: 2, borderColor: '#2e7d32', borderRadius: 10 },
   photoThumb: { width: 116, height: 100, borderRadius: 8, resizeMode: 'cover' },
-  primaryBadge: { position: 'absolute', bottom: 4, left: 4, right: 4, backgroundColor: 'rgba(46,125,50,0.85)', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 3, alignItems: 'center' },
+  primaryBadge: { position: 'absolute', bottom: 4, left: 4, right: 4, backgroundColor: 'rgba(46,125,50,0.85)', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 4, alignItems: 'center' },
   primaryBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   photoDelete: { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
   photoDeleteText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },

@@ -63,7 +63,6 @@ export default function ProjectListScreen() {
       });
       setSummaries(results);
     } catch (e: any) {
-      console.error('Projects load error:', e.message);
       Alert.alert('Could not load projects', e.message ?? 'Check your connection and try again.');
     } finally {
       setLoading(false);
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
   date: { color: '#6b6b6b' },
   dueLabel: { color: '#6b6b6b' },
   overdueLabel: { color: '#c62828', fontWeight: '600' },
-  progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 },
   progressBar: { flex: 1, height: 6, borderRadius: 3 },
   progressText: { color: '#6b6b6b', minWidth: 32, textAlign: 'right' },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },

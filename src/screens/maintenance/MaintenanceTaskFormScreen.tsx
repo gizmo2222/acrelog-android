@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   fieldHint: { color: '#6b6b6b', marginBottom: 6, marginTop: 4 },
   twoCol: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   colInput: { flex: 1 },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   photoThumb: { width: 64, height: 64, borderRadius: 4 },
   thumbRemove: { position: 'absolute', top: 2, right: 2, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
   thumbRemoveText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
