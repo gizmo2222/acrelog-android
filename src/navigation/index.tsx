@@ -29,6 +29,7 @@ import SerialScanScreen from '../screens/equipment/SerialScanScreen';
 import MaintenanceScheduleScreen from '../screens/maintenance/MaintenanceScheduleScreen';
 import MaintenanceLogFormScreen from '../screens/maintenance/MaintenanceLogFormScreen';
 import MaintenanceHistoryScreen from '../screens/maintenance/MaintenanceHistoryScreen';
+import MaintenanceTaskFormScreen from '../screens/maintenance/MaintenanceTaskFormScreen';
 import InspectionChecklistScreen from '../screens/maintenance/InspectionChecklistScreen';
 
 // Project screens
@@ -54,6 +55,7 @@ export type RootStackParamList = {
   MaintenanceSchedule: { equipmentId: string };
   MaintenanceLogForm: { taskId: string; equipmentId: string };
   MaintenanceHistory: { equipmentId: string };
+  MaintenanceTaskForm: { equipmentId: string; taskId?: string };
   InspectionChecklist: { equipmentId: string; checklistId?: string };
   ProjectDetail: { projectId: string };
   TaskForm: { projectId: string; taskId?: string };
@@ -136,6 +138,7 @@ export default function AppNavigator() {
             <Stack.Screen name="MaintenanceSchedule" component={MaintenanceScheduleScreen} options={{ headerShown: true, title: 'Maintenance' }} />
             <Stack.Screen name="MaintenanceLogForm" component={MaintenanceLogFormScreen} options={{ headerShown: true, title: 'Log Maintenance' }} />
             <Stack.Screen name="MaintenanceHistory" component={MaintenanceHistoryScreen} options={{ headerShown: true, title: 'Maintenance History' }} />
+            <Stack.Screen name="MaintenanceTaskForm" component={MaintenanceTaskFormScreen} options={{ headerShown: true, title: 'Add Task' }} />
             <Stack.Screen name="InspectionChecklist" component={InspectionChecklistScreen} options={{ headerShown: true, title: 'Inspection' }} />
             <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} options={{ headerShown: true, title: 'Project' }} />
             <Stack.Screen name="TaskForm" component={TaskFormScreen} options={{ headerShown: true, title: 'Task' }} />

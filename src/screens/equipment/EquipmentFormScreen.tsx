@@ -45,6 +45,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const [categoryId, setCategoryId] = useState('');
   const [manufacturerUrl, setManufacturerUrl] = useState('');
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
+  const [initialHours, setInitialHours] = useState('');
 
   useEffect(() => { load(); }, []);
 
@@ -130,7 +131,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         location: location.trim(),
         customFields,
         status: 'active' as EquipmentStatus,
-        totalHours: 0,
+        ...(isEdit ? {} : { totalHours: initialHours ? parseFloat(initialHours) : 0 }),
       };
       if (manufacturerUrl.trim()) data.manufacturerUrl = manufacturerUrl.trim();
 
@@ -233,6 +234,16 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       <AutocompleteInput label="Brand *" value={brand} onChangeText={setBrand} suggestions={brandSuggestions} style={styles.input} />
       <AutocompleteInput label="Model *" value={model} onChangeText={setModel} suggestions={modelSuggestions} style={styles.input} />
       <TextInput label="Serial Number" value={serial} onChangeText={setSerial} mode="outlined" style={styles.input} />
+      {!isEdit && (
+        <TextInput
+          label={`Current ${selectedCategory?.meterLabel === 'miles' ? 'odometer (miles)' : 'hours'} — optional`}
+          value={initialHours}
+          onChangeText={setInitialHours}
+          mode="outlined"
+          style={styles.input}
+          keyboardType="numeric"
+        />
+      )}
       <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
       <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
       <DatePickerField label="Purchase Date" value={purchaseDate} onChange={setPurchaseDate} optional />

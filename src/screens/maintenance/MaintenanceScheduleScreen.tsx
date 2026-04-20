@@ -1,20 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { View, FlatList, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
-import DatePickerField from '../../components/DatePickerField';
+import { Text, Card, Chip, Button, FAB, IconButton, TextInput, ActivityIndicator } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipmentById } from '../../services/equipment';
-import * as ImagePicker from 'expo-image-picker';
 import {
-  getMaintenanceTasks, createMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask,
-  archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule, uploadTaskPhoto,
+  getMaintenanceTasks, createMaintenanceTask, deleteMaintenanceTask,
+  archiveMaintenanceTask, getMaintenanceStatus, scrapeMaintenanceSchedule,
 } from '../../services/maintenance';
-import { Timestamp } from 'firebase/firestore';
 import { Equipment, MaintenanceTask } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
 
@@ -33,24 +30,11 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importedTasks, setImportedTasks] = useState<Omit<MaintenanceTask, 'id' | 'equipmentId' | 'createdAt'>[]>([]);
 
-  // Add/edit task form state
-  const [taskName, setTaskName] = useState('');
-  const [taskNotes, setTaskNotes] = useState('');
-  const [taskType, setTaskType] = useState<'recurring' | 'oneoff'>('recurring');
-  const [intervalHours, setIntervalHours] = useState('');
-  const [intervalDays, setIntervalDays] = useState('');
-  const [dueHours, setDueHours] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [lastDoneDate, setLastDoneDate] = useState('');
-  const [lastDoneHours, setLastDoneHours] = useState('');
-  const [taskPhotoUris, setTaskPhotoUris] = useState<string[]>([]);
-  const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [equipmentId]));
@@ -63,92 +47,6 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
     setLoading(false);
   }
 
-  function startEdit(task: MaintenanceTask) {
-    setEditingTask(task);
-    setTaskName(task.name);
-    setTaskNotes(task.notes ?? '');
-    const isOneOff = !task.intervalHours && !task.intervalDays;
-    setTaskType(isOneOff ? 'oneoff' : 'recurring');
-    setIntervalHours(task.intervalHours ? String(task.intervalHours) : '');
-    setIntervalDays(task.intervalDays ? String(task.intervalDays) : '');
-    setDueHours(task.nextDueHours ? String(task.nextDueHours) : '');
-    setDueDate(task.nextDueAt ? task.nextDueAt.toDate().toISOString().split('T')[0] : '');
-    setLastDoneHours(task.lastCompletedHours ? String(task.lastCompletedHours) : '');
-    setLastDoneDate(task.lastCompletedAt ? task.lastCompletedAt.toDate().toISOString().split('T')[0] : '');
-    setTaskPhotoUris([]);
-    setShowAddForm(true);
-  }
-
-  function cancelForm() {
-    setEditingTask(null);
-    setTaskName('');
-    setTaskNotes('');
-    setTaskType('recurring');
-    setIntervalHours('');
-    setIntervalDays('');
-    setDueHours('');
-    setDueDate('');
-    setLastDoneDate('');
-    setLastDoneHours('');
-    setTaskPhotoUris([]);
-    setShowAddForm(false);
-  }
-
-  async function takeTaskPhoto() {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('Permission required', 'Camera access is needed.'); return; }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.8 });
-    if (!result.canceled) setTaskPhotoUris(prev => [...prev, result.assets[0].uri]);
-  }
-
-  async function pickTaskPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsMultipleSelection: true });
-    if (!result.canceled) setTaskPhotoUris(prev => [...prev, ...result.assets.map(a => a.uri)]);
-  }
-
-  async function handleSaveTask() {
-    if (!taskName) return;
-    try {
-      const updates: any = {
-        name: taskName.trim(),
-        notes: taskNotes.trim() || undefined,
-        intervalHours: taskType === 'recurring' && intervalHours ? parseInt(intervalHours) : null,
-        intervalDays: taskType === 'recurring' && intervalDays ? parseInt(intervalDays) : null,
-      };
-
-      if (taskType === 'oneoff') {
-        updates.nextDueHours = dueHours ? parseFloat(dueHours) : null;
-        updates.nextDueAt = dueDate ? Timestamp.fromDate(new Date(dueDate)) : null;
-      }
-
-      if (lastDoneDate || lastDoneHours) {
-        updates.lastCompletedAt = lastDoneDate ? Timestamp.fromDate(new Date(lastDoneDate)) : null;
-        updates.lastCompletedHours = lastDoneHours ? parseFloat(lastDoneHours) : null;
-      }
-
-      let savedId: string;
-      if (editingTask) {
-        await updateMaintenanceTask(editingTask.id, updates);
-        savedId = editingTask.id;
-      } else {
-        const created = await createMaintenanceTask({ equipmentId, imported: false, ...updates });
-        savedId = created.id;
-      }
-
-      if (taskPhotoUris.length > 0 && activeFarm) {
-        const uploaded = await Promise.all(
-          taskPhotoUris.map(uri => uploadTaskPhoto(equipmentId, activeFarm.farmId, savedId, uri))
-        );
-        const existing = editingTask?.photoUrls ?? [];
-        await updateMaintenanceTask(savedId, { photoUrls: [...existing, ...uploaded] });
-      }
-
-      cancelForm();
-      load();
-    } catch (e: any) {
-      Alert.alert('Error saving task', errorMessage(e));
-    }
-  }
 
   async function handleImport() {
     if (!importUrl) return;
@@ -231,72 +129,13 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
               </Card>
             )}
 
-            {/* Add / edit task form */}
-            {canEdit && showAddForm && (
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Text variant="titleSmall" style={styles.sectionTitle}>{editingTask ? 'Edit Task' : 'New Task'}</Text>
-                  <TextInput label="Task name *" value={taskName} onChangeText={setTaskName} mode="outlined" style={styles.input} />
-                  <TextInput label="Notes / Instructions" value={taskNotes} onChangeText={setTaskNotes} mode="outlined" style={styles.input} multiline numberOfLines={2} placeholder="What needs to be done, parts required, etc." />
-                  <SegmentedButtons
-                    value={taskType}
-                    onValueChange={v => setTaskType(v as 'recurring' | 'oneoff')}
-                    buttons={[
-                      { value: 'recurring', label: 'Recurring' },
-                      { value: 'oneoff', label: 'One-off' },
-                    ]}
-                    style={styles.segmented}
-                  />
-                  {taskType === 'recurring' && (
-                    <>
-                      <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
-                      <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
-                      <Text variant="labelSmall" style={styles.fieldHint}>Last completed (optional — seeds next due calculation)</Text>
-                      <View style={styles.twoCol}>
-                        <DatePickerField label="Date" value={lastDoneDate} onChange={setLastDoneDate} style={styles.colInput} optional />
-                        <TextInput label="At hours" value={lastDoneHours} onChangeText={setLastDoneHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
-                      </View>
-                    </>
-                  )}
-                  {taskType === 'oneoff' && (
-                    <>
-                      <Text variant="labelSmall" style={styles.fieldHint}>Due (set at least one)</Text>
-                      <View style={styles.twoCol}>
-                        <DatePickerField label="By date" value={dueDate} onChange={setDueDate} style={styles.colInput} optional />
-                        <TextInput label="By hours" value={dueHours} onChangeText={setDueHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
-                      </View>
-                    </>
-                  )}
-                  <Text variant="labelSmall" style={styles.fieldHint}>Reference photos (parts, part numbers, location)</Text>
-                  <View style={styles.twoCol}>
-                    <Button icon="camera" mode="outlined" compact style={styles.colInput} onPress={takeTaskPhoto}>Camera</Button>
-                    <Button icon="image-plus" mode="outlined" compact style={styles.colInput} onPress={pickTaskPhoto}>Library</Button>
-                  </View>
-                  {taskPhotoUris.length > 0 && (
-                    <View style={styles.photoGrid}>
-                      {taskPhotoUris.map((uri, i) => (
-                        <TouchableOpacity key={i} onPress={() => setTaskPhotoUris(prev => prev.filter((_, j) => j !== i))}>
-                          <Image source={{ uri }} style={styles.photoThumb} />
-                          <View style={styles.thumbRemove}><Text style={styles.thumbRemoveText}>✕</Text></View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                  <View style={styles.formRow}>
-                    <Button onPress={cancelForm}>Cancel</Button>
-                    <Button mode="contained" onPress={handleSaveTask}>Save</Button>
-                  </View>
-                </Card.Content>
-              </Card>
-            )}
-
             {recurringTasks.length > 0 && <Text variant="labelLarge" style={styles.listHeader}>Recurring ({recurringTasks.length})</Text>}
             {recurringTasks.length === 0 && oneOffTasks.length === 0 && (
               <EmptyState
                 icon="wrench-clock"
                 title="No maintenance tasks"
                 subtitle="Add tasks manually or import from the manufacturer's maintenance page."
-                action={canEdit ? { label: 'Add Task', onPress: () => { cancelForm(); setShowAddForm(true); } } : undefined}
+                action={canEdit ? { label: 'Add Task', onPress: () => navigation.navigate('MaintenanceTaskForm', { equipmentId }) } : undefined}
               />
             )}
           </>
@@ -351,7 +190,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                   )}
                   {canEdit && (
                     <View style={styles.taskIcons}>
-                      <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                      <IconButton icon="pencil-outline" size={18} onPress={() => navigation.navigate('MaintenanceTaskForm', { equipmentId, taskId: item.id })} />
                       <IconButton icon="archive-outline" size={18} onPress={() => { archiveMaintenanceTask(item.id, true); load(); }} />
                       <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
                     </View>
@@ -373,7 +212,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     <Card.Content>
                       <View style={styles.taskTier1}>
                         <Text variant="titleSmall" style={styles.taskName}>{item.name}</Text>
-                        <Chip compact style={styles.pendingChip} textStyle={{ color: '#1565c0' }}>Pending</Chip>
+                        <Chip compact style={styles.pendingChip} textStyle={{ color: '#d4870a' }}>Pending</Chip>
                       </View>
                       {item.lastCompletedAt ? (
                         <Text variant="bodySmall" style={styles.lastDone}>
@@ -393,7 +232,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                         )}
                         {canEdit && (
                           <View style={styles.taskIcons}>
-                            <IconButton icon="pencil-outline" size={18} onPress={() => startEdit(item)} />
+                            <IconButton icon="pencil-outline" size={18} onPress={() => navigation.navigate('MaintenanceTaskForm', { equipmentId, taskId: item.id })} />
                             <IconButton icon="trash-can-outline" size={18} onPress={() => handleDelete(item.id)} />
                           </View>
                         )}
@@ -443,7 +282,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
       />
 
       {canEdit && (
-        <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => { cancelForm(); setShowAddForm(true); }} />
+        <FAB icon="plus" style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => navigation.navigate('MaintenanceTaskForm', { equipmentId })} />
       )}
     </View>
   );
@@ -475,16 +314,10 @@ const styles = StyleSheet.create({
   archivedToggle: { marginHorizontal: 16, marginTop: 8, alignSelf: 'flex-start' },
   archivedCard: { opacity: 0.6 },
   archivedText: { color: '#6b6b6b' },
-  segmented: { marginBottom: 12 },
-  fieldHint: { color: '#6b6b6b', marginBottom: 6, marginTop: 4 },
-  twoCol: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  colInput: { flex: 1 },
   taskNotes: { color: '#6b6b6b', marginBottom: 4, fontStyle: 'italic' },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
   photoThumb: { width: 64, height: 64, borderRadius: 4 },
-  thumbRemove: { position: 'absolute', top: 2, right: 2, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, width: 16, height: 16, justifyContent: 'center', alignItems: 'center' },
-  thumbRemoveText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
-  pendingChip: { backgroundColor: '#e3f2fd' },
+  pendingChip: { backgroundColor: '#fff3e0' },
   importedChip: { backgroundColor: '#f3e5f5', marginLeft: 4 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });

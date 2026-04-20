@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, Button, Divider, ActivityIndicator, DataTable } from 'react-native-paper';
+import { Text, Card, Button, ActivityIndicator, DataTable } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -103,26 +103,25 @@ export default function ReportsScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <Text variant="headlineSmall" style={styles.title}>Reports</Text>
 
-      {/* Summary cards */}
-      <View style={styles.summaryRow}>
-        <Card style={[styles.summaryCard, { backgroundColor: '#c62828' }]}>
-          <Card.Content>
-            <Text variant="displaySmall" style={styles.summaryNum}>{totalOverdue}</Text>
-            <Text style={styles.summaryLabel}>Overdue</Text>
-          </Card.Content>
-        </Card>
-        <Card style={[styles.summaryCard, { backgroundColor: '#f57c00' }]}>
-          <Card.Content>
-            <Text variant="displaySmall" style={styles.summaryNum}>{totalDueSoon}</Text>
-            <Text style={styles.summaryLabel}>Due Soon</Text>
-          </Card.Content>
-        </Card>
-        <Card style={[styles.summaryCard, { backgroundColor: '#2e7d32' }]}>
-          <Card.Content>
-            <Text variant="displaySmall" style={styles.summaryNum}>{summaries.length}</Text>
-            <Text style={styles.summaryLabel}>Equipment</Text>
-          </Card.Content>
-        </Card>
+      {/* Fleet summary */}
+      <View style={styles.statBar}>
+        <View style={styles.statItem}>
+          <View style={[styles.statDot, { backgroundColor: '#c62828' }]} />
+          <Text style={styles.statBarNum}>{totalOverdue}</Text>
+          <Text style={styles.statBarLabel}>Overdue</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <View style={[styles.statDot, { backgroundColor: '#f57c00' }]} />
+          <Text style={styles.statBarNum}>{totalDueSoon}</Text>
+          <Text style={styles.statBarLabel}>Due soon</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <View style={[styles.statDot, { backgroundColor: '#2e7d32' }]} />
+          <Text style={styles.statBarNum}>{summaries.length}</Text>
+          <Text style={styles.statBarLabel}>Active equipment</Text>
+        </View>
       </View>
 
       {/* Equipment utilization table */}
@@ -175,10 +174,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
-  summaryRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 12 },
-  summaryCard: { flex: 1, borderRadius: 8 },
-  summaryNum: { color: 'white', fontWeight: 'bold' },
-  summaryLabel: { color: 'white', fontSize: 11 },
+  statBar: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, marginHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: '#e8e4df', paddingVertical: 14 },
+  statItem: { flex: 1, alignItems: 'center', gap: 4 },
+  statDot: { width: 8, height: 8, borderRadius: 4 },
+  statBarNum: { fontSize: 28, fontWeight: 'bold', color: '#1a1a18', lineHeight: 32 },
+  statBarLabel: { fontSize: 11, color: '#6b6b6b', letterSpacing: 0.3 },
+  statDivider: { width: 1, backgroundColor: '#e8e4df', marginVertical: 4 },
   card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 8 },
   sectionTitle: { fontWeight: 'bold', color: '#2e7d32', marginBottom: 8 },
   flex: { flex: 1 },

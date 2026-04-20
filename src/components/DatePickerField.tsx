@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, ViewStyle, ScrollView } from 'react-native';
 import { Text, Button, Dialog, Portal } from 'react-native-paper';
 
@@ -37,6 +37,8 @@ function buildYears(): number[] {
 
 const YEARS = buildYears();
 
+const ITEM_HEIGHT = 44;
+
 interface ColProps {
   items: (string | number)[];
   selected: number;
@@ -44,8 +46,17 @@ interface ColProps {
 }
 
 function Column({ items, selected, onSelect }: ColProps) {
+  const ref = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (ref.current && selected >= 0) {
+      const offset = Math.max(0, selected * ITEM_HEIGHT - 78);
+      ref.current.scrollTo({ y: offset, animated: false });
+    }
+  }, []);
+
   return (
-    <ScrollView style={styles.col} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={ref} style={styles.col} showsVerticalScrollIndicator={false}>
       {items.map((item, i) => (
         <TouchableOpacity key={i} style={[styles.colItem, i === selected && styles.colItemSelected]} onPress={() => onSelect(i)}>
           <Text style={[styles.colText, i === selected && styles.colTextSelected]}>{item}</Text>
@@ -164,7 +175,7 @@ const styles = StyleSheet.create({
   dialog: { maxHeight: '80%' },
   pickerRow: { flexDirection: 'row', height: 200 },
   col: { flex: 1 },
-  colItem: { paddingVertical: 10, paddingHorizontal: 4, alignItems: 'center' },
+  colItem: { height: ITEM_HEIGHT, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   colItemSelected: { backgroundColor: '#c8e6c9', borderRadius: 6 },
   colText: { fontSize: 15, color: '#4a4540' },
   colTextSelected: { color: '#2e7d32', fontWeight: '700' },
