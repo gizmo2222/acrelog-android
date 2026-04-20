@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button, ProgressBar } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
@@ -64,6 +64,7 @@ export default function ProjectListScreen() {
       setSummaries(results);
     } catch (e: any) {
       console.error('Projects load error:', e.message);
+      Alert.alert('Could not load projects', e.message ?? 'Check your connection and try again.');
     } finally {
       setLoading(false);
     }

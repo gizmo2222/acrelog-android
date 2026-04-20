@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, FlatList, ScrollView, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, FAB, Chip, Searchbar, SegmentedButtons, ActivityIndicator, IconButton, Divider, Badge } from 'react-native-paper';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -90,6 +90,7 @@ export default function EquipmentListScreen() {
       setMaintenanceStatus(statuses);
     } catch (e: any) {
       console.error('Equipment load error:', e.message);
+      Alert.alert('Could not load equipment', e.message ?? 'Check your connection and try again.');
     } finally {
       setLoading(false);
     }

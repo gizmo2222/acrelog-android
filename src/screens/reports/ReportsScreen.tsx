@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Card, Button, ActivityIndicator, DataTable } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
@@ -55,7 +55,7 @@ export default function ReportsScreen() {
     );
     setSummaries(results);
     } catch (e: any) {
-      console.error('Reports load error:', errorMessage(e));
+      Alert.alert('Could not load reports', errorMessage(e));
     } finally {
       setLoading(false);
     }
