@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { Farm, FarmMembership, FarmMember, UserRole } from '../types';
+import * as Crypto from 'expo-crypto';
 
 async function syncFarmMember(farmId: string, userId: string, role: UserRole, displayName: string): Promise<void> {
   await setDoc(doc(db, 'farmMembers', `${farmId}_${userId}`), { farmId, userId, role, displayName });
@@ -103,7 +104,7 @@ export async function applyPendingInvites(uid: string, email: string): Promise<v
 
 export async function createQRInvite(farmId: string, role: UserRole): Promise<string> {
   const user = auth.currentUser!;
-  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const token = Crypto.randomUUID().replace(/-/g, '');
   const ref = doc(collection(db, 'farmQRInvites'));
   await setDoc(ref, {
     id: ref.id,
