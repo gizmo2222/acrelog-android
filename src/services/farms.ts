@@ -183,6 +183,19 @@ export async function getFarm(farmId: string): Promise<Farm | null> {
   return snap.exists() ? ({ id: snap.id, ...snap.data() } as Farm) : null;
 }
 
+export async function removeFarmMember(farmId: string, targetUid: string): Promise<void> {
+  const userSnap = await getDoc(doc(db, 'users', targetUid));
+  if (!userSnap.exists()) return;
+  const memberships: FarmMembership[] = userSnap.data().farmMemberships ?? [];
+  const membership = memberships.find(m => m.farmId === farmId);
+  if (membership) {
+    await Promise.all([
+      updateDoc(doc(db, 'users', targetUid), { farmMemberships: arrayRemove(membership) }),
+      deleteDoc(doc(db, 'farmMembers', `${farmId}_${targetUid}`)).catch(() => {}),
+    ]);
+  }
+}
+
 export async function updateFarmMemberRole(
   targetUid: string,
   farmId: string,

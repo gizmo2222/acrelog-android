@@ -4,12 +4,12 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, TextInput, Button, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
+import { Text, TextInput, Button, Divider, Dialog, Portal, SegmentedButtons, Menu, ActivityIndicator } from 'react-native-paper';
 import DatePickerField from '../../components/DatePickerField';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../hooks/useAuth';
-import { inviteUserToFarm, createQRInvite, getFarm, updateFarm, addFarmLocation, removeFarmLocation, leaveFarm, deleteFarm } from '../../services/farms';
-import { Farm, UserRole } from '../../types';
+import { inviteUserToFarm, createQRInvite, getFarm, updateFarm, addFarmLocation, removeFarmLocation, leaveFarm, deleteFarm, getFarmMembers, removeFarmMember, updateFarmMemberRole } from '../../services/farms';
+import { Farm, FarmMember, UserRole } from '../../types';
 import { signOut } from '../../services/auth';
 import { errorMessage } from '../../utils/errorMessage';
 
@@ -19,7 +19,7 @@ export default function FarmSettingsScreen() {
   const { activeFarm, setActiveFarm } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
-  const [tab, setTab] = useState<'invites' | 'general'>('invites');
+  const [tab, setTab] = useState<'invites' | 'members' | 'general'>('invites');
 
   // Invite state
   const [inviteEmail, setInviteEmail] = useState('');
@@ -28,6 +28,49 @@ export default function FarmSettingsScreen() {
   const [qrRole, setQrRole] = useState<UserRole>('worker');
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+
+  // Members state
+  const [members, setMembers] = useState<FarmMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [roleMenuId, setRoleMenuId] = useState<string | null>(null);
+
+  async function loadMembers() {
+    if (!activeFarm) return;
+    setMembersLoading(true);
+    try {
+      setMembers(await getFarmMembers(activeFarm.farmId));
+    } finally {
+      setMembersLoading(false);
+    }
+  }
+
+  async function handleRemoveMember(member: FarmMember) {
+    if (!activeFarm) return;
+    Alert.alert(
+      `Remove ${member.displayName}?`,
+      'They will lose access to this farm. You can re-invite them at any time.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove', style: 'destructive', onPress: async () => {
+            await removeFarmMember(activeFarm.farmId, member.userId);
+            setMembers(prev => prev.filter(m => m.id !== member.id));
+          },
+        },
+      ]
+    );
+  }
+
+  async function handleRoleChange(member: FarmMember, newRole: UserRole) {
+    setRoleMenuId(null);
+    if (!activeFarm) return;
+    await updateFarmMemberRole(member.userId, activeFarm.farmId, newRole);
+    setMembers(prev => prev.map(m => m.id === member.id ? { ...m, role: newRole } : m));
+  }
+
+  React.useEffect(() => {
+    if (tab === 'members') loadMembers();
+  }, [tab]);
 
   // Farm details state
   const [farm, setFarm] = useState<Farm | null>(null);
@@ -141,9 +184,10 @@ export default function FarmSettingsScreen() {
 
       <SegmentedButtons
         value={tab}
-        onValueChange={v => setTab(v as 'invites' | 'general')}
+        onValueChange={v => setTab(v as 'invites' | 'members' | 'general')}
         buttons={[
           { value: 'invites', label: 'Invites', icon: 'account-plus-outline' },
+          { value: 'members', label: 'Members', icon: 'account-group-outline' },
           { value: 'general', label: 'General', icon: 'cog-outline' },
         ]}
         style={styles.tabs}
@@ -186,6 +230,53 @@ export default function FarmSettingsScreen() {
             <Button mode="outlined" icon="qrcode" onPress={handleShowQR} loading={qrLoading} style={styles.button}>
               Generate QR Code
             </Button>
+          </>
+        )}
+
+        {tab === 'members' && (
+          <>
+            <Text variant="titleSmall" style={styles.sectionTitle}>Farm Members</Text>
+            <Text variant="bodySmall" style={styles.hint}>
+              {activeFarm?.role === 'owner' ? 'Tap a member to change their role or remove them.' : 'Members of this farm.'}
+            </Text>
+            {membersLoading
+              ? <ActivityIndicator size="small" color="#2e7d32" style={{ marginTop: 16 }} />
+              : members.length === 0
+                ? <Text variant="bodySmall" style={styles.emptyHint}>No members found.</Text>
+                : members.map(m => (
+                    <View key={m.id} style={styles.memberRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text variant="bodyMedium">{m.displayName}</Text>
+                        <Text variant="bodySmall" style={{ color: '#6b6b6b', textTransform: 'capitalize' }}>{m.role}</Text>
+                      </View>
+                      {activeFarm?.role === 'owner' && m.userId !== activeFarm.farmId.split('_')[0] && (
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                          <Menu
+                            visible={roleMenuId === m.id}
+                            onDismiss={() => setRoleMenuId(null)}
+                            anchor={
+                              <Button compact mode="outlined" onPress={() => setRoleMenuId(m.id)}>
+                                Role
+                              </Button>
+                            }
+                          >
+                            {ROLES.map(r => (
+                              <Menu.Item
+                                key={r}
+                                title={r.charAt(0).toUpperCase() + r.slice(1)}
+                                onPress={() => handleRoleChange(m, r)}
+                                trailingIcon={m.role === r ? 'check' : undefined}
+                              />
+                            ))}
+                          </Menu>
+                          <Button compact mode="text" textColor="#c62828" onPress={() => handleRemoveMember(m)}>
+                            Remove
+                          </Button>
+                        </View>
+                      )}
+                    </View>
+                  ))
+            }
           </>
         )}
 
@@ -369,4 +460,5 @@ const styles = StyleSheet.create({
   detailLabel: { color: '#6b6b6b', flex: 1 },
   detailValue: { flex: 2, textAlign: 'right', color: '#1a1a18' },
   detailsRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginBottom: 12 },
+  memberRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
 });
