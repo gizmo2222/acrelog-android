@@ -41,6 +41,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
   const [description, setDescription] = useState('');
   const [purchaseLocation, setPurchaseLocation] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState('');
   const [location, setLocation] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [manufacturerUrl, setManufacturerUrl] = useState('');
@@ -69,6 +70,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         setDescription(eq.description);
         setPurchaseLocation(eq.purchaseLocation);
         setPurchaseDate(eq.purchaseDate ?? '');
+        setPurchasePrice(eq.purchasePrice != null ? String(eq.purchasePrice) : '');
         setLocation(eq.location);
         setCategoryId(eq.categoryId);
         setManufacturerUrl(eq.manufacturerUrl ?? '');
@@ -128,6 +130,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
         description: description.trim(),
         purchaseLocation: purchaseLocation.trim(),
         purchaseDate: purchaseDate || undefined,
+        ...(purchasePrice ? { purchasePrice: parseFloat(purchasePrice) } : {}),
         location: location.trim(),
         customFields,
         status: 'active' as EquipmentStatus,
@@ -247,6 +250,7 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
       <TextInput label="Description" value={description} onChangeText={setDescription} mode="outlined" style={styles.input} multiline numberOfLines={3} />
       <TextInput label="Purchase Location" value={purchaseLocation} onChangeText={setPurchaseLocation} mode="outlined" style={styles.input} />
       <DatePickerField label="Purchase Date" value={purchaseDate} onChange={setPurchaseDate} optional />
+      <TextInput label="Purchase Price ($)" value={purchasePrice} onChangeText={setPurchasePrice} mode="outlined" style={styles.input} keyboardType="decimal-pad" />
       {farmLocations.length > 0 ? (
         <SelectField label="Storage Location" value={location} options={farmLocations} onChange={setLocation} allowClear style={styles.input} />
       ) : (

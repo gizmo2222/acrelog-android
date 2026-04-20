@@ -79,7 +79,7 @@ export default function ReportsScreen() {
       <html><body style="font-family: sans-serif; padding: 24px;">
         <h1>${summary.equipment.name}</h1>
         <p><b>Brand:</b> ${summary.equipment.brand} &nbsp; <b>Model:</b> ${summary.equipment.model}</p>
-        <p><b>Serial:</b> ${summary.equipment.serialNumber} &nbsp; <b>Total Hours:</b> ${summary.equipment.totalHours}</p>
+        <p><b>Serial:</b> ${summary.equipment.serialNumber} &nbsp; <b>Total Hours:</b> ${summary.equipment.totalHours}${summary.equipment.purchasePrice != null ? ` &nbsp; <b>Purchase Price:</b> $${summary.equipment.purchasePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : ''}</p>
         <h2>Maintenance History</h2>
         <table border="1" cellpadding="6" cellspacing="0" width="100%">
           <thead><tr><th>Task</th><th>Date</th><th>Hours</th><th>Notes</th><th>Parts</th></tr></thead>
@@ -146,6 +146,7 @@ export default function ReportsScreen() {
             <DataTable.Header>
               <DataTable.Title style={styles.flex}>Equipment</DataTable.Title>
               <DataTable.Title numeric>Hours</DataTable.Title>
+              <DataTable.Title numeric>Value $</DataTable.Title>
               <DataTable.Title numeric>Overdue</DataTable.Title>
               <DataTable.Title numeric>Due Soon</DataTable.Title>
             </DataTable.Header>
@@ -153,6 +154,9 @@ export default function ReportsScreen() {
               <DataTable.Row key={s.equipment.id}>
                 <DataTable.Cell style={styles.flex}>{s.equipment.name}</DataTable.Cell>
                 <DataTable.Cell numeric>{s.equipment.totalHours}</DataTable.Cell>
+                <DataTable.Cell numeric>
+                  {s.equipment.purchasePrice != null ? `$${s.equipment.purchasePrice.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '—'}
+                </DataTable.Cell>
                 <DataTable.Cell numeric style={s.overdueCount > 0 ? styles.redCell : {}}>
                   {s.overdueCount}
                 </DataTable.Cell>
