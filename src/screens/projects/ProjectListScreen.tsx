@@ -116,7 +116,9 @@ export default function ProjectListScreen() {
                 <Text variant="titleMedium">{item.project.name}</Text>
                 <View style={styles.metaRow}>
                   <Text variant="bodySmall" style={styles.date}>
-                    Created {item.project.createdAt.toDate().toLocaleDateString()}
+                    {item.taskCount === 0
+                      ? 'No tasks yet'
+                      : `${item.completedCount} done · ${item.taskCount - item.completedCount} remaining`}
                   </Text>
                   {item.project.dueDate && (
                     <Text variant="bodySmall" style={[styles.dueLabel, overdue && styles.overdueLabel]}>

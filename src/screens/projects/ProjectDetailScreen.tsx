@@ -9,7 +9,7 @@ import { Timestamp, deleteField } from 'firebase/firestore';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import {
-  getProject, getTasks, createTask, completeTask, reopenTask, startTask,
+  getProject, getTasks, createTask, completeTask, reopenTask,
   updateProjectStatus, deleteProject, deleteTask, updateProject,
   getTaskEquipmentLogs,
 } from '../../services/projects';
@@ -149,11 +149,28 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
     }
   }
 
+  async function optimisticUpdate(taskId: string, newStatus: 'pending' | 'in_progress' | 'completed', action: () => Promise<void>) {
+    setTasks(prev => prev.map(t => {
+      if (t.id !== taskId) return t;
+      return {
+        ...t,
+        status: newStatus,
+        ...(newStatus === 'completed' ? { completedAt: Timestamp.now() } : {}),
+        ...(newStatus === 'pending' ? { completedAt: undefined } : {}),
+      };
+    }));
+    try {
+      await action();
+    } catch (e: any) {
+      load();
+      Alert.alert("Couldn't update task", errorMessage(e));
+    }
+  }
+
   const canEdit = activeFarm?.role !== 'auditor';
   const inProgress = tasks.filter(t => t.status === 'in_progress');
   const pending = tasks.filter(t => t.status === 'pending');
   const completed = tasks.filter(t => t.status === 'completed');
-  const openTasks = [...inProgress, ...pending];
   const taskCount = tasks.length;
   const completedCount = completed.length;
   const progress = taskCount > 0 ? completedCount / taskCount : 0;
@@ -197,7 +214,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
 
           <View style={styles.taskMeta}>
             {isInProgress && (
-              <Chip compact style={styles.inProgressChip} textStyle={{ color: '#1565c0', fontSize: 11 }}>In Progress</Chip>
+              <Chip compact style={styles.inProgressChip} textStyle={{ color: '#d4870a', fontSize: 11 }}>In Progress</Chip>
             )}
             {task.dueDate && (
               <Text variant="bodySmall" style={styles.due}>Due {task.dueDate.toDate().toLocaleDateString()}</Text>
@@ -224,32 +241,19 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
           )}
 
           {canEdit && !isCompleted && (
-            <View style={styles.taskActions}>
-              {!isInProgress && (
-                <Button
-                  compact
-                  mode="outlined"
-                  icon="play-outline"
-                  style={styles.startBtn}
-                  onPress={() => { startTask(task.id); load(); }}
-                >
-                  Start
-                </Button>
-              )}
-              <Button
-                compact
-                mode="contained"
-                icon="check-circle-outline"
-                style={styles.completeBtn}
-                buttonColor="#2e7d32"
-                onPress={() => { completeTask(task.id); load(); }}
-              >
-                Mark Complete
-              </Button>
-            </View>
+            <Button
+              compact
+              mode="contained"
+              icon="check-circle-outline"
+              style={styles.completeBtn}
+              buttonColor="#2e7d32"
+              onPress={() => optimisticUpdate(task.id, 'completed', () => completeTask(task.id))}
+            >
+              Mark Complete
+            </Button>
           )}
           {canEdit && isCompleted && (
-            <Button compact mode="text" icon="undo" style={styles.reopenBtn} onPress={() => { reopenTask(task.id); load(); }}>
+            <Button compact mode="text" icon="undo" style={styles.reopenBtn} onPress={() => optimisticUpdate(task.id, 'pending', () => reopenTask(task.id))}>
               Reopen
             </Button>
           )}
@@ -343,12 +347,18 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
           </>
         )}
 
-        {/* To Do */}
-        <Text variant="labelLarge" style={styles.sectionLabel}>To Do ({pending.length})</Text>
-        {pending.length === 0 && inProgress.length === 0
-          ? <EmptyState icon="checkbox-blank-outline" title="No open tasks" subtitle={canEdit ? 'Add a task above.' : undefined} />
-          : pending.map(t => renderTask(t))
-        }
+        {/* Empty state when nothing is open */}
+        {inProgress.length === 0 && pending.length === 0 && (
+          <EmptyState icon="checkbox-blank-outline" title="No open tasks" subtitle={canEdit ? 'Add a task above.' : undefined} />
+        )}
+
+        {/* To Do — only when there are pending tasks */}
+        {pending.length > 0 && (
+          <>
+            <Text variant="labelLarge" style={styles.sectionLabel}>To Do ({pending.length})</Text>
+            {pending.map(t => renderTask(t))}
+          </>
+        )}
 
         {/* Done */}
         {completed.length > 0 && (
@@ -417,16 +427,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   strikethrough: { textDecorationLine: 'line-through', color: '#6b6b6b' },
   taskMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4, marginBottom: 2 },
-  inProgressChip: { backgroundColor: '#e3f2fd' },
+  inProgressChip: { backgroundColor: '#fff3e0' },
   due: { color: '#f57c00' },
   assignee: { color: '#6b6b6b' },
   completedAt: { color: '#6b6b6b' },
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   equipChip: { backgroundColor: '#e8f5e9' },
   costChip: { backgroundColor: '#fff8e1' },
-  taskActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  startBtn: { flex: 1 },
-  completeBtn: { flex: 2 },
+  completeBtn: { alignSelf: 'flex-start', marginTop: 10 },
   reopenBtn: { marginTop: 6, alignSelf: 'flex-start' },
   divider: { marginTop: 8, marginBottom: 4 },
   description: { color: '#6b6b6b', marginHorizontal: 16, marginTop: 2, marginBottom: 8 },

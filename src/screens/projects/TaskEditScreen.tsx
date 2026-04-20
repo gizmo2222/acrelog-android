@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput, Button, Card, Chip, IconButton, Divider, ActivityIndicator, Menu, SegmentedButtons } from 'react-native-paper';
@@ -103,7 +103,9 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     setParts(prev => prev.filter((_, i) => i !== index));
   }
 
-  async function handleSave() {
+  const canEdit = activeFarm?.role !== 'auditor';
+
+  const handleSave = useCallback(async () => {
     if (!name.trim()) return;
     setSaving(true);
     try {
@@ -141,7 +143,24 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     } finally {
       setSaving(false);
     }
-  }
+  }, [name, parts, status, notes, priority, assignedToId, assignedToName, dueDate, task, taskId]);
+
+
+  useEffect(() => {
+    if (!canEdit || loading) return;
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          onPress={handleSave}
+          loading={saving}
+          disabled={!name.trim() || saving}
+          textColor="#2e7d32"
+        >
+          Save
+        </Button>
+      ),
+    });
+  }, [name, saving, loading, canEdit, handleSave]);
 
   async function handleDeleteLog(logId: string) {
     Alert.alert('Remove this equipment entry?', "This can't be undone.", [
@@ -154,8 +173,6 @@ export default function TaskEditScreen({ route, navigation }: Props) {
       },
     ]);
   }
-
-  const canEdit = activeFarm?.role !== 'auditor';
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
@@ -337,18 +354,6 @@ export default function TaskEditScreen({ route, navigation }: Props) {
         )}
       </View>
 
-      {canEdit && (
-        <Button
-          mode="contained"
-          onPress={handleSave}
-          loading={saving}
-          disabled={!name.trim() || saving}
-          style={styles.saveBtn}
-          buttonColor="#2e7d32"
-        >
-          Save Changes
-        </Button>
-      )}
     </ScrollView>
   );
 }
@@ -376,5 +381,4 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   logMeta: { color: '#6b6b6b', marginTop: 2 },
   addEquipBtn: { marginTop: 4 },
-  saveBtn: { marginHorizontal: 16, marginTop: 24 },
 });
