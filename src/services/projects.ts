@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { Project, Task, TaskEquipmentLog, TaskComment, ProjectStatus, TaskStatus } from '../types';
-import { addHours } from './equipment';
+import { addHours, getEquipmentById } from './equipment';
 import { getMaintenanceTasks, updateMaintenanceTask } from './maintenance';
 
 // ─── Projects ──────────────────────────────────────────────────────────────
@@ -257,7 +257,6 @@ export async function deleteTaskComment(commentId: string): Promise<void> {
 // ─── Maintenance Recalculation ─────────────────────────────────────────────
 
 async function recalculateMaintenanceForEquipment(equipmentId: string): Promise<void> {
-  const { getEquipmentById } = await import('./equipment');
   const equipment = await getEquipmentById(equipmentId);
   if (!equipment) return;
 
