@@ -3,9 +3,10 @@ import { Timestamp } from 'firebase/firestore';
 export type UserRole = 'owner' | 'worker' | 'mechanic' | 'auditor';
 export type EquipmentStatus = 'active' | 'archived' | 'sold';
 export type MaintenanceStatus = 'ok' | 'due_soon' | 'overdue' | 'broken';
-export type ProjectStatus = 'active' | 'archived';
+export type ProjectStatus = 'active' | 'completed' | 'archived';
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
+export type TaskRecurrence = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 // ─── User ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ export interface Equipment {
   purchaseLocation: string;
   location: string;
   totalHours: number;  // always initialized to 0 on create
+  purchasePrice?: number;
   customFields: Record<string, string>;
   status: EquipmentStatus;
   broken?: boolean;
@@ -202,8 +204,19 @@ export interface Task {
   assignedToId?: string;
   assignedToName?: string;
   parts?: TaskPart[];
+  recurrence?: TaskRecurrence;
   completedAt?: Timestamp;
   completedBy?: string;
+  createdAt: Timestamp;
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  projectId: string;
+  userId: string;
+  userName: string;
+  body: string;
   createdAt: Timestamp;
 }
 
