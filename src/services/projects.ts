@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { Project, Task, TaskEquipmentLog, ProjectStatus, TaskStatus } from '../types';
+import { Project, Task, TaskEquipmentLog, TaskComment, ProjectStatus, TaskStatus } from '../types';
 import { addHours } from './equipment';
 import { getMaintenanceTasks, updateMaintenanceTask } from './maintenance';
 
@@ -186,6 +186,45 @@ export async function getTaskEquipmentLogs(taskId: string): Promise<TaskEquipmen
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TaskEquipmentLog));
 }
+
+// ─── Task Comments ─────────────────────────────────────────────────────────
+
+export async function getTaskComments(taskId: string): Promise<TaskComment[]> {
+  const q = query(
+    collection(db, 'taskComments'),
+    where('taskId', '==', taskId),
+    orderBy('createdAt', 'asc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as TaskComment));
+}
+
+export async function createTaskComment(
+  taskId: string,
+  projectId: string,
+  body: string,
+  userName: string
+): Promise<TaskComment> {
+  const user = auth.currentUser!;
+  const ref = doc(collection(db, 'taskComments'));
+  const comment: TaskComment = {
+    id: ref.id,
+    taskId,
+    projectId,
+    userId: user.uid,
+    userName,
+    body,
+    createdAt: serverTimestamp() as unknown as Timestamp,
+  };
+  await setDoc(ref, comment);
+  return comment;
+}
+
+export async function deleteTaskComment(commentId: string): Promise<void> {
+  await deleteDoc(doc(db, 'taskComments', commentId));
+}
+
+// ─── Maintenance Recalculation ─────────────────────────────────────────────
 
 async function recalculateMaintenanceForEquipment(equipmentId: string): Promise<void> {
   const { getEquipmentById } = await import('./equipment');

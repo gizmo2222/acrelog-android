@@ -10,11 +10,12 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   getTask, updateTask, completeTask, reopenTask, startTask,
   getTaskEquipmentLogs, deleteTaskEquipmentLog,
+  getTaskComments, createTaskComment, deleteTaskComment,
 } from '../../services/projects';
 import { getFarmMembers } from '../../services/farms';
 import { getEquipment, getCategories } from '../../services/equipment';
 import DatePickerField from '../../components/DatePickerField';
-import { Task, TaskEquipmentLog, Equipment, Category, FarmMember, TaskPriority, TaskStatus, TaskPart } from '../../types';
+import { Task, TaskEquipmentLog, TaskComment, Equipment, Category, FarmMember, TaskPriority, TaskStatus, TaskPart } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskEdit'>;
@@ -37,7 +38,7 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 
 export default function TaskEditScreen({ route, navigation }: Props) {
   const { taskId, projectId } = route.params;
-  const { activeFarm } = useAuth();
+  const { activeFarm, profile } = useAuth();
   const insets = useSafeAreaInsets();
   const [task, setTask] = useState<Task | null>(null);
   const [name, setName] = useState('');
@@ -55,14 +56,18 @@ export default function TaskEditScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [assigneeMenuVisible, setAssigneeMenuVisible] = useState(false);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [taskId]));
 
   async function load() {
     setLoading(true);
-    const [t, l] = await Promise.all([
+    const [t, l, c] = await Promise.all([
       getTask(taskId),
       getTaskEquipmentLogs(taskId),
+      getTaskComments(taskId),
     ]);
     if (!t) { navigation.goBack(); return; }
 
@@ -76,6 +81,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     setNotes(t.notes ?? '');
     setParts((t.parts ?? []).map(p => ({ name: p.name, cost: p.cost != null ? String(p.cost) : '' })));
     setLogs(l);
+    setComments(c);
 
     if (activeFarm) {
       const [eq, members, cats] = await Promise.all([
@@ -364,6 +370,62 @@ export default function TaskEditScreen({ route, navigation }: Props) {
         )}
       </View>
 
+      <Divider style={styles.divider} />
+
+      {/* Comments */}
+      <View style={styles.section}>
+        <Text variant="labelSmall" style={styles.fieldLabel}>Comments</Text>
+        {comments.length === 0
+          ? <Text variant="bodySmall" style={styles.emptyNote}>No comments yet.</Text>
+          : comments.map(c => (
+              <View key={c.id} style={styles.commentItem}>
+                <View style={styles.commentHeader}>
+                  <Text variant="labelSmall" style={styles.commentAuthor}>{c.userName}</Text>
+                  <Text variant="bodySmall" style={styles.commentDate}>
+                    {c.createdAt?.toDate?.().toLocaleDateString() ?? ''}
+                  </Text>
+                </View>
+                <Text variant="bodySmall" style={styles.commentBody}>{c.body}</Text>
+              </View>
+            ))
+        }
+        {canEdit && (
+          <View style={styles.commentInputRow}>
+            <TextInput
+              value={newComment}
+              onChangeText={setNewComment}
+              placeholder="Add a comment…"
+              mode="outlined"
+              dense
+              style={styles.commentInput}
+            />
+            <Button
+              mode="contained"
+              compact
+              disabled={!newComment.trim() || postingComment}
+              loading={postingComment}
+              onPress={async () => {
+                if (!newComment.trim()) return;
+                setPostingComment(true);
+                try {
+                  const userName = profile?.displayName ?? 'Unknown';
+                  const c = await createTaskComment(taskId, projectId, newComment.trim(), userName);
+                  setComments(prev => [...prev, c]);
+                  setNewComment('');
+                } catch (e: any) {
+                  Alert.alert("Couldn't post comment", errorMessage(e));
+                } finally {
+                  setPostingComment(false);
+                }
+              }}
+              style={styles.commentPostBtn}
+            >
+              Post
+            </Button>
+          </View>
+        )}
+      </View>
+
     </ScrollView>
   );
 }
@@ -391,4 +453,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   logMeta: { color: '#6b6b6b', marginTop: 2 },
   addEquipBtn: { marginTop: 4 },
+  commentItem: { marginBottom: 10 },
+  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
+  commentAuthor: { color: '#2e7d32', fontWeight: '600' },
+  commentDate: { color: '#9e9e9e' },
+  commentBody: { color: '#333' },
+  commentInputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  commentInput: { flex: 1 },
+  commentPostBtn: { marginTop: 4 },
 });
