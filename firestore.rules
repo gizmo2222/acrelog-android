@@ -1,0 +1,157 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isFarmMember(farmId) {
+      return isAuthed() &&
+        exists(/databases/$(database)/documents/farmMembers/$(farmId + '_' + request.auth.uid));
+    }
+
+    function farmRole(farmId) {
+      return get(/databases/$(database)/documents/farmMembers/$(farmId + '_' + request.auth.uid)).data.role;
+    }
+
+    function isFarmOwner(farmId) {
+      return isFarmMember(farmId) && farmRole(farmId) == 'owner';
+    }
+
+    function isFarmManager(farmId) {
+      return isFarmMember(farmId) && farmRole(farmId) in ['owner', 'manager'];
+    }
+
+    function isFarmWorker(farmId) {
+      return isFarmMember(farmId) && farmRole(farmId) in ['owner', 'manager', 'worker'];
+    }
+
+    function isFarmAuditor(farmId) {
+      return isFarmMember(farmId);
+    }
+
+    // ─── Users ────────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuthed() && request.auth.uid == userId;
+      allow write: if isAuthed() && request.auth.uid == userId;
+    }
+
+    // ─── Farms ────────────────────────────────────────────────────────────────
+
+    match /farms/{farmId} {
+      allow read: if isFarmAuditor(farmId);
+      allow create: if isAuthed();
+      allow update: if isFarmOwner(farmId);
+      allow delete: if isFarmOwner(farmId);
+    }
+
+    // ─── Farm Members ─────────────────────────────────────────────────────────
+
+    match /farmMembers/{memberId} {
+      // memberId is farmId_userId
+      allow read: if isAuthed() && (
+        isFarmAuditor(resource.data.farmId) ||
+        request.auth.uid == resource.data.userId
+      );
+      allow create: if isFarmManager(resource.data.farmId);
+      allow update: if isFarmOwner(resource.data.farmId);
+      allow delete: if isFarmOwner(resource.data.farmId) ||
+        request.auth.uid == resource.data.userId; // self-removal
+    }
+
+    // ─── Farm Invites ─────────────────────────────────────────────────────────
+
+    match /farmInvites/{inviteId} {
+      allow read: if isAuthed();
+      allow create: if isFarmManager(resource.data.farmId);
+      allow delete: if isFarmManager(resource.data.farmId);
+    }
+
+    match /farmQRInvites/{inviteId} {
+      allow read: if isAuthed();
+      allow create: if isFarmManager(resource.data.farmId);
+      allow delete: if isFarmManager(resource.data.farmId);
+    }
+
+    // ─── Categories ───────────────────────────────────────────────────────────
+
+    match /categories/{categoryId} {
+      allow read: if isFarmAuditor(resource.data.farmId);
+      allow write: if isFarmManager(resource.data.farmId);
+    }
+
+    // ─── Equipment ────────────────────────────────────────────────────────────
+
+    match /equipment/{equipmentId} {
+      allow read: if isFarmAuditor(resource.data.farmId);
+      allow create: if isFarmManager(resource.data.farmId);
+      allow update: if isFarmWorker(resource.data.farmId);
+      allow delete: if isFarmOwner(resource.data.farmId);
+    }
+
+    match /meterReadings/{readingId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /downtimeRecords/{recordId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    // ─── Maintenance ──────────────────────────────────────────────────────────
+
+    match /maintenanceTasks/{taskId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /maintenanceLogs/{logId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /inspectionChecklists/{checklistId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /inspectionLogs/{logId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    // ─── Projects & Tasks ─────────────────────────────────────────────────────
+
+    match /projects/{projectId} {
+      allow read: if isFarmAuditor(resource.data.farmId);
+      allow create: if isFarmWorker(resource.data.farmId);
+      allow update: if isFarmWorker(resource.data.farmId);
+      allow delete: if isFarmManager(resource.data.farmId);
+    }
+
+    match /tasks/{taskId} {
+      // Tasks don't carry farmId directly — rely on auth + app-layer scoping.
+      // Full farm-level enforcement would require a cross-collection read per request.
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /taskEquipmentLogs/{logId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed();
+    }
+
+    match /taskComments/{commentId} {
+      allow read: if isAuthed();
+      allow create: if isAuthed();
+      allow delete: if isAuthed() && request.auth.uid == resource.data.userId;
+      allow update: if false; // comments are immutable
+    }
+  }
+}
