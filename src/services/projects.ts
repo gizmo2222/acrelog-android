@@ -85,7 +85,7 @@ export async function createTask(
     id: ref.id,
     projectId,
     name,
-    dueDate: dueDate ? Timestamp.fromDate(dueDate) : undefined,
+    ...(dueDate ? { dueDate: Timestamp.fromDate(dueDate) } : {}),
     status: 'pending',
     createdAt: serverTimestamp() as any,
   };
