@@ -10,6 +10,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   increment,
   Timestamp,
@@ -411,11 +412,18 @@ export async function setHours(equipmentId: string, hours: number): Promise<void
   await logMeterReading(equipmentId, hours);
 }
 
-export async function getMeterReadings(equipmentId: string): Promise<MeterReading[]> {
-  const q = query(collection(db, 'meterReadings'), where('equipmentId', '==', equipmentId));
+export async function getMeterReadings(
+  equipmentId: string,
+  limitTo = 100
+): Promise<MeterReading[]> {
+  const q = query(
+    collection(db, 'meterReadings'),
+    where('equipmentId', '==', equipmentId),
+    orderBy('recordedAt', 'desc'),
+    limit(limitTo)
+  );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MeterReading))
-    .sort((a, b) => b.recordedAt.toMillis() - a.recordedAt.toMillis());
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MeterReading));
 }
 
 // ─── Downtime ──────────────────────────────────────────────────────────────

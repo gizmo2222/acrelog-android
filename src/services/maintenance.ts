@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
@@ -223,11 +224,18 @@ export async function deleteMaintenanceLog(id: string): Promise<void> {
   await deleteDoc(doc(db, 'maintenanceLogs', id));
 }
 
-export async function getMaintenanceLogs(equipmentId: string): Promise<MaintenanceLog[]> {
-  const q = query(collection(db, 'maintenanceLogs'), where('equipmentId', '==', equipmentId));
+export async function getMaintenanceLogs(
+  equipmentId: string,
+  limitTo = 100
+): Promise<MaintenanceLog[]> {
+  const q = query(
+    collection(db, 'maintenanceLogs'),
+    where('equipmentId', '==', equipmentId),
+    orderBy('completedAt', 'desc'),
+    limit(limitTo)
+  );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceLog))
-    .sort((a, b) => b.completedAt.toMillis() - a.completedAt.toMillis());
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MaintenanceLog));
 }
 
 // ─── Import from URL ────────────────────────────────────────────────────────
