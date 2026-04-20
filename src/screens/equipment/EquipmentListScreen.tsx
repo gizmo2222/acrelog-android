@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { getEquipment, getCategories, ensureBuiltInCategories } from '../../services/equipment';
-import { getMaintenanceTasks, getMaintenanceStatus } from '../../services/maintenance';
+import { getMaintenanceTasksForEquipment, getMaintenanceStatus } from '../../services/maintenance';
 import { Equipment, Category, MaintenanceStatus } from '../../types';
 import { STATUS_COLORS } from '../../constants/equipment';
 import EmptyState from '../../components/EmptyState';
@@ -75,20 +75,19 @@ export default function EquipmentListScreen() {
       setEquipment(eq);
       setCategories(cats);
 
+      const activeEq = eq.filter(e => e.status === 'active');
+      const tasksByEquipment = await getMaintenanceTasksForEquipment(activeEq.map(e => e.id));
       const statuses: Record<string, MaintenanceStatus> = {};
-      await Promise.all(
-        eq.filter(e => e.status === 'active').map(async (e) => {
-          if (e.broken) { statuses[e.id] = 'broken'; return; }
-          const tasks = await getMaintenanceTasks(e.id);
-          const worst = tasks.reduce<MaintenanceStatus>((acc, t) => {
-            const s = getMaintenanceStatus(t, e.totalHours);
-            if (s === 'overdue') return 'overdue';
-            if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
-            return acc;
-          }, 'ok');
-          statuses[e.id] = worst;
-        })
-      );
+      for (const e of activeEq) {
+        if (e.broken) { statuses[e.id] = 'broken'; continue; }
+        const tasks = tasksByEquipment[e.id] ?? [];
+        statuses[e.id] = tasks.reduce<MaintenanceStatus>((acc, t) => {
+          const s = getMaintenanceStatus(t, e.totalHours);
+          if (s === 'overdue') return 'overdue';
+          if (s === 'due_soon' && acc !== 'overdue') return 'due_soon';
+          return acc;
+        }, 'ok');
+      }
       setMaintenanceStatus(statuses);
     } catch (e: any) {
       console.error('Equipment load error:', e.message);

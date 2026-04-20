@@ -89,6 +89,24 @@ export async function getTasks(projectId: string): Promise<Task[]> {
     .sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
 }
 
+// Batch-fetch tasks for multiple projects — avoids N+1 reads on list screens.
+// Firestore 'in' supports up to 30 items; chunked here for larger farms.
+export async function getTasksForProjects(projectIds: string[]): Promise<Task[]> {
+  if (projectIds.length === 0) return [];
+  const chunks: string[][] = [];
+  for (let i = 0; i < projectIds.length; i += 30) {
+    chunks.push(projectIds.slice(i, i + 30));
+  }
+  const snaps = await Promise.all(
+    chunks.map(chunk =>
+      getDocs(query(collection(db, 'tasks'), where('projectId', 'in', chunk)))
+    )
+  );
+  return snaps.flatMap(snap =>
+    snap.docs.map(d => ({ id: d.id, ...d.data() } as Task))
+  ).sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+}
+
 export async function createTask(
   projectId: string,
   name: string,

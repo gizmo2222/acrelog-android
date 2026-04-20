@@ -8,7 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Timestamp } from 'firebase/firestore';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { getProjects, getTasks, createProject } from '../../services/projects';
+import { getProjects, getTasksForProjects, createProject } from '../../services/projects';
 import DatePickerField from '../../components/DatePickerField';
 import { Project } from '../../types';
 
@@ -48,16 +48,19 @@ export default function ProjectListScreen() {
     setLoading(true);
     try {
       const projects = await getProjects(activeFarm.farmId);
-      const results = await Promise.all(
-        projects.map(async (project) => {
-          const tasks = await getTasks(project.id);
-          return {
-            project,
-            taskCount: tasks.length,
-            completedCount: tasks.filter(t => t.status === 'completed').length,
-          };
-        })
-      );
+      const allTasks = await getTasksForProjects(projects.map(p => p.id));
+      const tasksByProject = allTasks.reduce<Record<string, typeof allTasks>>((acc, t) => {
+        (acc[t.projectId] = acc[t.projectId] ?? []).push(t);
+        return acc;
+      }, {});
+      const results = projects.map(project => {
+        const tasks = tasksByProject[project.id] ?? [];
+        return {
+          project,
+          taskCount: tasks.length,
+          completedCount: tasks.filter(t => t.status === 'completed').length,
+        };
+      });
       setSummaries(results);
     } catch (e: any) {
       console.error('Projects load error:', e.message);

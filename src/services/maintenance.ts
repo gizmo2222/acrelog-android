@@ -77,6 +77,30 @@ export async function getMaintenanceTasks(equipmentId: string): Promise<Maintena
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Batch-fetch tasks for multiple equipment — avoids N+1 reads on list screens.
+export async function getMaintenanceTasksForEquipment(
+  equipmentIds: string[]
+): Promise<Record<string, MaintenanceTask[]>> {
+  if (equipmentIds.length === 0) return {};
+  const chunks: string[][] = [];
+  for (let i = 0; i < equipmentIds.length; i += 30) {
+    chunks.push(equipmentIds.slice(i, i + 30));
+  }
+  const snaps = await Promise.all(
+    chunks.map(chunk =>
+      getDocs(query(collection(db, 'maintenanceTasks'), where('equipmentId', 'in', chunk)))
+    )
+  );
+  const result: Record<string, MaintenanceTask[]> = {};
+  for (const id of equipmentIds) result[id] = [];
+  snaps.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as MaintenanceTask)))
+    .forEach(task => {
+      if (!result[task.equipmentId]) result[task.equipmentId] = [];
+      result[task.equipmentId].push(task);
+    });
+  return result;
+}
+
 export async function createMaintenanceTask(
   data: Omit<MaintenanceTask, 'id' | 'createdAt'>
 ): Promise<MaintenanceTask> {
