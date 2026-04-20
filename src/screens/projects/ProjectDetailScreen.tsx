@@ -111,7 +111,7 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
               style={styles.logEquipBtn}
               onPress={() => navigation.navigate('TaskForm', { projectId, taskId: task.id })}
             >
-              Log Equipment
+              Record Equipment Use
             </Button>
           )}
         </Card.Content>

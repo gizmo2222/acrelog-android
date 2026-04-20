@@ -17,11 +17,11 @@ export default function SignUpScreen({ navigation }: Props) {
 
   async function handleSignUp() {
     if (!displayName || !email || !password) {
-      Alert.alert('Please fill in all fields');
+      Alert.alert('Required fields missing', 'Enter your name, email, and password to create an account.');
       return;
     }
     if (password !== confirm) {
-      Alert.alert('Passwords do not match');
+      Alert.alert("Passwords don't match", 'Re-enter your password to confirm.');
       return;
     }
     setLoading(true);

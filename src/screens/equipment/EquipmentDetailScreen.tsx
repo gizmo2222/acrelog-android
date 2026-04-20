@@ -435,10 +435,10 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
         {canEdit() && equipment.status === 'active' && (
           equipment.broken
             ? <Button mode="text" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
-                Clear Broken Status
+                Mark as Fixed
               </Button>
             : <Button mode="text" icon="alert-outline" onPress={handleMarkBroken} style={styles.actionBtn} textColor="#7b1fa2">
-                Mark as Broken
+                Report Breakdown
               </Button>
         )}
       </View>
@@ -496,7 +496,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
             ) : (
               <>
                 <Text variant="bodySmall" style={{ color: '#6b6b6b', marginBottom: 12 }}>
-                  The equipment will be moved and you can re-assign its category in the new farm.
+                  Equipment moves with its full maintenance history. You'll need to assign a category in the new farm.
                 </Text>
                 {otherFarms.map(({ farm }) => (
                   <Button

@@ -70,7 +70,7 @@ export default function MaintenanceLogFormScreen({ route, navigation }: Props) {
 
   async function handleSave() {
     if (!task || !hours || !activeFarm) {
-      Alert.alert('Hours required', 'Enter the current hours at the time of completion.');
+      Alert.alert('Meter reading required', 'Enter the machine\'s current hours (or miles) when you completed this task.');
       return;
     }
     setSaving(true);

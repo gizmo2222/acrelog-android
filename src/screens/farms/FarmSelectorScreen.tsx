@@ -51,7 +51,7 @@ export default function FarmSelectorScreen({ navigation }: Props) {
     setScanning(false);
     try {
       const farmName = await redeemQRInvite(data, user.uid);
-      Alert.alert('Joined!', `You've been added to ${farmName}. Refreshing…`);
+      Alert.alert('Joined!', `You're now a member of ${farmName}.`);
       const updated = await getUserFarms(user.uid);
       setFarms(updated);
     } catch (e: any) {
@@ -84,7 +84,6 @@ export default function FarmSelectorScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>Select a Farm</Text>
-      <Text variant="bodyMedium" style={styles.subtitle}>Choose which farm to work on</Text>
 
       {farms.length === 0 ? (
         <View style={styles.empty}>

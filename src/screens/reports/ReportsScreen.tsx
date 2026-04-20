@@ -127,7 +127,7 @@ export default function ReportsScreen() {
       {/* Equipment utilization table */}
       <Card style={styles.card}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>Equipment Utilization</Text>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Fleet Overview</Text>
           <DataTable>
             <DataTable.Header>
               <DataTable.Title style={styles.flex}>Equipment</DataTable.Title>
@@ -155,7 +155,7 @@ export default function ReportsScreen() {
       <Card style={styles.card}>
         <Card.Content>
           <Text variant="titleMedium" style={styles.sectionTitle}>Export Maintenance History</Text>
-          <Text variant="bodySmall" style={styles.exportNote}>Export a PDF of the full maintenance history for any equipment item (useful for resale).</Text>
+          <Text variant="bodySmall" style={styles.exportNote}>Full maintenance history as a PDF — useful when selling a piece of equipment.</Text>
           {summaries.map(s => (
             <View key={s.equipment.id} style={styles.exportRow}>
               <Text variant="bodyMedium" style={styles.flex}>{s.equipment.name}</Text>

@@ -24,7 +24,7 @@ export default function BiometricScreen({ navigation }: Props) {
     try {
       const success = await authenticateWithBiometrics();
       if (!success) {
-        Alert.alert('Authentication failed', 'Please try again or use your password.');
+        Alert.alert("Couldn't verify your identity", 'Try again, or sign in with your password.');
       }
       // Auth state is already set from stored credentials; if biometric succeeds
       // the navigator will redirect via onAuthChanged

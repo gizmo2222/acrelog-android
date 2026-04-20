@@ -58,11 +58,11 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
         notes,
         signedBy: auth.currentUser.uid,
       });
-      Alert.alert('Inspection logged', 'Inspection has been recorded.');
+      Alert.alert('Inspection saved', 'Check the History tab to review past inspections.');
       setResults({});
       setNotes('');
     } catch (e: any) {
-      Alert.alert('Could not save inspection', errorMessage(e));
+      Alert.alert("Couldn't save inspection", errorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -133,7 +133,7 @@ export default function InspectionChecklistScreen({ route, navigation }: Props) 
               style={styles.input}
             />
             <Button mode="contained" onPress={handleSubmit} loading={saving} icon="clipboard-check">
-              Submit Inspection
+              Save Inspection
             </Button>
           </Card.Content>
         </Card>

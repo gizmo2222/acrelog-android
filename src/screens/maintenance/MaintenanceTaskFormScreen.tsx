@@ -110,7 +110,7 @@ export default function MaintenanceTaskFormScreen({ route, navigation }: Props) 
 
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error saving task', errorMessage(e));
+      Alert.alert("Couldn't save task", errorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -149,7 +149,7 @@ export default function MaintenanceTaskFormScreen({ route, navigation }: Props) 
           <>
             <TextInput label="Every X hours" value={intervalHours} onChangeText={setIntervalHours} mode="outlined" keyboardType="numeric" style={styles.input} />
             <TextInput label="Every X days" value={intervalDays} onChangeText={setIntervalDays} mode="outlined" keyboardType="numeric" style={styles.input} />
-            <Text variant="labelSmall" style={styles.fieldHint}>Last completed — optional, seeds the next-due calculation</Text>
+            <Text variant="labelSmall" style={styles.fieldHint}>Last completed — optional, helps calculate when this is next due</Text>
             <View style={styles.twoCol}>
               <DatePickerField label="Date" value={lastDoneDate} onChange={setLastDoneDate} style={styles.colInput} optional />
               <TextInput label="At hours" value={lastDoneHours} onChangeText={setLastDoneHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />
@@ -159,7 +159,7 @@ export default function MaintenanceTaskFormScreen({ route, navigation }: Props) 
 
         {taskType === 'oneoff' && (
           <>
-            <Text variant="labelSmall" style={styles.fieldHint}>Due — set at least one</Text>
+            <Text variant="labelSmall" style={styles.fieldHint}>When is this due? Set at least one.</Text>
             <View style={styles.twoCol}>
               <DatePickerField label="By date" value={dueDate} onChange={setDueDate} style={styles.colInput} optional />
               <TextInput label="By hours" value={dueHours} onChangeText={setDueHours} mode="outlined" keyboardType="numeric" style={styles.colInput} />

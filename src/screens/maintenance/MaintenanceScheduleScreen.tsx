@@ -66,7 +66,8 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
   }
 
   async function handleDelete(id: string) {
-    Alert.alert('Delete Task', 'Are you sure?', [
+    const task = tasks.find(t => t.id === id);
+    Alert.alert(`Delete "${task?.name ?? 'task'}"?`, "This can't be undone.", [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: async () => { await deleteMaintenanceTask(id); load(); } },
     ]);
@@ -115,7 +116,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                     style={styles.input}
                   />
                   <Button mode="contained" onPress={handleImport} loading={importLoading}>
-                    Fetch Schedule
+                    Import Tasks
                   </Button>
                   {importedTasks.map((task, i) => (
                     <View key={i} style={styles.importedTask}>
@@ -253,7 +254,7 @@ export default function MaintenanceScheduleScreen({ route, navigation }: Props) 
                   style={styles.archivedToggle}
                   compact
                 >
-                  Completed / Archived ({archivedTasks.length})
+                  Archived ({archivedTasks.length})
                 </Button>
                 {showArchived && archivedTasks.map(item => (
                   <Card key={item.id} style={[styles.card, styles.archivedCard]}>
