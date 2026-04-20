@@ -146,18 +146,16 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   function renderTask(task: Task, isCompleted: boolean) {
     const logs = equipmentLogs[task.id] ?? [];
     return (
-      <Card style={[styles.card, isCompleted && styles.completedCard]} key={task.id}>
+      <Card
+        style={[styles.card, isCompleted && styles.completedCard]}
+        key={task.id}
+        onPress={() => navigation.navigate('TaskEdit', { taskId: task.id, projectId })}
+      >
         <Card.Content>
           <View style={styles.taskRow}>
             <Text variant="bodyLarge" style={[styles.flex, isCompleted && styles.strikethrough]}>
               {task.name}
             </Text>
-            {canEdit && !isCompleted && (
-              <IconButton icon="check" size={20} iconColor="#2e7d32" onPress={() => handleComplete(task.id)} />
-            )}
-            {canEdit && isCompleted && (
-              <IconButton icon="undo" size={18} iconColor="#6b6b6b" onPress={() => handleReopen(task.id)} />
-            )}
             {canEdit && (
               <IconButton icon="trash-can-outline" size={18} iconColor="#9e9e9e" onPress={() => handleDeleteTask(task)} />
             )}
@@ -188,12 +186,24 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
           {canEdit && !isCompleted && (
             <Button
               compact
-              icon="tractor"
-              mode="outlined"
-              style={styles.logEquipBtn}
-              onPress={() => navigation.navigate('TaskForm', { projectId, taskId: task.id })}
+              mode="contained"
+              icon="check-circle-outline"
+              style={styles.completeBtn}
+              buttonColor="#2e7d32"
+              onPress={() => handleComplete(task.id)}
             >
-              Record Equipment Use
+              Mark Complete
+            </Button>
+          )}
+          {canEdit && isCompleted && (
+            <Button
+              compact
+              mode="text"
+              icon="undo"
+              style={styles.completeBtn}
+              onPress={() => handleReopen(task.id)}
+            >
+              Reopen
             </Button>
           )}
         </Card.Content>
@@ -317,6 +327,6 @@ const styles = StyleSheet.create({
   completedAt: { color: '#6b6b6b', marginTop: 2 },
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   equipChip: { backgroundColor: '#e8f5e9' },
-  logEquipBtn: { marginTop: 8, alignSelf: 'flex-start' },
+  completeBtn: { marginTop: 8, alignSelf: 'flex-start' },
   divider: { marginTop: 8, marginBottom: 4 },
 });

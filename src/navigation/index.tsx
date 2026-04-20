@@ -36,6 +36,7 @@ import InspectionChecklistScreen from '../screens/maintenance/InspectionChecklis
 import ProjectListScreen from '../screens/projects/ProjectListScreen';
 import ProjectDetailScreen from '../screens/projects/ProjectDetailScreen';
 import TaskFormScreen from '../screens/projects/TaskFormScreen';
+import TaskEditScreen from '../screens/projects/TaskEditScreen';
 
 // Reports
 import ReportsScreen from '../screens/reports/ReportsScreen';
@@ -59,6 +60,7 @@ export type RootStackParamList = {
   InspectionChecklist: { equipmentId: string; checklistId?: string };
   ProjectDetail: { projectId: string };
   TaskForm: { projectId: string; taskId?: string };
+  TaskEdit: { taskId: string; projectId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -141,7 +143,8 @@ export default function AppNavigator() {
             <Stack.Screen name="MaintenanceTaskForm" component={MaintenanceTaskFormScreen} options={{ headerShown: true, title: 'Add Task' }} />
             <Stack.Screen name="InspectionChecklist" component={InspectionChecklistScreen} options={{ headerShown: true, title: 'Inspection' }} />
             <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} options={{ headerShown: true, title: 'Project' }} />
-            <Stack.Screen name="TaskForm" component={TaskFormScreen} options={{ headerShown: true, title: 'Task' }} />
+            <Stack.Screen name="TaskForm" component={TaskFormScreen} options={{ headerShown: true, title: 'Log Equipment Use' }} />
+            <Stack.Screen name="TaskEdit" component={TaskEditScreen} options={{ headerShown: true, title: 'Edit Task' }} />
           </>
         )}
       </Stack.Navigator>

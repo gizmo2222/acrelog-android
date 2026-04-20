@@ -41,6 +41,16 @@ export async function createProject(farmId: string, name: string): Promise<Proje
   return project;
 }
 
+export async function getTask(taskId: string): Promise<Task | null> {
+  const snap = await getDoc(doc(db, 'tasks', taskId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Task;
+}
+
+export async function deleteTaskEquipmentLog(logId: string): Promise<void> {
+  await deleteDoc(doc(db, 'taskEquipmentLogs', logId));
+}
+
 export async function getProject(projectId: string): Promise<Project | null> {
   const snap = await getDoc(doc(db, 'projects', projectId));
   if (!snap.exists()) return null;
