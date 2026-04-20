@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button, ProgressBar } from 'react-native-paper';
+import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button, ProgressBar, IconButton } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,7 +26,7 @@ function toISO(date: Date) {
 
 export default function ProjectListScreen() {
   const navigation = useNavigation<Nav>();
-  const { activeFarm } = useAuth();
+  const { activeFarm, setActiveFarm } = useAuth();
   const insets = useSafeAreaInsets();
   const [summaries, setSummaries] = useState<ProjectSummary[]>([]);
   const [filter, setFilter] = useState<'active' | 'completed' | 'archived'>('active');
@@ -95,8 +95,15 @@ export default function ProjectListScreen() {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
   return (
-    <View style={styles.container}>
-      <Text variant="headlineSmall" style={styles.title}>Projects</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text variant="headlineSmall" style={styles.title}>Projects</Text>
+          <IconButton icon="swap-horizontal" size={16} iconColor="#6b6b6b" style={styles.farmSwitchIcon} onPress={() => setActiveFarm(null)} />
+          <Text variant="bodySmall" style={styles.farmNameLabel} onPress={() => setActiveFarm(null)}>{activeFarm?.farmName}</Text>
+        </View>
+        <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
+      </View>
 
       <SegmentedButtons
         value={filter}
@@ -200,8 +207,12 @@ export default function ProjectListScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
-  segment: { marginHorizontal: 16, marginBottom: 8 },
+  header: { paddingLeft: 16, paddingRight: 4, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  title: { fontWeight: 'bold', color: '#2e7d32' },
+  farmNameLabel: { color: '#6b6b6b' },
+  farmSwitchIcon: { margin: 0, marginLeft: 2 },
+  segment: { marginHorizontal: 16, marginBottom: 8, marginTop: 8 },
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },

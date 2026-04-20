@@ -1,8 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, Button, ActivityIndicator, DataTable } from 'react-native-paper';
-import { useFocusEffect } from '@react-navigation/native';
+import { Text, Card, Button, ActivityIndicator, DataTable, IconButton } from 'react-native-paper';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,8 +23,11 @@ interface EquipmentSummary {
   totalDowntimeMs: number;
 }
 
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
 export default function ReportsScreen() {
-  const { activeFarm } = useAuth();
+  const navigation = useNavigation<Nav>();
+  const { activeFarm, setActiveFarm } = useAuth();
   const [summaries, setSummaries] = useState<EquipmentSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -97,10 +102,21 @@ export default function ReportsScreen() {
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
 
+  const header = (
+    <View style={styles.header}>
+      <View style={styles.headerLeft}>
+        <Text variant="headlineSmall" style={styles.title}>Reports</Text>
+        <IconButton icon="swap-horizontal" size={16} iconColor="#6b6b6b" style={styles.farmSwitchIcon} onPress={() => setActiveFarm(null)} />
+        <Text variant="bodySmall" style={styles.farmNameLabel} onPress={() => setActiveFarm(null)}>{activeFarm?.farmName}</Text>
+      </View>
+      <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate('FarmSettings')} />
+    </View>
+  );
+
   if (summaries.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text variant="headlineSmall" style={styles.title}>Reports</Text>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {header}
         <EmptyState
           icon="chart-bar"
           title="No active equipment"
@@ -114,8 +130,9 @@ export default function ReportsScreen() {
   const totalDueSoon = summaries.reduce((a, s) => a + s.dueSoonCount, 0);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
-      <Text variant="headlineSmall" style={styles.title}>Reports</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
+      {header}
 
       {/* Fleet summary */}
       <View style={styles.statBar}>
@@ -185,13 +202,18 @@ export default function ReportsScreen() {
         </Card.Content>
       </Card>
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
+  header: { paddingLeft: 16, paddingRight: 4, paddingBottom: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  title: { fontWeight: 'bold', color: '#2e7d32' },
+  farmNameLabel: { color: '#6b6b6b' },
+  farmSwitchIcon: { margin: 0, marginLeft: 2 },
   statBar: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, marginHorizontal: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e8e4df', paddingVertical: 14 },
   statItem: { flex: 1, alignItems: 'center', gap: 4 },
   statDot: { width: 8, height: 8, borderRadius: 4 },
