@@ -270,7 +270,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       )}
 
       {/* Summary */}
-      <Card style={styles.card}>
+      <Card style={[styles.card, styles.heroCard]}>
         <Card.Content>
           {/* Hours + Maintenance — full-width row */}
           <View style={styles.statRowWide}>
@@ -387,7 +387,7 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
       )}
 
       {/* Maintenance */}
-      <Card style={styles.card}>
+      <Card style={[styles.card, styles.maintCard]}>
         <Card.Content>
           <View style={styles.sectionHeader}>
             <Text variant="titleMedium" style={styles.sectionTitle}>Maintenance</Text>
@@ -433,13 +433,17 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
           History
         </Button>
         {canEdit() && equipment.status === 'active' && (
-          equipment.broken
-            ? <Button mode="text" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
-                Mark as Fixed
-              </Button>
-            : <Button mode="text" icon="alert-outline" onPress={handleMarkBroken} style={styles.actionBtn} textColor="#7b1fa2">
-                Report Breakdown
-              </Button>
+          <>
+            <Divider style={styles.actionDivider} />
+            {equipment.broken
+              ? <Button mode="text" icon="wrench-check" onPress={() => clearBroken(equipmentId).then(load)} style={styles.actionBtn} textColor="#7b1fa2">
+                  Mark as Fixed
+                </Button>
+              : <Button mode="text" icon="alert-outline" onPress={handleMarkBroken} style={styles.actionBtn} textColor="#7b1fa2">
+                  Report Breakdown
+                </Button>
+            }
+          </>
         )}
       </View>
       <Portal>
@@ -578,4 +582,7 @@ const styles = StyleSheet.create({
   empty: { color: '#6b6b6b', textAlign: 'center', padding: 8 },
   actions: { padding: 16, gap: 8 },
   actionBtn: { marginBottom: 4 },
+  actionDivider: { marginTop: 8, marginBottom: 4 },
+  heroCard: { marginBottom: 20 },
+  maintCard: { marginTop: 8 },
 });

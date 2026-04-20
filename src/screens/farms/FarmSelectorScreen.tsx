@@ -125,7 +125,7 @@ export default function FarmSelectorScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontWeight: 'bold', color: '#2e7d32', marginTop: 48 },
+  title: { fontWeight: 'bold', color: '#2e7d32', marginTop: 48, marginBottom: 24 },
   subtitle: { color: '#6b6b6b', marginBottom: 24 },
   card: { marginBottom: 12, borderRadius: 8 },
   roleChip: { marginTop: 8, alignSelf: 'flex-start' },

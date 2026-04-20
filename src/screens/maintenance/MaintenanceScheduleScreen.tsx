@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   sectionTitle: { fontWeight: 'bold', marginBottom: 8 },
   formRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  listHeader: { padding: 16, paddingBottom: 4, color: '#6b6b6b' },
+  listHeader: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, color: '#6b6b6b' },
   taskTier1: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 },
   taskName: { flex: 1, marginRight: 8 },
   taskChips: { flexDirection: 'row', alignItems: 'center', gap: 4 },

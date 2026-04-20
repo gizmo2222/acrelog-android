@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: { padding: 16, fontWeight: 'bold', color: '#2e7d32' },
-  statBar: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, marginHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: '#e8e4df', paddingVertical: 14 },
+  statBar: { flexDirection: 'row', backgroundColor: '#faf9f7', borderRadius: 8, marginHorizontal: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e8e4df', paddingVertical: 14 },
   statItem: { flex: 1, alignItems: 'center', gap: 4 },
   statDot: { width: 8, height: 8, borderRadius: 4 },
   statBarNum: { fontSize: 28, fontFamily: 'BarlowCondensed_700Bold', fontWeight: '700', color: '#1a1a18', lineHeight: 32, letterSpacing: -0.5 },
