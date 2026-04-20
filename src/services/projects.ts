@@ -5,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -40,8 +41,28 @@ export async function createProject(farmId: string, name: string): Promise<Proje
   return project;
 }
 
+export async function getProject(projectId: string): Promise<Project | null> {
+  const snap = await getDoc(doc(db, 'projects', projectId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Project;
+}
+
 export async function updateProjectStatus(id: string, status: ProjectStatus): Promise<void> {
   await updateDoc(doc(db, 'projects', id), { status });
+}
+
+export async function renameProject(id: string, name: string): Promise<void> {
+  await updateDoc(doc(db, 'projects', id), { name });
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+  const tasks = await getTasks(projectId);
+  await Promise.all(tasks.map(t => deleteDoc(doc(db, 'tasks', t.id))));
+  await deleteDoc(doc(db, 'projects', projectId));
+}
+
+export async function deleteTask(taskId: string): Promise<void> {
+  await deleteDoc(doc(db, 'tasks', taskId));
 }
 
 // ─── Tasks ─────────────────────────────────────────────────────────────────

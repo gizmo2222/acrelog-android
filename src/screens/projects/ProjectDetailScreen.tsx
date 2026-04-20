@@ -1,35 +1,46 @@
 import React, { useState, useCallback } from 'react';
-import { View, FlatList, SectionList, StyleSheet, Alert } from 'react-native';
-import { Text, Card, FAB, Chip, IconButton, TextInput, Button, Divider, Menu, ActivityIndicator } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text, Card, Chip, IconButton, TextInput, Button, Divider, Menu, ActivityIndicator, Dialog, Portal } from 'react-native-paper';
+import EmptyState from '../../components/EmptyState';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation';
 import { useAuth } from '../../hooks/useAuth';
 import {
-  getTasks, createTask, completeTask, reopenTask, updateProjectStatus,
+  getProject, getTasks, createTask, completeTask, reopenTask,
+  updateProjectStatus, deleteProject, deleteTask, renameProject,
   getTaskEquipmentLogs,
 } from '../../services/projects';
-import { Task, TaskEquipmentLog } from '../../types';
+import { Project, Task, TaskEquipmentLog } from '../../types';
+import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProjectDetail'>;
 
 export default function ProjectDetailScreen({ route, navigation }: Props) {
   const { projectId } = route.params;
   const { activeFarm } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTaskName, setNewTaskName] = useState('');
+  const [addingTask, setAddingTask] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [equipmentLogs, setEquipmentLogs] = useState<Record<string, TaskEquipmentLog[]>>({});
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameName, setRenameName] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [projectId]));
 
   async function load() {
     setLoading(true);
-    const t = await getTasks(projectId);
+    const [proj, t] = await Promise.all([getProject(projectId), getTasks(projectId)]);
+    setProject(proj);
     setTasks(t);
+    if (proj) navigation.setOptions({ title: proj.name });
 
-    // Load equipment logs for all tasks
     const logs: Record<string, TaskEquipmentLog[]> = {};
     await Promise.all(
       t.map(async (task) => {
@@ -43,9 +54,28 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
 
   async function handleAddTask() {
     if (!newTaskName.trim()) return;
-    await createTask(projectId, newTaskName.trim());
-    setNewTaskName('');
-    load();
+    setAddingTask(true);
+    try {
+      await createTask(projectId, newTaskName.trim());
+      setNewTaskName('');
+      load();
+    } catch (e: any) {
+      Alert.alert("Couldn't add task", errorMessage(e));
+    } finally {
+      setAddingTask(false);
+    }
+  }
+
+  async function handleDeleteTask(task: Task) {
+    Alert.alert(`Delete "${task.name}"?`, "This can't be undone.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive', onPress: async () => {
+          await deleteTask(task.id);
+          load();
+        }
+      },
+    ]);
   }
 
   async function handleComplete(taskId: string) {
@@ -56,6 +86,55 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   async function handleReopen(taskId: string) {
     await reopenTask(taskId);
     load();
+  }
+
+  async function handleArchive() {
+    setMenuVisible(false);
+    Alert.alert('Archive project?', 'You can restore it later from the Archived tab.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Archive', onPress: async () => {
+          await updateProjectStatus(projectId, 'archived');
+          navigation.goBack();
+        }
+      },
+    ]);
+  }
+
+  async function handleDelete() {
+    setMenuVisible(false);
+    Alert.alert(
+      `Delete "${project?.name ?? 'project'}"?`,
+      'All tasks will be permanently deleted. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete', style: 'destructive', onPress: async () => {
+            try {
+              await deleteProject(projectId);
+              navigation.goBack();
+            } catch (e: any) {
+              Alert.alert("Couldn't delete project", errorMessage(e));
+            }
+          }
+        },
+      ]
+    );
+  }
+
+  async function handleRename() {
+    if (!renameName.trim()) return;
+    setRenaming(true);
+    try {
+      await renameProject(projectId, renameName.trim());
+      setRenameVisible(false);
+      navigation.setOptions({ title: renameName.trim() });
+      setProject(p => p ? { ...p, name: renameName.trim() } : p);
+    } catch (e: any) {
+      Alert.alert("Couldn't rename project", errorMessage(e));
+    } finally {
+      setRenaming(false);
+    }
   }
 
   const pending = tasks.filter(t => t.status === 'pending');
@@ -79,11 +158,14 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
             {canEdit && isCompleted && (
               <IconButton icon="undo" size={18} iconColor="#6b6b6b" onPress={() => handleReopen(task.id)} />
             )}
+            {canEdit && (
+              <IconButton icon="trash-can-outline" size={18} iconColor="#9e9e9e" onPress={() => handleDeleteTask(task)} />
+            )}
           </View>
 
           {task.dueDate && (
             <Text variant="bodySmall" style={styles.due}>
-              Due: {task.dueDate.toDate().toLocaleDateString()}
+              Due {task.dueDate.toDate().toLocaleDateString()}
             </Text>
           )}
 
@@ -122,55 +204,97 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text variant="titleLarge" style={styles.title}>Tasks</Text>
+        <Text variant="titleLarge" style={styles.title} numberOfLines={1}>
+          {project?.name ?? 'Project'}
+        </Text>
         <Menu
           visible={menuVisible}
           onDismiss={() => setMenuVisible(false)}
           anchor={<IconButton icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
         >
           <Menu.Item
-            onPress={() => { setMenuVisible(false); updateProjectStatus(projectId, 'archived').then(() => navigation.goBack()); }}
+            onPress={() => { setMenuVisible(false); setRenameName(project?.name ?? ''); setRenameVisible(true); }}
+            title="Rename Project"
+            leadingIcon="pencil-outline"
+          />
+          <Menu.Item
+            onPress={handleArchive}
             title="Archive Project"
+            leadingIcon="archive-outline"
+          />
+          <Divider />
+          <Menu.Item
+            onPress={handleDelete}
+            title="Delete Project"
+            leadingIcon="trash-can-outline"
+            titleStyle={{ color: '#c62828' }}
           />
         </Menu>
       </View>
 
-      {/* New task input */}
       {canEdit && (
         <View style={styles.addRow}>
           <TextInput
-            label="Add task..."
+            label="New task name..."
             value={newTaskName}
             onChangeText={setNewTaskName}
             mode="outlined"
             style={styles.addInput}
             onSubmitEditing={handleAddTask}
+            returnKeyType="done"
           />
-          <IconButton icon="plus" mode="contained" onPress={handleAddTask} containerColor="#2e7d32" iconColor="white" />
+          <IconButton
+            icon="plus"
+            mode="contained"
+            onPress={handleAddTask}
+            disabled={addingTask}
+            containerColor="#2e7d32"
+            iconColor="white"
+          />
         </View>
       )}
 
-      <FlatList
-        data={[]}
-        ListHeaderComponent={
-          <>
-            <Text variant="labelLarge" style={styles.sectionLabel}>Pending ({pending.length})</Text>
-            {pending.map(t => renderTask(t, false))}
-            {pending.length === 0 && <Text style={styles.empty}>No pending tasks</Text>}
-
-            {completed.length > 0 && (
-              <>
-                <Divider style={styles.divider} />
-                <Text variant="labelLarge" style={styles.sectionLabel}>History ({completed.length})</Text>
-                {completed.map(t => renderTask(t, true))}
-              </>
-            )}
-          </>
+      <ScrollView contentContainerStyle={[styles.list, { paddingBottom: 32 + insets.bottom }]}>
+        <Text variant="labelLarge" style={styles.sectionLabel}>Pending ({pending.length})</Text>
+        {pending.length === 0
+          ? <EmptyState
+              icon="checkbox-blank-outline"
+              title="No pending tasks"
+              subtitle={canEdit ? 'Add a task above to get started.' : undefined}
+            />
+          : pending.map(t => renderTask(t, false))
         }
-        renderItem={() => null}
-        keyExtractor={() => 'dummy'}
-        contentContainerStyle={styles.list}
-      />
+
+        {completed.length > 0 && (
+          <>
+            <Divider style={styles.divider} />
+            <Text variant="labelLarge" style={styles.sectionLabel}>Completed ({completed.length})</Text>
+            {completed.map(t => renderTask(t, true))}
+          </>
+        )}
+      </ScrollView>
+
+      <Portal>
+        <Dialog visible={renameVisible} onDismiss={() => setRenameVisible(false)}>
+          <Dialog.Title>Rename Project</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Project name"
+              value={renameName}
+              onChangeText={setRenameName}
+              mode="outlined"
+              autoFocus
+              onSubmitEditing={handleRename}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setRenameVisible(false)}>Cancel</Button>
+            <Button onPress={handleRename} loading={renaming} disabled={!renameName.trim() || renaming}>
+              Save
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -178,12 +302,12 @@ export default function ProjectDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f2ee' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8 },
-  title: { fontWeight: 'bold', color: '#2e7d32' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 16, paddingRight: 4, paddingTop: 8 },
+  title: { fontWeight: 'bold', color: '#2e7d32', flex: 1 },
   addRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
   addInput: { flex: 1, marginRight: 4 },
-  list: { paddingHorizontal: 16, paddingBottom: 32 },
-  sectionLabel: { color: '#6b6b6b', marginBottom: 4, marginTop: 8 },
+  list: { paddingHorizontal: 16, paddingTop: 4 },
+  sectionLabel: { color: '#6b6b6b', marginBottom: 8, marginTop: 8 },
   card: { marginBottom: 8, borderRadius: 8 },
   completedCard: { opacity: 0.6 },
   taskRow: { flexDirection: 'row', alignItems: 'center' },
@@ -194,6 +318,5 @@ const styles = StyleSheet.create({
   logsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   equipChip: { backgroundColor: '#e8f5e9' },
   logEquipBtn: { marginTop: 8, alignSelf: 'flex-start' },
-  divider: { marginVertical: 12 },
-  empty: { textAlign: 'center', color: '#6b6b6b', padding: 16 },
+  divider: { marginTop: 8, marginBottom: 4 },
 });

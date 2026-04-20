@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Card, FAB, Chip, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
+import { Text, Card, FAB, SegmentedButtons, ActivityIndicator, Dialog, Portal, TextInput, Button } from 'react-native-paper';
 import EmptyState from '../../components/EmptyState';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +19,9 @@ export default function ProjectListScreen() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filter, setFilter] = useState<'active' | 'archived'>('active');
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [showDialog, setShowDialog] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -28,6 +31,19 @@ export default function ProjectListScreen() {
         .catch(e => { console.error('Projects load error:', e.message); setLoading(false); });
     }, [activeFarm])
   );
+
+  async function handleCreate() {
+    if (!newName.trim() || !activeFarm) return;
+    setCreating(true);
+    try {
+      const p = await createProject(activeFarm.farmId, newName.trim());
+      setShowDialog(false);
+      setNewName('');
+      navigation.navigate('ProjectDetail', { projectId: p.id });
+    } finally {
+      setCreating(false);
+    }
+  }
 
   const filtered = projects.filter(p => p.status === filter);
 
@@ -64,7 +80,7 @@ export default function ProjectListScreen() {
           <EmptyState
             icon="clipboard-list-outline"
             title={filter === 'active' ? 'No active projects' : 'No archived projects'}
-            subtitle={filter === 'active' ? 'Tap + to create your first project.' : undefined}
+            subtitle={filter === 'active' ? 'Tap + to start your first project.' : undefined}
           />
         }
         contentContainerStyle={[styles.list, { paddingBottom: 80 + insets.bottom }]}
@@ -74,13 +90,31 @@ export default function ProjectListScreen() {
         <FAB
           icon="plus"
           style={[styles.fab, { bottom: 16 + insets.bottom }]}
-          onPress={async () => {
-            if (!activeFarm) return;
-            const p = await createProject(activeFarm.farmId, 'New Project');
-            navigation.navigate('ProjectDetail', { projectId: p.id });
-          }}
+          onPress={() => { setNewName(''); setShowDialog(true); }}
         />
       )}
+
+      <Portal>
+        <Dialog visible={showDialog} onDismiss={() => setShowDialog(false)}>
+          <Dialog.Title>New Project</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Project name"
+              value={newName}
+              onChangeText={setNewName}
+              mode="outlined"
+              autoFocus
+              onSubmitEditing={handleCreate}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowDialog(false)}>Cancel</Button>
+            <Button onPress={handleCreate} loading={creating} disabled={!newName.trim() || creating}>
+              Create
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -93,6 +127,5 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 16 },
   card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 8 },
   date: { color: '#6b6b6b', marginTop: 2 },
-  empty: { textAlign: 'center', color: '#6b6b6b', padding: 32 },
   fab: { position: 'absolute', right: 16, bottom: 16, backgroundColor: '#2e7d32' },
 });
