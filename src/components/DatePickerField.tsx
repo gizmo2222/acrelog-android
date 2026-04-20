@@ -31,7 +31,7 @@ function formatDisplay(iso: string): string {
 function buildYears(): number[] {
   const cur = new Date().getFullYear();
   const years: number[] = [];
-  for (let i = cur + 5; i >= cur - 30; i--) years.push(i);
+  for (let i = cur + 5; i >= 1900; i--) years.push(i);
   return years;
 }
 
