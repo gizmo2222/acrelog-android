@@ -12,9 +12,9 @@ import {
   getTaskEquipmentLogs, deleteTaskEquipmentLog,
 } from '../../services/projects';
 import { getFarmMembers } from '../../services/farms';
-import { getEquipment } from '../../services/equipment';
+import { getEquipment, getCategories } from '../../services/equipment';
 import DatePickerField from '../../components/DatePickerField';
-import { Task, TaskEquipmentLog, Equipment, FarmMember, TaskPriority, TaskStatus, TaskPart } from '../../types';
+import { Task, TaskEquipmentLog, Equipment, Category, FarmMember, TaskPriority, TaskStatus, TaskPart } from '../../types';
 import { errorMessage } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskEdit'>;
@@ -51,6 +51,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
   const [farmMembers, setFarmMembers] = useState<FarmMember[]>([]);
   const [logs, setLogs] = useState<TaskEquipmentLog[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [assigneeMenuVisible, setAssigneeMenuVisible] = useState(false);
@@ -77,12 +78,14 @@ export default function TaskEditScreen({ route, navigation }: Props) {
     setLogs(l);
 
     if (activeFarm) {
-      const [eq, members] = await Promise.all([
+      const [eq, members, cats] = await Promise.all([
         getEquipment(activeFarm.farmId),
         getFarmMembers(activeFarm.farmId),
+        getCategories(activeFarm.farmId),
       ]);
       setEquipment(eq);
       setFarmMembers(members);
+      setCategories(cats);
     }
     setLoading(false);
   }
@@ -172,6 +175,13 @@ export default function TaskEditScreen({ route, navigation }: Props) {
         }
       },
     ]);
+  }
+
+  function meterUnitFor(equipmentId: string): string {
+    const eq = equipment.find(e => e.id === equipmentId);
+    if (!eq) return 'hrs';
+    const cat = categories.find(c => c.id === eq.categoryId);
+    return cat?.meterLabel === 'miles' ? 'mi' : 'hrs';
   }
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2e7d32" /></View>;
@@ -337,7 +347,7 @@ export default function TaskEditScreen({ route, navigation }: Props) {
                   <Card.Content style={styles.logRow}>
                     <View style={styles.flex}>
                       <Text variant="bodyMedium">{eq?.name ?? log.equipmentId}</Text>
-                      <Text variant="bodySmall" style={styles.logMeta}>{log.hours} hrs · {log.loggedAt.toDate().toLocaleDateString()}</Text>
+                      <Text variant="bodySmall" style={styles.logMeta}>{log.hours} {meterUnitFor(log.equipmentId)} · {log.loggedAt.toDate().toLocaleDateString()}</Text>
                     </View>
                     {canEdit && (
                       <IconButton icon="trash-can-outline" size={18} iconColor="#9e9e9e" onPress={() => handleDeleteLog(log.id)} />
