@@ -276,7 +276,9 @@ export async function createEquipment(data: Omit<Equipment, 'id' | 'createdAt' |
 }
 
 export async function updateEquipment(id: string, data: Partial<Equipment>): Promise<void> {
-  await updateDoc(doc(db, 'equipment', id), data);
+  // Firestore updateDoc rejects undefined values — strip them out
+  const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+  await updateDoc(doc(db, 'equipment', id), clean);
 }
 
 export async function archiveEquipment(id: string, status: EquipmentStatus): Promise<void> {
