@@ -10,7 +10,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../hooks/useAuth';
 import { inviteUserToFarm, createQRInvite, getFarm, updateFarm, addFarmLocation, removeFarmLocation, leaveFarm, deleteFarm, getFarmMembers, removeFarmMember, updateFarmMemberRole } from '../../services/farms';
 import { Farm, FarmMember, UserRole } from '../../types';
-import { signOut } from '../../services/auth';
+import { signOut, deleteAccount } from '../../services/auth';
 import { errorMessage } from '../../utils/errorMessage';
 
 const ROLES: UserRole[] = ['owner', 'worker', 'mechanic', 'auditor'];
@@ -404,6 +404,31 @@ export default function FarmSettingsScreen() {
             )}
             <Button onPress={() => signOut()} textColor="#c62828">
               Sign Out
+            </Button>
+            <Button
+              textColor="#9e9e9e"
+              onPress={() =>
+                Alert.alert(
+                  'Delete Account',
+                  'This will permanently delete your account and personal data. Farm data you own will remain. This cannot be undone.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete Account',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          await deleteAccount();
+                        } catch (e: any) {
+                          Alert.alert('Error', errorMessage(e));
+                        }
+                      },
+                    },
+                  ]
+                )
+              }
+            >
+              Delete Account
             </Button>
           </>
         )}

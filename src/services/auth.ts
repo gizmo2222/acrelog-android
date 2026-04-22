@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  deleteUser,
   User,
 } from 'firebase/auth';
 import {
@@ -10,6 +11,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -43,6 +45,13 @@ export async function signUp(
 
 export async function signOut(): Promise<void> {
   await firebaseSignOut(auth);
+}
+
+export async function deleteAccount(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No user is signed in.');
+  await deleteDoc(doc(db, 'users', user.uid));
+  await deleteUser(user);
 }
 
 export function onAuthChanged(callback: (user: User | null) => void) {
