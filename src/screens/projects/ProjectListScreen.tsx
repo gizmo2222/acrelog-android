@@ -30,7 +30,7 @@ export default function ProjectListScreen() {
   const insets = useSafeAreaInsets();
   const [summaries, setSummaries] = useState<ProjectSummary[]>([]);
   const [filter, setFilter] = useState<'active' | 'completed' | 'archived'>('active');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDueDate, setNewDueDate] = useState('');

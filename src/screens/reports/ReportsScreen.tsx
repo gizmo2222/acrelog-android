@@ -29,7 +29,7 @@ export default function ReportsScreen() {
   const navigation = useNavigation<Nav>();
   const { activeFarm, setActiveFarm } = useAuth();
   const [summaries, setSummaries] = useState<EquipmentSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useFocusEffect(useCallback(() => { load(); }, [activeFarm]));
 

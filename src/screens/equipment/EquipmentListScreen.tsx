@@ -40,7 +40,7 @@ export default function EquipmentListScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'archived'>('active');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [maintenanceStatus, setMaintenanceStatus] = useState<Record<string, MaintenanceStatus>>({});
 
