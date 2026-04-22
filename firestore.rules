@@ -87,14 +87,14 @@ service cloud.firestore {
     // ─── Categories ───────────────────────────────────────────────────────────
 
     match /categories/{categoryId} {
-      allow read: if isFarmAuditor(resource.data.farmId);
+      allow read: if isAuthed();
       allow write: if isFarmManager(resource.data.farmId);
     }
 
     // ─── Equipment ────────────────────────────────────────────────────────────
 
     match /equipment/{equipmentId} {
-      allow read: if isFarmAuditor(resource.data.farmId);
+      allow read: if isAuthed();
       allow create: if isFarmManager(resource.data.farmId);
       allow update: if isFarmWorker(resource.data.farmId);
       allow delete: if isFarmOwner(resource.data.farmId);
@@ -135,7 +135,7 @@ service cloud.firestore {
     // ─── Projects & Tasks ─────────────────────────────────────────────────────
 
     match /projects/{projectId} {
-      allow read: if isFarmAuditor(resource.data.farmId);
+      allow read: if isAuthed();
       allow create: if isFarmWorker(resource.data.farmId);
       allow update: if isFarmWorker(resource.data.farmId);
       allow delete: if isFarmManager(resource.data.farmId);
