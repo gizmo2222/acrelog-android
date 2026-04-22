@@ -58,7 +58,13 @@ service cloud.firestore {
         isFarmAuditor(resource.data.farmId) ||
         request.auth.uid == resource.data.userId
       );
-      allow create: if isFarmManager(resource.data.farmId);
+      allow create: if isAuthed() && (
+        isFarmManager(resource.data.farmId) ||
+        // Farm creator bootstrapping their own owner membership during createFarm
+        (request.auth.uid == resource.data.userId &&
+         resource.data.role == 'owner' &&
+         get(/databases/$(database)/documents/farms/$(resource.data.farmId)).data.createdBy == request.auth.uid)
+      );
       allow update: if isFarmOwner(resource.data.farmId);
       allow delete: if isFarmOwner(resource.data.farmId) ||
         request.auth.uid == resource.data.userId; // self-removal
