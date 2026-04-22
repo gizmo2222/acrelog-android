@@ -55,10 +55,20 @@ export async function getUserFarms(uid: string): Promise<{ farm: Farm; role: Use
   if (!userSnap.exists()) return [];
 
   const memberships: FarmMembership[] = userSnap.data().farmMemberships ?? [];
+  const displayName = userSnap.data().displayName || uid;
+
   const results = await Promise.all(
     memberships.map(async (m) => {
       const farmSnap = await getDoc(doc(db, 'farms', m.farmId));
       if (!farmSnap.exists()) return null;
+
+      // Self-heal: ensure the farmMembers doc exists (may be missing for older farms)
+      const memberRef = doc(db, 'farmMembers', `${m.farmId}_${uid}`);
+      const memberSnap = await getDoc(memberRef);
+      if (!memberSnap.exists()) {
+        await setDoc(memberRef, { farmId: m.farmId, userId: uid, role: m.role, displayName });
+      }
+
       return { farm: { id: farmSnap.id, ...farmSnap.data() } as Farm, role: m.role };
     })
   );
