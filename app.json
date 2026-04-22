@@ -32,7 +32,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.acrelog.app",
       "versionCode": 1
@@ -49,6 +50,11 @@
           "photosPermission": "Allow AcreLog to access your photos for equipment images"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5f855f46-7402-4469-b4dd-9115a5b3a27c"
+      }
+    }
   }
 }
