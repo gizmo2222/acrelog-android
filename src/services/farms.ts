@@ -63,11 +63,11 @@ export async function getUserFarms(uid: string): Promise<{ farm: Farm; role: Use
       if (!farmSnap.exists()) return null;
 
       // Self-heal: ensure the farmMembers doc exists (may be missing for older farms)
-      const memberRef = doc(db, 'farmMembers', `${m.farmId}_${uid}`);
-      const memberSnap = await getDoc(memberRef);
-      if (!memberSnap.exists()) {
-        await setDoc(memberRef, { farmId: m.farmId, userId: uid, role: m.role, displayName });
-      }
+      await setDoc(
+        doc(db, 'farmMembers', `${m.farmId}_${uid}`),
+        { farmId: m.farmId, userId: uid, role: m.role, displayName },
+        { merge: true }
+      );
 
       return { farm: { id: farmSnap.id, ...farmSnap.data() } as Farm, role: m.role };
     })
