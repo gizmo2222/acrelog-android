@@ -66,37 +66,42 @@ export default function TaskEditScreen({ route, navigation }: Props) {
 
   async function load() {
     setLoading(true);
-    const [t, l, c] = await Promise.all([
-      getTask(taskId),
-      getTaskEquipmentLogs(taskId),
-      getTaskComments(taskId),
-    ]);
-    if (!t) { navigation.goBack(); return; }
-
-    setTask(t);
-    setName(t.name);
-    setDueDate(t.dueDate ? toISO(t.dueDate.toDate()) : '');
-    setPriority(t.priority);
-    setStatus(t.status);
-    setAssignedToId(t.assignedToId);
-    setAssignedToName(t.assignedToName);
-    setNotes(t.notes ?? '');
-    setRecurrence(t.recurrence);
-    setParts((t.parts ?? []).map(p => ({ name: p.name, cost: p.cost != null ? String(p.cost) : '' })));
-    setLogs(l);
-    setComments(c);
-
-    if (activeFarm) {
-      const [eq, members, cats] = await Promise.all([
-        getEquipment(activeFarm.farmId),
-        getFarmMembers(activeFarm.farmId),
-        getCategories(activeFarm.farmId),
+    try {
+      const [t, l, c] = await Promise.all([
+        getTask(taskId),
+        getTaskEquipmentLogs(taskId),
+        getTaskComments(taskId),
       ]);
-      setEquipment(eq);
-      setFarmMembers(members);
-      setCategories(cats);
+      if (!t) { navigation.goBack(); return; }
+
+      setTask(t);
+      setName(t.name);
+      setDueDate(t.dueDate ? toISO(t.dueDate.toDate()) : '');
+      setPriority(t.priority);
+      setStatus(t.status);
+      setAssignedToId(t.assignedToId);
+      setAssignedToName(t.assignedToName);
+      setNotes(t.notes ?? '');
+      setRecurrence(t.recurrence);
+      setParts((t.parts ?? []).map(p => ({ name: p.name, cost: p.cost != null ? String(p.cost) : '' })));
+      setLogs(l);
+      setComments(c);
+
+      if (activeFarm) {
+        const [eq, members, cats] = await Promise.all([
+          getEquipment(activeFarm.farmId),
+          getFarmMembers(activeFarm.farmId),
+          getCategories(activeFarm.farmId),
+        ]);
+        setEquipment(eq);
+        setFarmMembers(members);
+        setCategories(cats);
+      }
+    } catch (e: any) {
+      Alert.alert('Could not load task', errorMessage(e));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function toISO(date: Date) {

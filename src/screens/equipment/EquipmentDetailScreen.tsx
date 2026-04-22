@@ -48,21 +48,26 @@ export default function EquipmentDetailScreen({ route, navigation }: Props) {
 
   async function load() {
     setLoading(true);
-    const eq = await getEquipmentById(equipmentId);
-    setEquipment(eq);
-    if (eq && activeFarm) {
-      const cats = await getCategories(activeFarm.farmId);
-      setCategory(cats.find(c => c.id === eq.categoryId) ?? null);
-      const [t, r, dt] = await Promise.all([
-        getMaintenanceTasks(equipmentId),
-        getMeterReadings(equipmentId),
-        getDowntimeRecords(equipmentId),
-      ]);
-      setTasks(t);
-      setReadings(r);
-      setDowntimeRecords(dt);
+    try {
+      const eq = await getEquipmentById(equipmentId);
+      setEquipment(eq);
+      if (eq && activeFarm) {
+        const cats = await getCategories(activeFarm.farmId);
+        setCategory(cats.find(c => c.id === eq.categoryId) ?? null);
+        const [t, r, dt] = await Promise.all([
+          getMaintenanceTasks(equipmentId),
+          getMeterReadings(equipmentId),
+          getDowntimeRecords(equipmentId),
+        ]);
+        setTasks(t);
+        setReadings(r);
+        setDowntimeRecords(dt);
+      }
+    } catch (e: any) {
+      Alert.alert('Could not load equipment', errorMessage(e));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function canEdit() {

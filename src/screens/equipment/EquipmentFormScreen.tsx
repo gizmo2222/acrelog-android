@@ -52,36 +52,41 @@ export default function EquipmentFormScreen({ route, navigation }: Props) {
 
   async function load() {
     if (!activeFarm) return;
-    const [cats, farm] = await Promise.all([
-      getCategories(activeFarm.farmId),
-      getFarm(activeFarm.farmId),
-    ]);
-    setCategories(cats);
-    setFarmLocations((farm?.locations ?? []).sort());
-    if (cats.length > 0 && !categoryId) setCategoryId(cats[0].id);
+    try {
+      const [cats, farm] = await Promise.all([
+        getCategories(activeFarm.farmId),
+        getFarm(activeFarm.farmId),
+      ]);
+      setCategories(cats);
+      setFarmLocations((farm?.locations ?? []).sort());
+      if (cats.length > 0 && !categoryId) setCategoryId(cats[0].id);
 
-    if (isEdit) {
-      const eq = await getEquipmentById(equipmentId!);
-      if (eq) {
-        setName(eq.name);
-        setBrand(eq.brand);
-        setModel(eq.model);
-        setSerial(eq.serialNumber);
-        setDescription(eq.description);
-        setPurchaseLocation(eq.purchaseLocation);
-        setPurchaseDate(eq.purchaseDate ?? '');
-        setPurchasePrice(eq.purchasePrice != null ? String(eq.purchasePrice) : '');
-        setLocation(eq.location);
-        setCategoryId(eq.categoryId);
-        setManufacturerUrl(eq.manufacturerUrl ?? '');
-        setCustomFields(eq.customFields ?? {});
-        const existing: PhotoEntry[] = [];
-        if (eq.primaryImageUrl) existing.push({ uri: eq.primaryImageUrl, isNew: false });
-        for (const p of eq.photos ?? []) existing.push({ uri: p.url, isNew: false });
-        setPhotos(existing);
+      if (isEdit) {
+        const eq = await getEquipmentById(equipmentId!);
+        if (eq) {
+          setName(eq.name);
+          setBrand(eq.brand);
+          setModel(eq.model);
+          setSerial(eq.serialNumber);
+          setDescription(eq.description);
+          setPurchaseLocation(eq.purchaseLocation);
+          setPurchaseDate(eq.purchaseDate ?? '');
+          setPurchasePrice(eq.purchasePrice != null ? String(eq.purchasePrice) : '');
+          setLocation(eq.location);
+          setCategoryId(eq.categoryId);
+          setManufacturerUrl(eq.manufacturerUrl ?? '');
+          setCustomFields(eq.customFields ?? {});
+          const existing: PhotoEntry[] = [];
+          if (eq.primaryImageUrl) existing.push({ uri: eq.primaryImageUrl, isNew: false });
+          for (const p of eq.photos ?? []) existing.push({ uri: p.url, isNew: false });
+          setPhotos(existing);
+        }
       }
+    } catch (e: any) {
+      Alert.alert('Could not load form', errorMessage(e));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function addFromLibrary() {
