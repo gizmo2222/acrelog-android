@@ -22,14 +22,18 @@ const ROLE_LABELS: Record<UserRole, string> = {
 export default function FarmSelectorScreen({ navigation }: Props) {
   const { user, setActiveFarm } = useAuth();
   const [farms, setFarms] = useState<{ farm: Farm; role: UserRole }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
   useEffect(() => {
     if (!user) return;
-    getUserFarms(user.uid).then((f) => { setFarms(f); setLoading(false); });
+    setLoading(true);
+    getUserFarms(user.uid)
+      .then((f) => setFarms(f))
+      .catch((e) => Alert.alert('Could not load farms', errorMessage(e)))
+      .finally(() => setLoading(false));
   }, [user]);
 
   function selectFarm(farm: Farm, role: UserRole) {
