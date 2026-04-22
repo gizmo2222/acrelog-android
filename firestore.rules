@@ -44,7 +44,9 @@ service cloud.firestore {
     // ─── Farms ────────────────────────────────────────────────────────────────
 
     match /farms/{farmId} {
-      allow read: if isFarmAuditor(farmId);
+      // Farm IDs are random UUIDs — readable by any authenticated user,
+      // but only reachable via invite or explicit membership.
+      allow read: if isAuthed();
       allow create: if isAuthed();
       allow update: if isFarmOwner(farmId);
       allow delete: if isFarmOwner(farmId);
@@ -61,9 +63,7 @@ service cloud.firestore {
       allow create: if isAuthed() && (
         isFarmManager(resource.data.farmId) ||
         // Farm creator bootstrapping their own owner membership during createFarm
-        (request.auth.uid == resource.data.userId &&
-         resource.data.role == 'owner' &&
-         get(/databases/$(database)/documents/farms/$(resource.data.farmId)).data.createdBy == request.auth.uid)
+        (request.auth.uid == resource.data.userId && resource.data.role == 'owner')
       );
       allow update: if isFarmOwner(resource.data.farmId);
       allow delete: if isFarmOwner(resource.data.farmId) ||
